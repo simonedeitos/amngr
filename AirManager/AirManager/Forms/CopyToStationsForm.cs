@@ -13,6 +13,7 @@ namespace AirManager.Forms
         private readonly List<int> _selectedIds;
         private readonly string _archiveType;
         private List<StationConfig> _availableStations;
+        private readonly EventHandler _languageChangedHandler;
 
         private Label lblSummary;
         private Label lblStations;
@@ -58,7 +59,8 @@ namespace AirManager.Forms
             LoadStations();
             ApplyLanguage();
 
-            LanguageManager.LanguageChanged += (s, e) => ApplyLanguage();
+            _languageChangedHandler = (s, e) => ApplyLanguage();
+            LanguageManager.LanguageChanged += _languageChangedHandler;
         }
 
         private void InitializeControls()
@@ -314,7 +316,7 @@ namespace AirManager.Forms
         {
             if (disposing)
             {
-                LanguageManager.LanguageChanged -= (s, e) => ApplyLanguage();
+                LanguageManager.LanguageChanged -= _languageChangedHandler;
             }
 
             base.Dispose(disposing);
