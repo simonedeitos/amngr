@@ -326,7 +326,5 @@ namespace AirManager.Forms
             serialTextBox.Enabled = enabled;
             activateButton.Enabled = enabled;
         }
-
-    
     }
 }

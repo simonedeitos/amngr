@@ -95,10 +95,10 @@ namespace AirManager.Services
                 {
                     if (languageName != "English")
                     {
-                        string englishPath = Path.Combine(_languagesPath, "English.ini");
-                        if (File.Exists(englishPath))
+                        string fallbackPath = Path.Combine(_languagesPath, "English.ini");
+                        if (File.Exists(fallbackPath))
                         {
-                            filePath = englishPath;
+                            filePath = fallbackPath;
                             languageName = "English";
                         }
                         else
