@@ -84,6 +84,14 @@ namespace AirManager.Themes
         public static readonly Color ButtonInfo = Color.FromArgb(23, 162, 184);     // Bottone info
         public static readonly Color ButtonDisabled = Color.FromArgb(80, 80, 80);   // Bottone disabilitato
 
+        // ✅ COLORI LICENSE FORM
+        public static readonly Color Primary = Color.FromArgb(0, 120, 215);             // Colore primario header
+        public static readonly Color TextInverse = Color.White;                         // Testo su sfondo colorato
+        public static readonly Color LicBgLight = Color.FromArgb(45, 45, 48);           // Background license form
+        public static readonly Color LicSurface = Color.FromArgb(40, 40, 40);           // Superficie card license
+        public static readonly Color LicBorderLight = Color.FromArgb(70, 70, 70);       // Bordo card license
+        public static readonly Color LicTextSecondary = Color.FromArgb(180, 180, 180);  // Testo secondario license
+
         // ✅ COLORI CARDS
         public static readonly Color CardBackground = Color.FromArgb(40, 40, 40);   // Background card
         public static readonly Color CardBorder = Color.FromArgb(60, 60, 60);       // Bordo card

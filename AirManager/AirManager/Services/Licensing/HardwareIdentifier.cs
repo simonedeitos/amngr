@@ -15,7 +15,7 @@ namespace AirManager.Services.Licensing
         /// <summary>
         /// Gets a unique hardware ID based on CPU, motherboard, and disk identifiers
         /// </summary>
-        public static string GetHardwareId()
+        public static string GetMachineID()
         {
             if (!string.IsNullOrEmpty(_cachedHardwareId))
                 return _cachedHardwareId;

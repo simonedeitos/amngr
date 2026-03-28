@@ -40,15 +40,14 @@ namespace AirManager
             try
             {
                 Console.WriteLine("[AirManager] Verifica licenza...");
-                var licenseManager = LicenseManager.Instance;
 
-                if (!licenseManager.IsLicensed())
+                if (!LicenseManager.IsLicenseValid())
                 {
                     Console.WriteLine("[AirManager] ⚠️ Licenza non valida, apertura form di attivazione...");
                     using (var licenseForm = new LicenseForm())
                     {
                         DialogResult result = licenseForm.ShowDialog();
-                        if (result != DialogResult.OK || !licenseForm.LicenseActivated)
+                        if (result != DialogResult.OK)
                         {
                             Console.WriteLine("[AirManager] ❌ Attivazione licenza annullata. Chiusura applicazione.");
                             return;

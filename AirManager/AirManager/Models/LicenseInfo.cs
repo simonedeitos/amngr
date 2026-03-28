@@ -3,57 +3,79 @@ using AirManager.Services.Licensing;
 
 namespace AirManager.Models
 {
+    /// <summary>
+    /// Software license information
+    /// </summary>
     public class LicenseInfo
     {
         public const string SERIAL_PREFIX = "AMG-";
-        public const string ProductName = "AirManager";
 
-        // License properties
-        public string SerialCode { get; set; } = string.Empty;
-        public string LicenseKey { get; set; } = string.Empty;
-        public string HardwareId { get; set; } = string.Empty;
-        public string CustomerName { get; set; } = string.Empty;
-        public string CustomerEmail { get; set; } = string.Empty;
-        public string ProductVersion { get; set; } = string.Empty;
-        public DateTime ActivationDate { get; set; } = DateTime.MinValue;
-        public DateTime ExpirationDate { get; set; } = DateTime.MinValue;
-        public string LicenseType { get; set; } = "Standard";
-        public bool IsActivated { get; set; } = false;
-        public int MaxActivations { get; set; } = 1;
-        public int CurrentActivations { get; set; } = 0;
-        public string Status { get; set; } = "Inactive";
+        public string SerialKey { get; set; }
+        public string OwnerName { get; set; }
+        public DateTime ActivatedOn { get; set; }
+        public string MachineID { get; set; }
+        public string ProductName { get; set; }
+        public string Version { get; set; }
+        public bool IsActivated { get; set; }
+
+        public LicenseInfo()
+        {
+            SerialKey = string.Empty;
+            OwnerName = string.Empty;
+            ActivatedOn = DateTime.MinValue;
+            MachineID = string.Empty;
+            ProductName = "AirManager";
+            Version = "1.0.0";
+            IsActivated = false;
+        }
 
         /// <summary>
-        /// Checks if the serial code has a valid format (AMG-XXXX-XXXX-XXXX)
+        /// Checks if the license is valid
+        /// </summary>
+        public bool IsValid()
+        {
+            if (string.IsNullOrEmpty(SerialKey))
+                return false;
+
+            if (!IsActivated)
+                return false;
+
+            // Check serial format
+            if (!IsValidSerialFormat(SerialKey))
+                return false;
+
+            // Check that the hardware ID matches the current one
+            if (!string.IsNullOrEmpty(MachineID) &&
+                MachineID != HardwareIdentifier.GetMachineID())
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Validates serial format AMG-XXXX-XXXX-XXXX
         /// </summary>
         public static bool IsValidSerialFormat(string serial)
         {
-            if (string.IsNullOrWhiteSpace(serial))
+            if (string.IsNullOrEmpty(serial))
                 return false;
 
-            serial = serial.Trim().ToUpper();
-
+            // Format: AMG-XXXX-XXXX-XXXX (18 characters)
             if (!serial.StartsWith(SERIAL_PREFIX))
-                return false;
-
-            // Format: AMG-XXXX-XXXX-XXXX (19 characters)
-            if (serial.Length != 19)
                 return false;
 
             string[] parts = serial.Split('-');
             if (parts.Length != 4)
                 return false;
 
-            // First part must be "AMG"
-            if (parts[0] != "AMG")
-                return false;
+            if (parts[0] != SERIAL_PREFIX.TrimEnd('-')) return false;
+            if (parts[1].Length != 4) return false;
+            if (parts[2].Length != 4) return false;
+            if (parts[3].Length != 4) return false;
 
-            // Each segment after prefix must be 4 alphanumeric characters
+            // Check that parts are alphanumeric
             for (int i = 1; i < parts.Length; i++)
             {
-                if (parts[i].Length != 4)
-                    return false;
-
                 foreach (char c in parts[i])
                 {
                     if (!char.IsLetterOrDigit(c))
@@ -64,57 +86,10 @@ namespace AirManager.Models
             return true;
         }
 
-        /// <summary>
-        /// Checks if the license is valid and not expired
-        /// </summary>
-        public bool IsValid()
+        public override string ToString()
         {
-            if (!IsActivated)
-                return false;
-
-            if (string.IsNullOrEmpty(SerialCode) || string.IsNullOrEmpty(LicenseKey))
-                return false;
-
-            // Check hardware ID matches current machine
-            string currentHwId = HardwareIdentifier.GetHardwareId();
-            if (!string.Equals(HardwareId, currentHwId, StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            // Check expiration (DateTime.MinValue = never expires)
-            if (ExpirationDate != DateTime.MinValue && DateTime.Now > ExpirationDate)
-                return false;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns license status description
-        /// </summary>
-        public string GetStatusDescription()
-        {
-            if (!IsActivated)
-                return "Not Activated";
-
-            if (ExpirationDate != DateTime.MinValue && DateTime.Now > ExpirationDate)
-                return "Expired";
-
-            string currentHwId = HardwareIdentifier.GetHardwareId();
-            if (!string.Equals(HardwareId, currentHwId, StringComparison.OrdinalIgnoreCase))
-                return "Hardware Mismatch";
-
-            return "Active";
-        }
-
-        /// <summary>
-        /// Returns remaining days until expiration, or -1 if perpetual
-        /// </summary>
-        public int GetRemainingDays()
-        {
-            if (ExpirationDate == DateTime.MinValue)
-                return -1; // Perpetual license
-
-            int days = (ExpirationDate - DateTime.Now).Days;
-            return days < 0 ? 0 : days;
+            string displayName = !string.IsNullOrEmpty(OwnerName) ? OwnerName : SerialKey;
+            return $"{displayName} - Activated: {ActivatedOn:dd/MM/yyyy HH:mm}";
         }
     }
 }
