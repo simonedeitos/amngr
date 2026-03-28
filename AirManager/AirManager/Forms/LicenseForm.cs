@@ -327,9 +327,6 @@ namespace AirManager.Forms
             activateButton.Enabled = enabled;
         }
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            base.OnFormClosing(e);
-        }
+    
     }
 }

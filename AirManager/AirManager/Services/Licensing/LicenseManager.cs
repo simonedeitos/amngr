@@ -235,7 +235,7 @@ namespace AirManager.Services.Licensing
                                 CustomerName = licenseData?["customer_name"]?.Value<string>() ?? string.Empty,
                                 CustomerEmail = licenseData?["customer_email"]?.Value<string>() ?? string.Empty,
                                 ProductVersion = licenseData?["product_version"]?.Value<string>() ?? string.Empty,
-                                ActivationDate = DateTime.Now,
+                                ActivationDate = DateTime.UtcNow,
                                 ExpirationDate = ParseExpirationDate(licenseData?["expiration_date"]?.Value<string>()),
                                 LicenseType = licenseData?["license_type"]?.Value<string>() ?? "Standard",
                                 IsActivated = true,
@@ -425,7 +425,10 @@ namespace AirManager.Services.Licensing
                         return apiKey;
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LicenseManager] Error reading API key from registry: {ex.Message}");
+            }
 
             return DEFAULT_API_KEY;
         }

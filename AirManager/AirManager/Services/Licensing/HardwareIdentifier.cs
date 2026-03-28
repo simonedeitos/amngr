@@ -28,26 +28,28 @@ namespace AirManager.Services.Licensing
                 string biosId = GetWmiProperty("Win32_BIOS", "SerialNumber");
 
                 string combined = $"{cpuId}|{boardId}|{diskId}|{biosId}";
-
-                using (SHA256 sha256 = SHA256.Create())
-                {
-                    byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
-                    _cachedHardwareId = BitConverter.ToString(hashBytes).Replace("-", "").Substring(0, 32);
-                }
+                _cachedHardwareId = ComputeHash(combined);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[HardwareIdentifier] Error generating hardware ID: {ex.Message}");
-                // Fallback: use machine name + environment
                 string fallback = $"{Environment.MachineName}|{Environment.UserName}|{Environment.OSVersion}";
-                using (SHA256 sha256 = SHA256.Create())
-                {
-                    byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(fallback));
-                    _cachedHardwareId = BitConverter.ToString(hashBytes).Replace("-", "").Substring(0, 32);
-                }
+                _cachedHardwareId = ComputeHash(fallback);
             }
 
             return _cachedHardwareId!;
+        }
+
+        /// <summary>
+        /// Computes a truncated SHA256 hash from the input string
+        /// </summary>
+        private static string ComputeHash(string input)
+        {
+            using (SHA256 sha256 = SHA256.Create())
+            {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+                return BitConverter.ToString(hashBytes).Replace("-", "").Substring(0, 32);
+            }
         }
 
         /// <summary>
