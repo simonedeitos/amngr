@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AirManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9006057f6a4b889a058479b1bd2c63b81f0b1631")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+178fecf9586ae0b7d5cbf534ebb5c5050189748d")]
 [assembly: System.Reflection.AssemblyProductAttribute("AirManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AirManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
