@@ -1,14 +1,18 @@
-﻿using AirManager.Services;
-using AirManager.Services.Database;
-using AirManager.Themes;
-using NAudio.Wave;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Win32;
+using NAudio.Wave;
+using AirManager.Services.Database;
+using AirManager.Services;
+using AirManager.Themes;
 
 namespace AirManager.Forms
 {
@@ -20,6 +24,7 @@ namespace AirManager.Forms
         private System.Windows.Forms.Timer _positionTimer;
 
         private float[] _waveformData;
+        private float[] _originalWaveformData; // dati originali senza volume boost
         private Bitmap _waveformBitmap;
         private bool _isLoadingWaveform = false;
         private string _lastLoadedFile = "";
@@ -45,12 +50,49 @@ namespace AirManager.Forms
         private Button btnResetMix;
         private Button btnResetOut;
 
+        // ✅ ZOOM
+        private float _zoomLevel = 1.0f;
+        private int _scrollOffset = 0; // offset in waveformData samples
+        private bool _userScrolled = false; // flag: l'utente ha scrollato manualmente
+
+        // ✅ Backup marker originali (per ripristino su Annulla)
+        private int _originalMarkerIN;
+        private int _originalMarkerINTRO;
+        private int _originalMarkerMIX;
+        private int _originalMarkerOUT;
+
+        // ✅ VOLUME BOOST
+        private float _volumeBoostDb = 0f;
+
+        // Flag per la visualizzazione dei picchi colorati nella waveform (disattivato di default)
+        private bool _showColoredPeaks = false;
+
+        // ✅ VU METER
+        private float _vuLevelLeft = 0f;
+        private float _vuLevelRight = 0f;
+        private float _vuPeakLeft = 0f;
+        private float _vuPeakRight = 0f;
+        private System.Windows.Forms.Timer _vuDecayTimer;
+
+        // ✅ AUTOCOMPLETE suggerimenti
+        private AutoCompleteStringCollection _genreSuggestions;
+
+        // ✅ CATEGORIE – dati interni per popup
+        private List<string> _allCategories = new List<string>();
+        private HashSet<string> _checkedCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         public MusicEditorForm(MusicEntry musicEntry, bool isClip = false)
         {
             InitializeComponent();
 
             _musicEntry = musicEntry;
             _isClip = isClip;
+
+            // Backup marker originali per ripristino su Annulla
+            _originalMarkerIN = musicEntry.MarkerIN;
+            _originalMarkerINTRO = musicEntry.MarkerINTRO;
+            _originalMarkerMIX = musicEntry.MarkerMIX;
+            _originalMarkerOUT = musicEntry.MarkerOUT;
 
             if (_isClip)
             {
@@ -60,6 +102,11 @@ namespace AirManager.Forms
             this.BackColor = AppTheme.BgDark;
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
+
+            Console.WriteLine($"\n[MusicEditor] ========== APERTURA EDITOR ==========");
+            Console.WriteLine($"[MusicEditor] ID: {_musicEntry.ID}");
+            Console.WriteLine($"[MusicEditor] IsClip: {_isClip}");
+            Console.WriteLine($"[MusicEditor] =======================================\n");
 
             _dtpValidFrom = dtpValidFrom;
             _dtpValidTo = dtpValidTo;
@@ -79,68 +126,1022 @@ namespace AirManager.Forms
             ApplyTheme();
             CreateResetButtons();
             CreateValidityControls();
-            LoadMetadata();
+            SetupZoomControls();
+            SetupVolumeControls();
+            SetupVuMeter();
+            LoadGenreSuggestions();
+            LoadCategorySuggestions();
+
+            // ✅ APPLICA LINGUA
             ApplyLanguage();
+
+            LoadMetadata();
             LoadAudioFile();
 
             _positionTimer = new System.Windows.Forms.Timer { Interval = 50 };
             _positionTimer.Tick += PositionTimer_Tick;
 
+            // ✅ ASCOLTA CAMBIO LINGUA
             LanguageManager.LanguageChanged += (s, e) => ApplyLanguage();
+
+            // ✅ Ripristina marker originali se l'utente annulla
+            this.FormClosing += (s, e) =>
+            {
+                if (this.DialogResult != DialogResult.OK)
+                {
+                    _musicEntry.MarkerIN = _originalMarkerIN;
+                    _musicEntry.MarkerINTRO = _originalMarkerINTRO;
+                    _musicEntry.MarkerMIX = _originalMarkerMIX;
+                    _musicEntry.MarkerOUT = _originalMarkerOUT;
+                }
+            };
         }
+
+        #region ============ GENRE / CATEGORY SUGGESTIONS ============
+
+        private void LoadGenreSuggestions()
+        {
+            try
+            {
+                _genreSuggestions = new AutoCompleteStringCollection();
+
+                // ✅ Carica SOLO generi presenti in altri brani dell'archivio
+                string dbcFile = _isClip ? "Clips.dbc" : "Music.dbc";
+                var existingGenres = GetDistinctFieldValues(dbcFile, "Genre");
+
+                foreach (var genre in existingGenres)
+                {
+                    if (!string.IsNullOrWhiteSpace(genre))
+                    {
+                        _genreSuggestions.Add(genre);
+                    }
+                }
+
+                cmbGenre.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                cmbGenre.AutoCompleteSource = AutoCompleteSource.CustomSource;
+                cmbGenre.AutoCompleteCustomSource = _genreSuggestions;
+
+                // ✅ Popola dropdown SOLO con generi presenti nell'archivio
+                cmbGenre.Items.Clear();
+                var allGenres = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (string g in existingGenres)
+                {
+                    if (!string.IsNullOrWhiteSpace(g))
+                        allGenres.Add(g);
+                }
+                cmbGenre.Items.AddRange(allGenres.OrderBy(g => g).ToArray());
+
+                Console.WriteLine($"[MusicEditor] ✅ Caricati {allGenres.Count} generi da {dbcFile} (solo brani esistenti)");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore LoadGenreSuggestions: {ex.Message}");
+                // ✅ Fallback: dropdown vuoto, l'utente può scrivere liberamente
+                cmbGenre.Items.Clear();
+            }
+        }
+
+        private void LoadCategorySuggestions()
+        {
+            try
+            {
+                string dbcFile = _isClip ? "Clips.dbc" : "Music.dbc";
+                var existingCategories = GetDistinctFieldValues(dbcFile, "Categories");
+
+                // Le categorie possono essere separate da virgola o punto e virgola
+                var allCats = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var catField in existingCategories)
+                {
+                    if (string.IsNullOrWhiteSpace(catField)) continue;
+                    var parts = catField.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var part in parts)
+                    {
+                        string trimmed = part.Trim();
+                        if (!string.IsNullOrWhiteSpace(trimmed))
+                            allCats.Add(trimmed);
+                    }
+                }
+
+                // Aggiungi anche categorie da Categories.dbc
+                try
+                {
+                    var categoryEntries = DbcManager.LoadFromCsv<CategoryEntry>("Categories.dbc");
+                    foreach (var ce in categoryEntries)
+                    {
+                        if (!string.IsNullOrWhiteSpace(ce.CategoryName))
+                            allCats.Add(ce.CategoryName.Trim());
+                    }
+                }
+                catch { }
+
+                _allCategories = allCats.OrderBy(c => c).ToList();
+
+                Console.WriteLine($"[MusicEditor] ✅ Caricate {allCats.Count} categorie da {dbcFile}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore LoadCategorySuggestions: {ex.Message}");
+            }
+        }
+
+        private void UpdateCategoryDisplay()
+        {
+            txtCategoriesDisplay.Text = _checkedCategories.Count > 0
+                ? string.Join("; ", _checkedCategories.OrderBy(c => c))
+                : "";
+        }
+
+        private void ShowCategoryPopup()
+        {
+            var popup = new Form
+            {
+                FormBorderStyle = FormBorderStyle.FixedToolWindow,
+                StartPosition = FormStartPosition.Manual,
+                ShowInTaskbar = false,
+                Text = LanguageManager.GetString("MusicEditor.Categories", "Categorie:"),
+                Size = new Size(280, 260),
+                BackColor = this.BackColor
+            };
+
+            var clb = new CheckedListBox
+            {
+                Dock = DockStyle.Fill,
+                CheckOnClick = true,
+                Font = new Font("Segoe UI", 9F),
+                BorderStyle = BorderStyle.None
+            };
+
+            // Popola con tutte le categorie (incluse quelle checked non presenti in _allCategories)
+            var allItems = new HashSet<string>(_allCategories, StringComparer.OrdinalIgnoreCase);
+            foreach (var c in _checkedCategories)
+                allItems.Add(c);
+
+            foreach (var cat in allItems.OrderBy(c => c))
+            {
+                int idx = clb.Items.Add(cat);
+                if (_checkedCategories.Contains(cat))
+                    clb.SetItemChecked(idx, true);
+            }
+
+            // Pannello in basso per aggiungere nuova categoria
+            var addPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 36,
+                BackColor = AppTheme.BgLight,
+                Padding = new Padding(4, 4, 4, 4)
+            };
+            var txtNew = new TextBox
+            {
+                Location = new Point(4, 6),
+                Size = new Size(168, 24),
+                Font = new Font("Segoe UI", 9F),
+                BackColor = AppTheme.Surface,
+                ForeColor = AppTheme.TextPrimary
+            };
+            var btnAdd = new Button
+            {
+                Text = "+ " + LanguageManager.GetString("Download.Add", "Aggiungi"),
+                Location = new Point(176, 4),
+                Size = new Size(90, 26),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                BackColor = AppTheme.Primary,
+                ForeColor = Color.White,
+                Cursor = Cursors.Hand
+            };
+            btnAdd.FlatAppearance.BorderSize = 0;
+            txtNew.KeyDown += (sk, ek) => { if (ek.KeyCode == Keys.Enter) { ek.SuppressKeyPress = true; btnAdd.PerformClick(); } };
+            btnAdd.Click += (s2, e2) =>
+            {
+                string newCat = txtNew.Text.Trim();
+                if (string.IsNullOrWhiteSpace(newCat)) return;
+
+                bool exists = false;
+                for (int i = 0; i < clb.Items.Count; i++)
+                {
+                    if (string.Equals(clb.Items[i].ToString(), newCat, StringComparison.OrdinalIgnoreCase))
+                    {
+                        clb.SetItemChecked(i, true);
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                {
+                    int idx = clb.Items.Add(newCat);
+                    clb.SetItemChecked(idx, true);
+                    if (!_allCategories.Contains(newCat))
+                    {
+                        _allCategories.Add(newCat);
+                        PersistNewCategory(newCat);
+                    }
+                }
+                txtNew.Text = "";
+            };
+            addPanel.Controls.Add(txtNew);
+            addPanel.Controls.Add(btnAdd);
+
+            popup.Controls.Add(clb);
+            popup.Controls.Add(addPanel);
+
+            // Posiziona sotto il TextBox
+            var screenPos = txtCategoriesDisplay.PointToScreen(new Point(0, txtCategoriesDisplay.Height));
+            popup.Location = screenPos;
+
+            // Quando il popup si chiude, aggiorna i dati
+            popup.FormClosed += (s2, e2) =>
+            {
+                _checkedCategories.Clear();
+                for (int i = 0; i < clb.Items.Count; i++)
+                {
+                    if (clb.GetItemChecked(i))
+                        _checkedCategories.Add(clb.Items[i].ToString());
+                }
+                UpdateCategoryDisplay();
+            };
+
+            popup.Show(this);
+        }
+
+        private void PersistNewCategory(string categoryName)
+        {
+            try
+            {
+                var existing = DbcManager.LoadFromCsv<CategoryEntry>("Categories.dbc");
+                bool alreadyExists = existing.Any(c =>
+                    string.Equals(c.CategoryName?.Trim(), categoryName, StringComparison.OrdinalIgnoreCase));
+
+                if (!alreadyExists)
+                {
+                    DbcManager.Insert("Categories.dbc", new CategoryEntry
+                    {
+                        CategoryName = categoryName,
+                        Color = "#607D8B",
+                        IgnoreHourlySeparation = 0
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore salvataggio nuova categoria: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Legge tutti i valori distinti di un campo dal file DBC specificato.
+        /// </summary>
+        private List<string> GetDistinctFieldValues(string dbcFile, string fieldName)
+        {
+            var values = new List<string>();
+            try
+            {
+                if (_isClip)
+                {
+                    var allClips = DbcManager.LoadFromCsv<ClipEntry>(dbcFile);
+                    if (allClips != null)
+                    {
+                        foreach (var clip in allClips)
+                        {
+                            string val = fieldName == "Genre" ? clip.Genre : clip.Categories;
+                            if (!string.IsNullOrWhiteSpace(val) && !values.Contains(val))
+                                values.Add(val);
+                        }
+                    }
+                }
+                else
+                {
+                    var allMusic = DbcManager.LoadFromCsv<MusicEntry>(dbcFile);
+                    if (allMusic != null)
+                    {
+                        foreach (var entry in allMusic)
+                        {
+                            string val = fieldName == "Genre" ? entry.Genre : entry.Categories;
+                            if (!string.IsNullOrWhiteSpace(val) && !values.Contains(val))
+                                values.Add(val);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore lettura {dbcFile}/{fieldName}: {ex.Message}");
+            }
+            return values;
+        }
+
+        #endregion
+
+        #region ============ ZOOM ============
+
+        private void SetupZoomControls()
+        {
+            trkZoom.ValueChanged += TrkZoom_ValueChanged;
+            hScrollWaveform.Scroll += HScrollWaveform_Scroll;
+
+            // ✅ Mouse wheel zoom sulla waveform
+            picWaveform.MouseWheel += PicWaveform_MouseWheel;
+        }
+
+        private void TrkZoom_ValueChanged(object sender, EventArgs e)
+        {
+            _zoomLevel = trkZoom.Value / 100f;
+            lblZoomPercent.Text = $"{trkZoom.Value}%";
+            UpdateScrollBarForZoom();
+            RecreateWaveformBitmapWithBoost();
+            picWaveform.Invalidate();
+        }
+
+        private void PicWaveform_MouseWheel(object sender, MouseEventArgs e)
+        {
+            if (_waveformData == null || _waveformData.Length == 0)
+            {
+                int delta0 = e.Delta > 0 ? 50 : -50;
+                int newVal0 = Math.Max(trkZoom.Minimum, Math.Min(trkZoom.Maximum, trkZoom.Value + delta0));
+                trkZoom.Value = newVal0;
+                return;
+            }
+
+            _userScrolled = true;
+
+            float oldZoom = _zoomLevel;
+            int delta = e.Delta > 0 ? 50 : -50;
+            int newVal = Math.Max(trkZoom.Minimum, Math.Min(trkZoom.Maximum, trkZoom.Value + delta));
+            float newZoom = newVal / 100f;
+
+            // Calculate the sample index under cursor before zoom
+            int oldVisible = (int)(_waveformData.Length / oldZoom);
+            oldVisible = Math.Max(1, Math.Min(oldVisible, _waveformData.Length));
+            float cursorRatio = (float)e.X / picWaveform.Width;
+            float sampleUnderCursor = _scrollOffset + cursorRatio * oldVisible;
+
+            // Apply zoom
+            _zoomLevel = newZoom;
+            trkZoom.ValueChanged -= TrkZoom_ValueChanged;
+            trkZoom.Value = newVal;
+            trkZoom.ValueChanged += TrkZoom_ValueChanged;
+            lblZoomPercent.Text = $"{newVal}%";
+
+            // Adjust scroll offset so the sample under cursor stays at the same screen position
+            int newVisible = (int)(_waveformData.Length / newZoom);
+            newVisible = Math.Max(1, Math.Min(newVisible, _waveformData.Length));
+            int newOffset = (int)(sampleUnderCursor - cursorRatio * newVisible);
+            int maxOffset = Math.Max(0, _waveformData.Length - newVisible);
+            _scrollOffset = Math.Max(0, Math.Min(newOffset, maxOffset));
+
+            UpdateScrollBarForZoom();
+            RecreateWaveformBitmapWithBoost();
+            picWaveform.Invalidate();
+        }
+
+        private void HScrollWaveform_Scroll(object sender, ScrollEventArgs e)
+        {
+            if (_waveformData == null || _waveformData.Length == 0) return;
+
+            _userScrolled = true;
+
+            int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+            int maxOffset = Math.Max(0, _waveformData.Length - visibleSamples);
+            _scrollOffset = (int)((float)hScrollWaveform.Value / Math.Max(1, hScrollWaveform.Maximum - hScrollWaveform.LargeChange) * maxOffset);
+            _scrollOffset = Math.Max(0, Math.Min(_scrollOffset, maxOffset));
+
+            RecreateWaveformBitmapWithBoost();
+            picWaveform.Invalidate();
+        }
+
+        private void UpdateScrollBarForZoom()
+        {
+            if (_zoomLevel <= 1.01f)
+            {
+                hScrollWaveform.Visible = false;
+                _scrollOffset = 0;
+            }
+            else
+            {
+                hScrollWaveform.Visible = true;
+                hScrollWaveform.Maximum = 1000;
+                hScrollWaveform.LargeChange = Math.Max(1, (int)(1000 / _zoomLevel));
+
+                // Mantieni posizione relativa
+                if (_waveformData != null && _waveformData.Length > 0)
+                {
+                    int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+                    int maxOffset = Math.Max(0, _waveformData.Length - visibleSamples);
+                    float ratio = maxOffset > 0 ? (float)_scrollOffset / maxOffset : 0f;
+                    hScrollWaveform.Value = (int)(ratio * (hScrollWaveform.Maximum - hScrollWaveform.LargeChange));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converte una posizione in millisecondi in pixel X sullo schermo della waveform (con zoom e scroll).
+        /// </summary>
+        private float MsToPixelX(int ms, int totalMs)
+        {
+            if (totalMs == 0 || _waveformData == null || _waveformData.Length == 0) return 0;
+
+            int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+            visibleSamples = Math.Max(1, Math.Min(visibleSamples, _waveformData.Length));
+
+            float sampleIndex = (float)ms / totalMs * _waveformData.Length;
+            float visibleIndex = sampleIndex - _scrollOffset;
+            float pixelX = visibleIndex / visibleSamples * picWaveform.Width;
+            return pixelX;
+        }
+
+        /// <summary>
+        /// Converte una posizione pixel X sullo schermo in millisecondi (con zoom e scroll).
+        /// </summary>
+        private int PixelXToMs(int pixelX, int totalMs)
+        {
+            if (totalMs == 0 || _waveformData == null || _waveformData.Length == 0) return 0;
+
+            int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+            visibleSamples = Math.Max(1, Math.Min(visibleSamples, _waveformData.Length));
+
+            float sampleIndex = (float)pixelX / picWaveform.Width * visibleSamples + _scrollOffset;
+            int ms = (int)(sampleIndex / _waveformData.Length * totalMs);
+            return Math.Max(0, Math.Min(ms, totalMs));
+        }
+
+        #endregion
+
+        #region ============ VOLUME BOOST (ffmpeg) ============
+
+        private void SetupVolumeControls()
+        {
+            trkVolume.ValueChanged += TrkVolume_ValueChanged;
+            btnApplyVolume.Click += BtnApplyVolume_Click;
+        }
+
+        private void ChkColoredPeaks_CheckedChanged(object sender, EventArgs e)
+        {
+            _showColoredPeaks = chkColoredPeaks.Checked;
+            RecreateWaveformBitmapWithBoost();
+            picWaveform.Invalidate();
+        }
+
+        private void TrkVolume_ValueChanged(object sender, EventArgs e)
+        {
+            _volumeBoostDb = trkVolume.Value;
+            lblVolumeDb.Text = $"{(_volumeBoostDb >= 0 ? "+" : "")}{_volumeBoostDb} dB";
+
+            // ✅ Colore dinamico
+            if (_volumeBoostDb > 0)
+                lblVolumeDb.ForeColor = Color.FromArgb(255, Math.Max(0, 255 - (int)(_volumeBoostDb * 12)), 0);
+            else if (_volumeBoostDb < 0)
+                lblVolumeDb.ForeColor = Color.FromArgb(0, Math.Max(100, 255 + (int)(_volumeBoostDb * 8)), 255);
+            else
+                lblVolumeDb.ForeColor = Color.Lime;
+
+            // ✅ Preview visivo in tempo reale sulla waveform
+            RecreateWaveformBitmapWithBoost();
+            picWaveform.Invalidate();
+        }
+
+        /// <summary>
+        /// Ricrea la bitmap della waveform applicando il boost visivo e lo zoom.
+        /// </summary>
+        private void RecreateWaveformBitmapWithBoost()
+        {
+            if (_originalWaveformData == null || _originalWaveformData.Length == 0) return;
+
+            try
+            {
+                float linearGain = (float)Math.Pow(10.0, _volumeBoostDb / 20.0);
+
+                // Applica gain ai dati
+                _waveformData = new float[_originalWaveformData.Length];
+                for (int i = 0; i < _originalWaveformData.Length; i++)
+                {
+                    _waveformData[i] = Math.Min(1.0f, _originalWaveformData[i] * linearGain);
+                }
+
+                // Calcola la porzione visibile (zoom + scroll)
+                int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+                visibleSamples = Math.Max(1, Math.Min(visibleSamples, _waveformData.Length));
+                int startSample = Math.Max(0, Math.Min(_scrollOffset, _waveformData.Length - visibleSamples));
+
+                int width = Math.Max(1, picWaveform.Width);
+                int height = Math.Max(1, picWaveform.Height > 0 ? picWaveform.Height : 350);
+
+                _waveformBitmap?.Dispose();
+                _waveformBitmap = new Bitmap(width, height);
+
+                using (Graphics g = Graphics.FromImage(_waveformBitmap))
+                {
+                    g.Clear(Color.FromArgb(10, 10, 10));
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.CompositingQuality = CompositingQuality.HighQuality;
+
+                    int midY = height / 2;
+
+                    for (int px = 0; px < width; px++)
+                    {
+                        // Mappa pixel -> sample nello zoom
+                        int sampleIdx = startSample + (int)((float)px / width * visibleSamples);
+                        sampleIdx = Math.Max(0, Math.Min(sampleIdx, _waveformData.Length - 1));
+
+                        float amplitude = _waveformData[sampleIdx] * (height / 2) * 0.98f;
+
+                        // Colore basato sull'ampiezza (solo se _showColoredPeaks è attivo)
+                        Color colorTop, colorBottom;
+                        if (_showColoredPeaks)
+                        {
+                            if (_waveformData[sampleIdx] >= 0.98f)
+                            {
+                                colorTop = Color.FromArgb(255, 40, 40);
+                                colorBottom = Color.FromArgb(220, 30, 30);
+                            }
+                            else if (_waveformData[sampleIdx] >= 0.8f)
+                            {
+                                colorTop = Color.FromArgb(255, 200, 0);
+                                colorBottom = Color.FromArgb(220, 170, 0);
+                            }
+                            else
+                            {
+                                colorTop = Color.FromArgb(0, 255, 100);
+                                colorBottom = Color.FromArgb(0, 200, 80);
+                            }
+                        }
+                        else
+                        {
+                            colorTop = Color.FromArgb(0, 200, 120);
+                            colorBottom = Color.FromArgb(0, 160, 90);
+                        }
+
+                        using (Pen penTop = new Pen(colorTop, 1.2f))
+                        using (Pen penBottom = new Pen(colorBottom, 1.2f))
+                        {
+                            g.DrawLine(penTop, px, midY, px, midY - amplitude);
+                            g.DrawLine(penBottom, px, midY, px, midY + amplitude);
+                        }
+                    }
+
+                    // Linea centrale
+                    using (Pen penCenter = new Pen(Color.FromArgb(80, 80, 80), 1f))
+                    {
+                        g.DrawLine(penCenter, 0, midY, width, midY);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ❌ Errore RecreateWaveformBitmapWithBoost: {ex.Message}");
+            }
+        }
+
+        private async void BtnApplyVolume_Click(object sender, EventArgs e)
+        {
+            if (_volumeBoostDb == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MusicEditor.VolumeNoChange", "The volume is at 0 dB, no changes to apply."),
+                    LanguageManager.GetString("Common.Info", "Info"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            string ffmpegPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe");
+            if (!File.Exists(ffmpegPath))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MusicEditor.FfmpegNotFound", "❌ ffmpeg.exe not found in application folder!"),
+                    LanguageManager.GetString("Common.Error", "Error"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string sourceFile = _musicEntry.FilePath;
+            if (!File.Exists(sourceFile))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MusicEditor.FileNotFound", "❌ File not found:\n{0}"),
+                    LanguageManager.GetString("Common.Error", "Error"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            var result = MessageBox.Show(
+                string.Format(
+                    LanguageManager.GetString("MusicEditor.VolumeConfirm",
+                    "Apply {0} dB to the file?\n\n{1}\n\n⚠️ This will overwrite the original file!"),
+                    (_volumeBoostDb >= 0 ? "+" : "") + _volumeBoostDb, sourceFile),
+                LanguageManager.GetString("MusicEditor.VolumeTitle", "🔊 Apply Gain Volume"),
+                MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+
+            if (result != DialogResult.Yes) return;
+
+            // ✅ Ferma la riproduzione
+            _waveOut?.Stop();
+            _isPlaying = false;
+            _positionTimer.Stop();
+
+            // ✅ Chiudi audio reader per liberare il file
+            _audioReader?.Dispose();
+            _audioReader = null;
+            _waveOut?.Dispose();
+            _waveOut = null;
+
+            btnApplyVolume.Enabled = false;
+            btnApplyVolume.Text = "⏳...";
+
+            try
+            {
+                string ext = Path.GetExtension(sourceFile);
+                string tempFile = Path.Combine(Path.GetDirectoryName(sourceFile),
+                    Path.GetFileNameWithoutExtension(sourceFile) + "_boosted" + ext);
+
+                string volumeFilter = $"volume={_volumeBoostDb}dB";
+                string arguments = $"-i \"{sourceFile}\" -af \"{volumeFilter}\" -y \"{tempFile}\"";
+
+                Console.WriteLine($"[MusicEditor] 🔊 ffmpeg: {arguments}");
+
+                bool success = await Task.Run(() =>
+                {
+                    try
+                    {
+                        var process = new Process
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = ffmpegPath,
+                                Arguments = arguments,
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true
+                            }
+                        };
+
+                        process.Start();
+                        string stderr = process.StandardError.ReadToEnd();
+                        process.WaitForExit(60000); // timeout 60s
+
+                        Console.WriteLine($"[MusicEditor] ffmpeg output: {stderr}");
+
+                        if (process.ExitCode == 0 && File.Exists(tempFile))
+                        {
+                            // Sovrascrivi il file originale
+                            File.Delete(sourceFile);
+                            File.Move(tempFile, sourceFile);
+                            return true;
+                        }
+                        else
+                        {
+                            if (File.Exists(tempFile)) File.Delete(tempFile);
+                            return false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[MusicEditor] ❌ ffmpeg error: {ex.Message}");
+                        return false;
+                    }
+                });
+
+                if (success)
+                {
+                    // ✅ Reset slider e ricarica
+                    trkVolume.Value = 0;
+                    _volumeBoostDb = 0;
+
+                    _lastLoadedFile = ""; // forza ricaricamento waveform
+                    LoadAudioFile();
+
+                   
+                }
+                else
+                {
+                    // Ricarica comunque l'audio originale
+                    LoadAudioFile();
+
+                    MessageBox.Show(
+                        LanguageManager.GetString("MusicEditor.VolumeError", "❌ Errore durante l'applicazione del volume con ffmpeg."),
+                        LanguageManager.GetString("Common.Error", "Errore"),
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ❌ Errore volume boost: {ex.Message}");
+                LoadAudioFile(); // ricarica
+            }
+            finally
+            {
+                btnApplyVolume.Enabled = true;
+                btnApplyVolume.Text = "APPLICA";
+            }
+        }
+
+        #endregion
+
+        #region ============ VU METER ============
+
+        private void SetupVuMeter()
+        {
+            vuMeterPanel.Paint += VuMeterPanel_Paint;
+
+            _vuDecayTimer = new System.Windows.Forms.Timer { Interval = 30 };
+            _vuDecayTimer.Tick += VuDecayTimer_Tick;
+            _vuDecayTimer.Start();
+        }
+
+        private void VuDecayTimer_Tick(object sender, EventArgs e)
+        {
+            if (_isPlaying && _audioReader != null)
+            {
+                // ✅ Leggi livelli audio reali dalla posizione corrente
+                try
+                {
+                    if (_waveformData != null && _waveformData.Length > 0)
+                    {
+                        int totalMs = (int)_audioReader.TotalTime.TotalMilliseconds;
+                        int currentMs = (int)_audioReader.CurrentTime.TotalMilliseconds;
+
+                        if (totalMs > 0)
+                        {
+                            int sampleIdx = (int)((float)currentMs / totalMs * _waveformData.Length);
+                            sampleIdx = Math.Max(0, Math.Min(sampleIdx, _waveformData.Length - 1));
+
+                            // Simula stereo con leggera variazione
+                            float level = _waveformData[sampleIdx];
+                            float variation = (float)(new Random().NextDouble() * 0.05 - 0.025);
+
+                            float targetL = Math.Min(1.0f, level + variation);
+                            float targetR = Math.Min(1.0f, level - variation);
+
+                            // Smooth attack/release
+                            _vuLevelLeft = _vuLevelLeft * 0.3f + targetL * 0.7f;
+                            _vuLevelRight = _vuLevelRight * 0.3f + targetR * 0.7f;
+
+                            // Peak hold
+                            if (_vuLevelLeft > _vuPeakLeft) _vuPeakLeft = _vuLevelLeft;
+                            else _vuPeakLeft = Math.Max(0, _vuPeakLeft - 0.005f);
+
+                            if (_vuLevelRight > _vuPeakRight) _vuPeakRight = _vuLevelRight;
+                            else _vuPeakRight = Math.Max(0, _vuPeakRight - 0.005f);
+                        }
+                    }
+                }
+                catch { }
+            }
+            else
+            {
+                // Decay quando non in play
+                _vuLevelLeft = Math.Max(0, _vuLevelLeft - 0.03f);
+                _vuLevelRight = Math.Max(0, _vuLevelRight - 0.03f);
+                _vuPeakLeft = Math.Max(0, _vuPeakLeft - 0.008f);
+                _vuPeakRight = Math.Max(0, _vuPeakRight - 0.008f);
+            }
+
+            if (vuMeterPanel.IsHandleCreated && !vuMeterPanel.IsDisposed)
+            {
+                vuMeterPanel.Invalidate();
+            }
+        }
+
+        private void VuMeterPanel_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.HighQuality;
+
+            int w = vuMeterPanel.Width;
+            int h = vuMeterPanel.Height;
+            int barHeight = (h - 6) / 2; // 2 barre (L + R)
+            int yL = 2;
+            int yR = yL + barHeight + 2;
+
+            g.Clear(Color.FromArgb(15, 15, 15));
+
+            // ✅ Disegna barra sinistra (L)
+            DrawVuBar(g, yL, barHeight, w, _vuLevelLeft, _vuPeakLeft, "L");
+
+            // ✅ Disegna barra destra (R)
+            DrawVuBar(g, yR, barHeight, w, _vuLevelRight, _vuPeakRight, "R");
+        }
+
+        private void DrawVuBar(Graphics g, int y, int barHeight, int totalWidth, float level, float peak, string channel)
+        {
+            int labelWidth = 14;
+            int barX = labelWidth;
+            int barW = totalWidth - labelWidth - 4;
+
+            // Label canale
+            using (Font f = new Font("Consolas", 7, FontStyle.Bold))
+            using (SolidBrush b = new SolidBrush(Color.Gray))
+            {
+                g.DrawString(channel, f, b, 1, y);
+            }
+
+            // Background barra
+            using (SolidBrush bg = new SolidBrush(Color.FromArgb(25, 25, 25)))
+            {
+                g.FillRectangle(bg, barX, y, barW, barHeight);
+            }
+
+            // Segmenti colorati
+            int levelWidth = (int)(level * barW);
+            int greenEnd = (int)(barW * 0.6f);
+            int yellowEnd = (int)(barW * 0.85f);
+
+            if (levelWidth > 0)
+            {
+                // Green zone
+                int greenW = Math.Min(levelWidth, greenEnd);
+                if (greenW > 0)
+                {
+                    using (LinearGradientBrush brush = new LinearGradientBrush(
+                        new Rectangle(barX, y, greenW, barHeight),
+                        Color.FromArgb(0, 180, 0), Color.FromArgb(0, 255, 60), LinearGradientMode.Horizontal))
+                    {
+                        g.FillRectangle(brush, barX, y, greenW, barHeight);
+                    }
+                }
+
+                // Yellow zone
+                if (levelWidth > greenEnd)
+                {
+                    int yellowW = Math.Min(levelWidth - greenEnd, yellowEnd - greenEnd);
+                    if (yellowW > 0)
+                    {
+                        using (LinearGradientBrush brush = new LinearGradientBrush(
+                            new Rectangle(barX + greenEnd, y, yellowW, barHeight),
+                            Color.FromArgb(255, 255, 0), Color.FromArgb(255, 180, 0), LinearGradientMode.Horizontal))
+                        {
+                            g.FillRectangle(brush, barX + greenEnd, y, yellowW, barHeight);
+                        }
+                    }
+                }
+
+                // Red zone
+                if (levelWidth > yellowEnd)
+                {
+                    int redW = levelWidth - yellowEnd;
+                    using (LinearGradientBrush brush = new LinearGradientBrush(
+                        new Rectangle(barX + yellowEnd, y, Math.Max(1, redW), barHeight),
+                        Color.FromArgb(255, 80, 0), Color.FromArgb(255, 0, 0), LinearGradientMode.Horizontal))
+                    {
+                        g.FillRectangle(brush, barX + yellowEnd, y, redW, barHeight);
+                    }
+                }
+            }
+
+            // ✅ Peak indicator (linea sottile)
+            int peakX = barX + (int)(peak * barW);
+            peakX = Math.Max(barX, Math.Min(peakX, barX + barW - 1));
+            Color peakColor = peak >= 0.85f ? Color.Red : (peak >= 0.6f ? Color.Yellow : Color.Lime);
+            using (Pen peakPen = new Pen(peakColor, 2f))
+            {
+                g.DrawLine(peakPen, peakX, y, peakX, y + barHeight);
+            }
+
+            // ✅ Graduazione dB (tacche)
+            float[] dbMarks = { -30, -20, -10, -6, -3, 0 };
+            using (Pen tickPen = new Pen(Color.FromArgb(80, 80, 80), 1f))
+            using (Font tickFont = new Font("Consolas", 6))
+            using (SolidBrush tickBrush = new SolidBrush(Color.FromArgb(100, 100, 100)))
+            {
+                foreach (float db in dbMarks)
+                {
+                    // dB to linear: 10^(dB/20), normalizzato su 0dB = 1.0
+                    float linear = (float)Math.Pow(10.0, db / 20.0);
+                    int tickX = barX + (int)(linear * barW);
+                    if (tickX >= barX && tickX <= barX + barW)
+                    {
+                        g.DrawLine(tickPen, tickX, y, tickX, y + barHeight);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region ============ LANGUAGE ============
 
         private void ApplyLanguage()
         {
-            if (_isClip)
+            try
             {
-                this.Text = string.Format(
-                    LanguageManager.GetString("MusicEditor.Title.Jingle"),
-                    _musicEntry.Title);
+                // ✅ TITOLO FINESTRA
+                string windowTitle = _isClip
+                    ? LanguageManager.GetString("MusicEditor.WindowTitleClip", "🎵 Editing Jingle: {0}")
+                    : LanguageManager.GetString("MusicEditor.WindowTitle", "🎵 Editing: {0} - {1}");
+
+                if (_isClip)
+                {
+                    this.Text = string.Format(windowTitle, _musicEntry.Title);
+                }
+                else
+                {
+                    this.Text = string.Format(windowTitle, _musicEntry.Artist, _musicEntry.Title);
+                }
+
+                // ✅ TOOLBAR
+                btnPlay.Text = LanguageManager.GetString("MusicEditor.Play", "▶ PLAY");
+                btnStop.Text = LanguageManager.GetString("MusicEditor.Stop", "⏹ STOP");
+                btnLoop.Text = LanguageManager.GetString("MusicEditor.Loop", "🔁 LOOP");
+
+                // ✅ MARKER LABELS
+                lblMarkerInLabel.Text = LanguageManager.GetString("MusicEditor.MarkerIN", "IN");
+                lblMarkerIntroLabel.Text = LanguageManager.GetString("MusicEditor.MarkerINTRO", "INTRO");
+                lblMarkerMixLabel.Text = LanguageManager.GetString("MusicEditor.MarkerMIX", "MIX");
+                lblMarkerOutLabel.Text = LanguageManager.GetString("MusicEditor.MarkerOUT", "OUT");
+
+                // ✅ METADATA LABELS
+                lblTitle.Text = LanguageManager.GetString("MusicEditor.Title", "Titolo:");
+                lblArtist.Text = LanguageManager.GetString("MusicEditor.Artist", "Artista:");
+                lblAlbum.Text = LanguageManager.GetString("MusicEditor.Album", "Album:");
+                lblYear.Text = LanguageManager.GetString("MusicEditor.Year", "Anno:");
+                lblGenre.Text = LanguageManager.GetString("MusicEditor.Genre", "Genere:");
+                lblCategories.Text = LanguageManager.GetString("MusicEditor.Categories", "Categorie:");
+                lblFilePath.Text = LanguageManager.GetString("MusicEditor.FilePath", "File Audio:");
+
+                // ✅ GROUPBOX
+                grpPeriod.Text = LanguageManager.GetString("MusicEditor.ValidityPeriod", "📅 Periodo Validità");
+                grpMonths.Text = LanguageManager.GetString("MusicEditor.AllowedMonths", "📆 Mesi Consentiti");
+                grpDays.Text = LanguageManager.GetString("MusicEditor.AllowedDays", "📅 Giorni Consentiti");
+                grpHours.Text = LanguageManager.GetString("MusicEditor.AllowedHours", "🕐 Ore Consentite");
+
+                // ✅ CHECKBOX VALIDITÀ
+                chkEnableValidFrom.Text = LanguageManager.GetString("MusicEditor.ValidFrom", "Da");
+                chkEnableValidTo.Text = LanguageManager.GetString("MusicEditor.ValidTo", "A");
+
+                // ✅ BOTTONI
+                btnSave.Text = LanguageManager.GetString("MusicEditor.Save", "💾 Salva");
+                btnCancel.Text = LanguageManager.GetString("MusicEditor.Cancel", "✖ Annulla");
+
+                // ✅ VOLUME
+                grpVolume.Text = LanguageManager.GetString("MusicEditor.VolumeBoost", "🔊 Volume Boost");
+                btnApplyVolume.Text = LanguageManager.GetString("MusicEditor.Apply", "APPLY");
+
+                // ✅ AGGIORNA NOMI MESI
+                UpdateMonthNames();
+
+                // ✅ AGGIORNA NOMI GIORNI
+                UpdateDayNames();
             }
-            else
+            catch (Exception ex)
             {
-                this.Text = string.Format(
-                    LanguageManager.GetString("MusicEditor.Title.Music"),
-                    _musicEntry.Artist,
-                    _musicEntry.Title);
+                Console.WriteLine($"[MusicEditor] Errore ApplyLanguage: {ex.Message}");
             }
-
-            if (!_isPlaying)
-            {
-                btnPlay.Text = "▶ " + LanguageManager.GetString("MusicEditor.Play");
-            }
-            else
-            {
-                btnPlay.Text = "⏸ " + LanguageManager.GetString("MusicEditor.Pause");
-            }
-
-            btnStop.Text = "⏹ " + LanguageManager.GetString("MusicEditor.Stop");
-            btnLoop.Text = "🔁 " + LanguageManager.GetString("MusicEditor.Loop");
-
-            lblMarkerInLabel.Text = LanguageManager.GetString("MusicEditor.Marker.In");
-            lblMarkerIntroLabel.Text = LanguageManager.GetString("MusicEditor.Marker.Intro");
-            lblMarkerMixLabel.Text = LanguageManager.GetString("MusicEditor.Marker.Mix");
-            lblMarkerOutLabel.Text = LanguageManager.GetString("MusicEditor.Marker.Out");
-
-            lblTitle.Text = LanguageManager.GetString("MusicEditor.Label.Title");
-            lblArtist.Text = LanguageManager.GetString("MusicEditor.Label.Artist");
-            lblAlbum.Text = LanguageManager.GetString("MusicEditor.Label.Album");
-            lblYear.Text = LanguageManager.GetString("MusicEditor.Label.Year");
-            lblGenre.Text = LanguageManager.GetString("MusicEditor.Label.Genre");
-            lblCategories.Text = LanguageManager.GetString("MusicEditor.Label.Categories");
-            lblFilePath.Text = LanguageManager.GetString("MusicEditor.Label.FilePath");
-
-            grpPeriod.Text = "📅 " + LanguageManager.GetString("MusicEditor.Group.ValidityPeriod");
-            grpMonths.Text = "📆 " + LanguageManager.GetString("MusicEditor.Group.AllowedMonths");
-            grpDays.Text = "📅 " + LanguageManager.GetString("MusicEditor.Group.AllowedDays");
-            grpHours.Text = "🕐 " + LanguageManager.GetString("MusicEditor.Group.AllowedHours");
-
-            chkEnableValidFrom.Text = LanguageManager.GetString("MusicEditor.ValidFrom");
-            chkEnableValidTo.Text = LanguageManager.GetString("MusicEditor.ValidTo");
-
-            btnSave.Text = "💾 " + LanguageManager.GetString("Common.Save");
-            btnCancel.Text = "✖ " + LanguageManager.GetString("Common.Cancel");
         }
+
+        private void UpdateMonthNames()
+        {
+            try
+            {
+                string[] monthKeys = {
+                    "Common.MonthJan", "Common.MonthFeb", "Common.MonthMar", "Common.MonthApr",
+                    "Common.MonthMay", "Common.MonthJun", "Common.MonthJul", "Common.MonthAug",
+                    "Common.MonthSep", "Common.MonthOct", "Common.MonthNov", "Common.MonthDec"
+                };
+
+                string[] defaultMonths = { "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic" };
+
+                for (int i = 0; i < 12 && i < _chkMonths.Length; i++)
+                {
+                    if (_chkMonths[i] != null)
+                    {
+                        _chkMonths[i].Text = LanguageManager.GetString(monthKeys[i], defaultMonths[i]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] Errore UpdateMonthNames: {ex.Message}");
+            }
+        }
+
+        private void UpdateDayNames()
+        {
+            try
+            {
+                string[] dayKeys = {
+                    "Common.DaySunday", "Common.DayMonday", "Common.DayTuesday", "Common.DayWednesday",
+                    "Common.DayThursday", "Common.DayFriday", "Common.DaySaturday"
+                };
+
+                string[] defaultDays = { "Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab" };
+
+                for (int i = 0; i < 7 && i < _chkDays.Length; i++)
+                {
+                    if (_chkDays[i] != null)
+                    {
+                        _chkDays[i].Text = LanguageManager.GetString(dayKeys[i], defaultDays[i]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] Errore UpdateDayNames: {ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region ============ THEME ============
 
         private void ApplyTheme()
         {
@@ -179,6 +1180,10 @@ namespace AirManager.Forms
             btnCancel.ForeColor = Color.White;
             btnCancel.FlatAppearance.BorderSize = 0;
         }
+
+        #endregion
+
+        #region ============ RESET BUTTONS ============
 
         private void CreateResetButtons()
         {
@@ -277,21 +1282,25 @@ namespace AirManager.Forms
             }
 
             picWaveform.Invalidate();
+            Console.WriteLine($"[MusicEditor] ✅ Marker {markerType} resettato");
         }
+
+        #endregion
+
+        #region ============ VALIDITY CONTROLS ============
 
         private void CreateValidityControls()
         {
             _chkMonths = new CheckBox[12];
+            string[] monthNames = { "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic" };
 
             for (int i = 0; i < 12; i++)
             {
-                string monthName = LanguageManager.GetString("MusicEditor.Month." + (i + 1).ToString());
-
                 _chkMonths[i] = new CheckBox
                 {
-                    Text = monthName,
+                    Text = monthNames[i],
                     Location = new Point(8 + (i * 55), 20),
-                    Size = new Size(48, 30),
+                    Size = new Size(48, 25),
                     Checked = true,
                     Appearance = Appearance.Button,
                     TextAlign = ContentAlignment.MiddleCenter,
@@ -312,16 +1321,15 @@ namespace AirManager.Forms
             }
 
             _chkDays = new CheckBox[7];
+            string[] dayNames = { "Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab" };
 
             for (int i = 0; i < 7; i++)
             {
-                string dayName = LanguageManager.GetString("MusicEditor.Day." + i.ToString());
-
                 _chkDays[i] = new CheckBox
                 {
-                    Text = dayName,
+                    Text = dayNames[i],
                     Location = new Point(8 + (i * 68), 20),
-                    Size = new Size(60, 30),
+                    Size = new Size(60, 25),
                     Checked = true,
                     Appearance = Appearance.Button,
                     TextAlign = ContentAlignment.MiddleCenter,
@@ -345,11 +1353,13 @@ namespace AirManager.Forms
 
             for (int i = 0; i < 24; i++)
             {
+                string hourText = string.Format("{0:D2}", i);
+
                 _chkHours[i] = new CheckBox
                 {
-                    Text = i.ToString("D2"),  // ✅ CORRETTO: 00, 01, 02... 23
+                    Text = hourText,
                     Location = new Point(8 + (i * 34), 18),
-                    Size = new Size(30, 30),
+                    Size = new Size(30, 22),
                     Checked = true,
                     Appearance = Appearance.Button,
                     TextAlign = ContentAlignment.MiddleCenter,
@@ -370,6 +1380,10 @@ namespace AirManager.Forms
             }
         }
 
+        #endregion
+
+        #region ============ LOAD METADATA / AUDIO ============
+
         private void LoadMetadata()
         {
             txtMarkerIn.Text = FormatTime(_musicEntry.MarkerIN);
@@ -383,14 +1397,17 @@ namespace AirManager.Forms
             txtAlbum.Text = _musicEntry.Album ?? "";
             numYear.Value = _musicEntry.Year > 0 ? _musicEntry.Year : DateTime.Now.Year;
             cmbGenre.Text = _musicEntry.Genre ?? "";
-            txtCategories.Text = _musicEntry.Categories ?? "";
 
-            cmbGenre.Items.Clear();
-            cmbGenre.Items.AddRange(new string[] {
-                "Pop", "Rock", "Dance", "Hip Hop", "R&B", "Indie", "Electronic",
-                "Jazz", "Blues", "Country", "Reggae", "Latin", "Classical",
-                "Metal", "Punk", "Folk", "Disco", "House", "Techno", "Trance", "Unknown"
-            });
+            // Popola le categorie selezionate dai dati del brano
+            _checkedCategories.Clear();
+            string currentCats = _musicEntry.Categories ?? "";
+            foreach (var part in currentCats.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                string trimmed = part.Trim();
+                if (!string.IsNullOrWhiteSpace(trimmed))
+                    _checkedCategories.Add(trimmed);
+            }
+            UpdateCategoryDisplay();
 
             LoadValidityData();
         }
@@ -459,11 +1476,9 @@ namespace AirManager.Forms
             {
                 if (!File.Exists(_musicEntry.FilePath))
                 {
-                    MessageBox.Show(
-                        string.Format(LanguageManager.GetString("MusicEditor.Error.FileNotFound"), _musicEntry.FilePath),
-                        LanguageManager.GetString("Common.Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                    string errorMsg = LanguageManager.GetString("MusicEditor.FileNotFound", "❌ File non trovato:\n{0}");
+                    string errorTitle = LanguageManager.GetString("Common.Error", "Errore");
+                    MessageBox.Show(string.Format(errorMsg, _musicEntry.FilePath), errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -478,7 +1493,7 @@ namespace AirManager.Forms
                         {
                             _isPlaying = false;
                             _positionTimer.Stop();
-                            btnPlay.Text = "▶ " + LanguageManager.GetString("MusicEditor.Play");
+                            btnPlay.Text = LanguageManager.GetString("MusicEditor.Play", "▶ PLAY");
                             btnPlay.BackColor = Color.FromArgb(40, 160, 40);
                             _audioReader.Position = 0;
                             lblCurrentPosition.Text = "00:00:00.000";
@@ -488,11 +1503,15 @@ namespace AirManager.Forms
                     }
                 };
 
-                int deviceNumber = SettingsForm.GetAudioDeviceNumber();
+                int previewDeviceNumber = -1;  // Use default audio output device
 
-                if (deviceNumber >= 0)
+                if (previewDeviceNumber >= 0 && previewDeviceNumber < WaveOut.DeviceCount)
                 {
-                    _waveOut.DeviceNumber = deviceNumber;
+                    _waveOut.DeviceNumber = previewDeviceNumber;
+                }
+                else
+                {
+                    _waveOut.DeviceNumber = -1;
                 }
 
                 _waveOut.Init(_audioReader);
@@ -510,16 +1529,19 @@ namespace AirManager.Forms
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[MusicEditor] ❌ Errore caricamento audio: {ex.Message}");
                 if (this.IsHandleCreated && !this.IsDisposed)
                 {
-                    MessageBox.Show(
-                        string.Format(LanguageManager.GetString("MusicEditor.Error.LoadAudio"), ex.Message),
-                        LanguageManager.GetString("Common.Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                    string errorMsg = LanguageManager.GetString("MusicEditor.LoadError", "❌ Errore caricamento audio:\n{0}");
+                    string errorTitle = LanguageManager.GetString("Common.Error", "Errore");
+                    MessageBox.Show(string.Format(errorMsg, ex.Message), errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
+
+        #endregion
+
+        #region ============ WAVEFORM GENERATION ============
 
         private async Task GenerateWaveformAsync(string filePath)
         {
@@ -535,6 +1557,7 @@ namespace AirManager.Forms
             _waveformBitmap?.Dispose();
             _waveformBitmap = null;
 
+            // ✅ FASE 1: Preview veloce (800 campioni)
             await Task.Run(() =>
             {
                 try
@@ -551,7 +1574,7 @@ namespace AirManager.Forms
                         var sampleProvider = reader.ToSampleProvider();
                         float[] buffer = new float[8192];
 
-                        System.Threading.Tasks.Parallel.For(0, quickSamples, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
+                        Parallel.For(0, quickSamples, new ParallelOptions { MaxDegreeOfParallelism = 4 }, i =>
                         {
                             try
                             {
@@ -575,8 +1598,9 @@ namespace AirManager.Forms
                             catch { quickData[i] = 0f; }
                         });
 
-                        _waveformData = quickData;
-                        CreateWaveformBitmap();
+                        _originalWaveformData = quickData;
+                        _waveformData = (float[])quickData.Clone();
+                        RecreateWaveformBitmapWithBoost();
                     }
                 }
                 catch { _waveformBitmap = null; }
@@ -587,6 +1611,7 @@ namespace AirManager.Forms
                 this.Invoke(new Action(() => picWaveform.Invalidate()));
             }
 
+            // ✅ FASE 2: Waveform completa ad alta risoluzione
             await Task.Run(() =>
             {
                 try
@@ -605,7 +1630,7 @@ namespace AirManager.Forms
                         int batchSize = 50;
                         int batches = (_waveformSamples + batchSize - 1) / batchSize;
 
-                        System.Threading.Tasks.Parallel.For(0, batches, new ParallelOptions { MaxDegreeOfParallelism = 4 }, batchIndex =>
+                        Parallel.For(0, batches, new ParallelOptions { MaxDegreeOfParallelism = 4 }, batchIndex =>
                         {
                             int start = batchIndex * batchSize;
                             int end = Math.Min(start + batchSize, _waveformSamples);
@@ -635,8 +1660,9 @@ namespace AirManager.Forms
                             }
                         });
 
-                        _waveformData = fullData;
-                        CreateWaveformBitmap();
+                        _originalWaveformData = fullData;
+                        _waveformData = (float[])fullData.Clone();
+                        RecreateWaveformBitmapWithBoost();
                     }
                 }
                 catch { }
@@ -652,54 +1678,14 @@ namespace AirManager.Forms
             }
         }
 
-        private void CreateWaveformBitmap()
-        {
-            if (_waveformData == null || _waveformData.Length == 0)
-                return;
+        #endregion
 
-            try
-            {
-                int width = _waveformData.Length;
-                int height = 350;
-
-                _waveformBitmap?.Dispose();
-                _waveformBitmap = new Bitmap(width, height);
-
-                using (Graphics g = Graphics.FromImage(_waveformBitmap))
-                {
-                    g.Clear(Color.FromArgb(10, 10, 10));
-                    g.SmoothingMode = SmoothingMode.HighQuality;
-                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    g.CompositingQuality = CompositingQuality.HighQuality;
-
-                    int midY = height / 2;
-
-                    using (Pen penTop = new Pen(Color.FromArgb(0, 255, 100), 1.8f))
-                    using (Pen penBottom = new Pen(Color.FromArgb(0, 200, 80), 1.8f))
-                    {
-                        for (int x = 0; x < _waveformData.Length; x++)
-                        {
-                            float amplitude = _waveformData[x] * (height / 2) * 0.98f;
-                            g.DrawLine(penTop, x, midY, x, midY - amplitude);
-                            g.DrawLine(penBottom, x, midY, x, midY + amplitude);
-                        }
-                    }
-
-                    using (Pen penCenter = new Pen(Color.FromArgb(80, 80, 80), 1f))
-                    {
-                        g.DrawLine(penCenter, 0, midY, width, midY);
-                    }
-                }
-            }
-            catch { }
-        }
+        #region ============ TIME FORMATTING ============
 
         private string FormatTime(int milliseconds)
         {
             TimeSpan ts = TimeSpan.FromMilliseconds(Math.Abs(milliseconds));
-            int totalHours = (int)ts.TotalHours;
-            return string.Format("{0:D2}:{1:D2}:{2:D2}.{3:D3}",
-                totalHours, ts.Minutes, ts.Seconds, ts.Milliseconds); // ✅ CORRETTO
+            return $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}.{ts.Milliseconds:D3}";
         }
 
         private int ParseTime(string timeString)
@@ -720,6 +1706,10 @@ namespace AirManager.Forms
             }
         }
 
+        #endregion
+
+        #region ============ PLAYBACK CONTROLS ============
+
         private void btnPlay_Click(object sender, EventArgs e)
         {
             if (_isPlaying)
@@ -727,16 +1717,26 @@ namespace AirManager.Forms
                 _waveOut?.Pause();
                 _isPlaying = false;
                 _positionTimer.Stop();
-                btnPlay.Text = "▶ " + LanguageManager.GetString("MusicEditor.Play");
+                btnPlay.Text = LanguageManager.GetString("MusicEditor.Play", "▶ PLAY");
                 btnPlay.BackColor = Color.FromArgb(40, 160, 40);
+
+                // Pause video preview
             }
             else
             {
+                // If stopped (position at 0 or before IN), seek to IN marker first
+                if (_audioReader != null && _musicEntry.MarkerIN > 0 && _audioReader.CurrentTime.TotalMilliseconds < _musicEntry.MarkerIN)
+                {
+                    _audioReader.CurrentTime = TimeSpan.FromMilliseconds(_musicEntry.MarkerIN);
+                }
+
                 _waveOut?.Play();
                 _isPlaying = true;
                 _positionTimer.Start();
-                btnPlay.Text = "⏸ " + LanguageManager.GetString("MusicEditor.Pause");
+                btnPlay.Text = "⏸ PAUSE";
                 btnPlay.BackColor = Color.FromArgb(200, 100, 0);
+
+                // Sync and play video preview
             }
         }
 
@@ -746,12 +1746,20 @@ namespace AirManager.Forms
             _audioReader.Position = 0;
             _isPlaying = false;
             _positionTimer.Stop();
-            btnPlay.Text = "▶ " + LanguageManager.GetString("MusicEditor.Play");
+            _userScrolled = false;
+            btnPlay.Text = LanguageManager.GetString("MusicEditor.Play", "▶ PLAY");
             btnPlay.BackColor = Color.FromArgb(40, 160, 40);
             lblCurrentPosition.Text = "00:00:00.000";
             lblCurrentPositionMs.Text = "0 ms";
             picWaveform.Invalidate();
+
+            // Stop and reset video preview
         }
+
+        // ═════════════════════════════════════════════════════════════════
+        // VIDEO PREVIEW – sync helpers
+        // ═════════════════════════════════════════════════════════════════
+
 
         private void btnSetMarkerIn_Click(object sender, EventArgs e) => SetMarkerToCurrent("In");
         private void btnSetMarkerIntro_Click(object sender, EventArgs e) => SetMarkerToCurrent("Intro");
@@ -871,23 +1879,25 @@ namespace AirManager.Forms
 
             int ms = 0;
 
-            switch (markerType)
+            switch (markerType.ToUpperInvariant())
             {
-                case "In":
+                case "IN":
                     ms = _musicEntry.MarkerIN;
                     break;
-                case "Intro":
+                case "INTRO":
                     ms = _musicEntry.MarkerINTRO;
                     break;
-                case "Mix":
+                case "MIX":
                     ms = _musicEntry.MarkerMIX;
                     break;
-                case "Out":
+                case "OUT":
                     ms = _musicEntry.MarkerOUT;
                     break;
             }
 
             _audioReader.CurrentTime = TimeSpan.FromMilliseconds(ms);
+
+            // Sync video to this marker position
 
             if (!_isPlaying)
             {
@@ -901,10 +1911,39 @@ namespace AirManager.Forms
             {
                 int currentMs = (int)_audioReader.CurrentTime.TotalMilliseconds;
                 lblCurrentPosition.Text = FormatTime(currentMs);
-                lblCurrentPositionMs.Text = currentMs.ToString() + " ms";
+                lblCurrentPositionMs.Text = $"{currentMs} ms";
+
+                // ✅ Periodic video sync: re-align if drift > 500ms (check every ~500ms)
+
+                // ✅ Auto-scroll zoom: centra la posizione corrente se fuori dalla vista
+                // Solo se l'utente non ha scrollato manualmente
+                if (!_userScrolled && _zoomLevel > 1.01f && _waveformData != null && _waveformData.Length > 0)
+                {
+                    int totalMs = (int)_audioReader.TotalTime.TotalMilliseconds;
+                    int visibleSamples = (int)(_waveformData.Length / _zoomLevel);
+                    int currentSample = (int)((float)currentMs / totalMs * _waveformData.Length);
+
+                    if (currentSample < _scrollOffset || currentSample > _scrollOffset + visibleSamples)
+                    {
+                        _scrollOffset = Math.Max(0, currentSample - visibleSamples / 4);
+                        int maxOffset = Math.Max(0, _waveformData.Length - visibleSamples);
+                        _scrollOffset = Math.Min(_scrollOffset, maxOffset);
+
+                        // Aggiorna scrollbar
+                        float ratio = maxOffset > 0 ? (float)_scrollOffset / maxOffset : 0f;
+                        hScrollWaveform.Value = (int)(ratio * (hScrollWaveform.Maximum - hScrollWaveform.LargeChange));
+
+                        RecreateWaveformBitmapWithBoost();
+                    }
+                }
+
                 picWaveform.Invalidate();
             }
         }
+
+        #endregion
+
+        #region ============ WAVEFORM PAINT & INTERACTION ============
 
         private void picWaveform_Paint(object sender, PaintEventArgs e)
         {
@@ -919,25 +1958,36 @@ namespace AirManager.Forms
             {
                 int totalMs = (int)_audioReader.TotalTime.TotalMilliseconds;
 
-                DrawMarkerWithLabel(e.Graphics, _musicEntry.MarkerIN, totalMs, Color.FromArgb(255, 50, 50), "IN", 3, false);
-                DrawMarkerWithLabel(e.Graphics, _musicEntry.MarkerINTRO, totalMs, Color.FromArgb(255, 0, 255), "INTRO", picWaveform.Height / 2, false);
-                DrawMarkerWithLabel(e.Graphics, _musicEntry.MarkerMIX, totalMs, Color.FromArgb(255, 255, 0), "MIX", 3, true);
-                DrawMarkerWithLabel(e.Graphics, _musicEntry.MarkerOUT, totalMs, Color.FromArgb(255, 140, 0), "OUT", picWaveform.Height - 25, true);
+                // ✅ Usa MsToPixelX per posizionamento coerente con zoom
+                DrawMarkerWithLabelZoomed(e.Graphics, _musicEntry.MarkerIN, totalMs, Color.FromArgb(255, 50, 50), "IN", 3, false);
+                DrawMarkerWithLabelZoomed(e.Graphics, _musicEntry.MarkerINTRO, totalMs, Color.FromArgb(255, 0, 255), "INTRO", picWaveform.Height / 2, false);
+                DrawMarkerWithLabelZoomed(e.Graphics, _musicEntry.MarkerMIX, totalMs, Color.FromArgb(255, 255, 0), "MIX", 3, true);
+                DrawMarkerWithLabelZoomed(e.Graphics, _musicEntry.MarkerOUT, totalMs, Color.FromArgb(255, 140, 0), "OUT", picWaveform.Height - 25, true);
 
+                // ✅ Cursore posizione corrente
                 int currentMs = (int)_audioReader.CurrentTime.TotalMilliseconds;
-                float xPos = (float)currentMs / totalMs * picWaveform.Width;
-                using (Pen pen = new Pen(Color.White, 2.5f))
+                float xPos = MsToPixelX(currentMs, totalMs);
+                if (xPos >= 0 && xPos <= picWaveform.Width)
                 {
-                    e.Graphics.DrawLine(pen, xPos, 0, xPos, picWaveform.Height);
+                    using (Pen pen = new Pen(Color.White, 2.5f))
+                    {
+                        e.Graphics.DrawLine(pen, xPos, 0, xPos, picWaveform.Height);
+                    }
                 }
             }
         }
 
-        private void DrawMarkerWithLabel(Graphics g, int markerMs, int totalMs, Color color, string label, int labelYPos, bool labelOnLeft)
+        /// <summary>
+        /// Disegna un marker con label usando le coordinate zoom-aware.
+        /// </summary>
+        private void DrawMarkerWithLabelZoomed(Graphics g, int markerMs, int totalMs, Color color, string label, int labelYPos, bool labelOnLeft)
         {
             if (totalMs == 0) return;
 
-            float xPos = (float)markerMs / totalMs * picWaveform.Width;
+            float xPos = MsToPixelX(markerMs, totalMs);
+
+            // Disegna solo se visibile
+            if (xPos < -50 || xPos > picWaveform.Width + 50) return;
 
             using (Pen pen = new Pen(color, 2.5f))
             {
@@ -953,6 +2003,9 @@ namespace AirManager.Forms
                     int labelHeight = (int)textSize.Height + 4;
 
                     float labelX = labelOnLeft ? xPos - labelWidth - 5 : xPos + 5;
+
+                    // Clamp dentro la waveform
+                    labelX = Math.Max(0, Math.Min(labelX, picWaveform.Width - labelWidth));
 
                     RectangleF labelRect = new RectangleF(labelX, labelYPos, labelWidth, labelHeight);
                     using (SolidBrush bgBrush = new SolidBrush(color))
@@ -979,32 +2032,39 @@ namespace AirManager.Forms
 
             int totalMs = (int)_audioReader.TotalTime.TotalMilliseconds;
 
-            if (CheckMarkerLabelClick(e.X, e.Y, totalMs, _musicEntry.MarkerOUT, "OUT", true)) return;
-            if (CheckMarkerLabelClick(e.X, e.Y, totalMs, _musicEntry.MarkerMIX, "MIX", true)) return;
-            if (CheckMarkerLabelClick(e.X, e.Y, totalMs, _musicEntry.MarkerINTRO, "INTRO", false)) return;
-            if (CheckMarkerLabelClick(e.X, e.Y, totalMs, _musicEntry.MarkerIN, "IN", false)) return;
+            // ✅ Check click su marker labels (zoom-aware)
+            if (CheckMarkerLabelClickZoomed(e.X, e.Y, totalMs, _musicEntry.MarkerOUT, "OUT", true)) return;
+            if (CheckMarkerLabelClickZoomed(e.X, e.Y, totalMs, _musicEntry.MarkerMIX, "MIX", true)) return;
+            if (CheckMarkerLabelClickZoomed(e.X, e.Y, totalMs, _musicEntry.MarkerINTRO, "INTRO", false)) return;
+            if (CheckMarkerLabelClickZoomed(e.X, e.Y, totalMs, _musicEntry.MarkerIN, "IN", false)) return;
 
-            int clickMs = (int)((float)e.X / picWaveform.Width * totalMs);
+            // ✅ Click su waveform = spostamento posizione (zoom-aware)
+            _userScrolled = false;
+            int clickMs = PixelXToMs(e.X, totalMs);
             _audioReader.CurrentTime = TimeSpan.FromMilliseconds(clickMs);
+
+            // Sync video to click position
+
             picWaveform.Invalidate();
         }
 
-        private bool CheckMarkerLabelClick(int mouseX, int mouseY, int totalMs, int markerMs, string markerType, bool labelOnLeft)
+        private bool CheckMarkerLabelClickZoomed(int mouseX, int mouseY, int totalMs, int markerMs, string markerType, bool labelOnLeft)
         {
-            float xPos = (float)markerMs / totalMs * picWaveform.Width;
+            float xPos = MsToPixelX(markerMs, totalMs);
 
-            if (IsInsideLabel(mouseX, mouseY, xPos, markerType, labelOnLeft))
+            if (IsInsideLabelZoomed(mouseX, mouseY, xPos, markerType, labelOnLeft))
             {
                 _isDraggingMarker = true;
                 _draggingMarkerType = markerType;
                 picWaveform.Cursor = Cursors.SizeWE;
+                Console.WriteLine($"[DRAG START] {markerType} at {markerMs}ms");
                 return true;
             }
 
             return false;
         }
 
-        private bool IsInsideLabel(int mouseX, int mouseY, float xPos, string markerType, bool labelOnLeft)
+        private bool IsInsideLabelZoomed(int mouseX, int mouseY, float xPos, string markerType, bool labelOnLeft)
         {
             int labelYPos;
 
@@ -1044,7 +2104,9 @@ namespace AirManager.Forms
             if (!_isDraggingMarker || _audioReader == null) return;
 
             int totalMs = (int)_audioReader.TotalTime.TotalMilliseconds;
-            int newMs = (int)((float)e.X / picWaveform.Width * totalMs);
+
+            // ✅ Conversione pixel -> ms zoom-aware
+            int newMs = PixelXToMs(e.X, totalMs);
             newMs = Math.Max(0, Math.Min(newMs, totalMs));
 
             switch (_draggingMarkerType)
@@ -1080,6 +2142,7 @@ namespace AirManager.Forms
         {
             if (_isDraggingMarker)
             {
+                Console.WriteLine($"[DRAG END] {_draggingMarkerType}");
                 PlayFromMarker(_draggingMarkerType);
             }
 
@@ -1088,16 +2151,28 @@ namespace AirManager.Forms
             picWaveform.Cursor = Cursors.Default;
         }
 
+        #endregion
+
+        #region ============ SAVE ============
+
         private void btnSave_Click(object sender, EventArgs e)
         {
             try
             {
+                Console.WriteLine($"\n[MusicEditor] ========== SALVATAGGIO ==========");
+                Console.WriteLine($"[MusicEditor] ID originale: {(_isClip ? _originalClipId : _musicEntry.ID)}");
+                Console.WriteLine($"[MusicEditor] IsClip: {_isClip}");
+
                 _musicEntry.Title = txtTitle.Text ?? "";
                 _musicEntry.Artist = txtArtist.Text ?? "";
                 _musicEntry.Album = txtAlbum.Text ?? "";
                 _musicEntry.Year = (int)numYear.Value;
                 _musicEntry.Genre = cmbGenre.Text ?? "";
-                _musicEntry.Categories = txtCategories.Text ?? "";
+
+                // Categorie: join degli elementi selezionati con punto e virgola
+                _musicEntry.Categories = _checkedCategories.Count > 0
+                    ? string.Join(";", _checkedCategories.OrderBy(c => c))
+                    : "";
 
                 _musicEntry.MarkerIN = ParseTime(txtMarkerIn.Text);
                 _musicEntry.MarkerINTRO = ParseTime(txtMarkerIntro.Text);
@@ -1128,7 +2203,8 @@ namespace AirManager.Forms
 
                 if (_audioReader != null)
                 {
-                    _musicEntry.Duration = (int)_audioReader.TotalTime.TotalSeconds;
+                    _musicEntry.Duration = (int)_audioReader.TotalTime.TotalMilliseconds;
+                    Console.WriteLine($"[MusicEditor] Duration aggiornata: {_musicEntry.Duration}ms");
                 }
 
                 if (!_isClip)
@@ -1145,9 +2221,13 @@ namespace AirManager.Forms
                             tagFile.Tag.Genres = new[] { _musicEntry.Genre };
                             tagFile.Save();
                             tagFile.Dispose();
+                            Console.WriteLine($"[MusicEditor] ✅ TAG MP3 aggiornati");
                         }
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[MusicEditor] ⚠️ Errore TAG: {ex.Message}");
+                    }
                 }
 
                 bool success;
@@ -1176,51 +2256,69 @@ namespace AirManager.Forms
                         PlayCount = _musicEntry.PlayCount
                     };
 
+                    Console.WriteLine($"[MusicEditor] ========== DATI CLIP DA SALVARE ==========");
+                    Console.WriteLine($"  ID: {clipEntry.ID}");
+                    Console.WriteLine($"  Title: {clipEntry.Title}");
+                    Console.WriteLine($"  Duration: {clipEntry.Duration}ms");
+                    Console.WriteLine($"  MarkerIN: {clipEntry.MarkerIN}ms");
+                    Console.WriteLine($"  MarkerMIX: {clipEntry.MarkerMIX}ms");
+                    Console.WriteLine($"  MarkerOUT: {clipEntry.MarkerOUT}ms");
+                    Console.WriteLine($"[MusicEditor] ===========================================");
+
                     success = DbcManager.Update("Clips.dbc", clipEntry);
                 }
                 else
                 {
+                    Console.WriteLine($"[MusicEditor] ========== DATI MUSICA DA SALVARE ==========");
+                    Console.WriteLine($"  ID: {_musicEntry.ID}");
+                    Console.WriteLine($"  Title: {_musicEntry.Title}");
+                    Console.WriteLine($"  Artist: {_musicEntry.Artist}");
+                    Console.WriteLine($"  Duration: {_musicEntry.Duration}ms");
+                    Console.WriteLine($"  MarkerIN: {_musicEntry.MarkerIN}ms");
+                    Console.WriteLine($"  MarkerMIX: {_musicEntry.MarkerMIX}ms");
+                    Console.WriteLine($"  MarkerOUT: {_musicEntry.MarkerOUT}ms");
+                    Console.WriteLine($"[MusicEditor] =============================================");
+
                     success = DbcManager.Update("Music.dbc", _musicEntry);
                 }
 
+                Console.WriteLine($"[MusicEditor] Risultato DbcManager.Update: {success}");
+
                 if (success)
                 {
-                    MessageBox.Show(
-                        LanguageManager.GetString("MusicEditor.Message.SaveSuccess"),
-                        LanguageManager.GetString("MusicEditor.Title.SaveSuccess"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
-
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }
                 else
                 {
-                    MessageBox.Show(
-                        LanguageManager.GetString("MusicEditor.Error.SaveFailed"),
-                        LanguageManager.GetString("Common.Error"),
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Error);
+                    string errorMsg = LanguageManager.GetString("MusicEditor.SaveError", "❌ Errore salvataggio nel database.\n\nControlla la console per dettagli!");
+                    string errorTitle = LanguageManager.GetString("Common.Error", "Errore");
+                    MessageBox.Show(errorMsg, errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    string.Format(LanguageManager.GetString("MusicEditor.Error.Exception"), ex.Message),
-                    LanguageManager.GetString("Common.Error"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                Console.WriteLine($"[MusicEditor] ❌ ECCEZIONE: {ex.Message}");
+                Console.WriteLine($"[MusicEditor] StackTrace: {ex.StackTrace}");
+
+                string errorMsg = LanguageManager.GetString("MusicEditor.SaveException", "❌ Errore:\n{0}");
+                string errorTitle = LanguageManager.GetString("Common.Error", "Errore");
+                MessageBox.Show(string.Format(errorMsg, ex.Message), errorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        #endregion
+
+        #region ============ DISPOSE ============
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                LanguageManager.LanguageChanged -= (s, e) => ApplyLanguage();
-
                 _positionTimer?.Stop();
                 _positionTimer?.Dispose();
+                _vuDecayTimer?.Stop();
+                _vuDecayTimer?.Dispose();
                 _waveOut?.Stop();
                 _waveOut?.Dispose();
                 _audioReader?.Dispose();
@@ -1234,5 +2332,7 @@ namespace AirManager.Forms
 
             base.Dispose(disposing);
         }
+
+        #endregion
     }
 }

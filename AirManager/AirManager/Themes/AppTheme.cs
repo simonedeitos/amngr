@@ -14,6 +14,7 @@ namespace AirManager.Themes
         public static readonly Color BgPanel = Color.FromArgb(40, 40, 40);          // Background cards/panels
         public static readonly Color BgInput = Color.FromArgb(50, 50, 50);          // Background input fields
         public static readonly Color BgHover = Color.FromArgb(60, 60, 60);          // Background hover state
+        public static readonly Color Surface = Color.FromArgb(50, 50, 50);          // Superficie controlli
 
         // ✅ COLORI TESTO
         public static readonly Color TextPrimary = Color.White;                     // Testo principale
