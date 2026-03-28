@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
 using AirManager.Services.Database;
+using AirManager.Services.Licensing;
+using AirManager.Forms;
 
 namespace AirManager
 {
@@ -31,6 +33,42 @@ namespace AirManager
                     "Errore Critico",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+                return;
+            }
+
+            // ✅ VERIFICA LICENZA
+            try
+            {
+                Console.WriteLine("[AirManager] Verifica licenza...");
+                var licenseManager = LicenseManager.Instance;
+
+                if (!licenseManager.IsLicensed())
+                {
+                    Console.WriteLine("[AirManager] ⚠️ Licenza non valida, apertura form di attivazione...");
+                    using (var licenseForm = new LicenseForm())
+                    {
+                        DialogResult result = licenseForm.ShowDialog();
+                        if (result != DialogResult.OK || !licenseForm.LicenseActivated)
+                        {
+                            Console.WriteLine("[AirManager] ❌ Attivazione licenza annullata. Chiusura applicazione.");
+                            return;
+                        }
+                    }
+                    Console.WriteLine("[AirManager] ✅ Licenza attivata con successo");
+                }
+                else
+                {
+                    Console.WriteLine("[AirManager] ✅ Licenza valida");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AirManager] ⚠️ Errore verifica licenza: {ex.Message}");
+                MessageBox.Show(
+                    $"⚠️ Errore durante la verifica della licenza:\n\n{ex.Message}\n\nL'applicazione verrà chiusa.",
+                    "Errore Licenza",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
                 return;
             }
 
