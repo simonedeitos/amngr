@@ -39,6 +39,7 @@ namespace AirManager.Services
                     key.SetValue("Name", station.Name ?? "");
                     key.SetValue("LogoPath", station.LogoPath ?? "");
                     key.SetValue("DatabasePath", station.DatabasePath ?? "");
+                    key.SetValue("StationType", station.StationType.ToString());
                     key.SetValue("CreatedDate", station.CreatedDate.ToString("o")); // ISO 8601
                     key.SetValue("LastAccessed", station.LastAccessed.ToString("o"));
 
@@ -86,6 +87,10 @@ namespace AirManager.Services
                                     DatabasePath = stationKey.GetValue("DatabasePath", "").ToString()
                                 };
 
+                                // ✅ PARSE STATION TYPE
+                                if (Enum.TryParse<StationType>(stationKey.GetValue("StationType", "Radio")?.ToString(), out StationType stationType))
+                                    station.StationType = stationType;
+
                                 // ✅ PARSE DATE
                                 if (DateTime.TryParse(stationKey.GetValue("CreatedDate", "")?.ToString(), out DateTime created))
                                     station.CreatedDate = created;
@@ -130,6 +135,10 @@ namespace AirManager.Services
                         LogoPath = key.GetValue("LogoPath", "").ToString(),
                         DatabasePath = key.GetValue("DatabasePath", "").ToString()
                     };
+
+                    // ✅ PARSE STATION TYPE
+                    if (Enum.TryParse<StationType>(key.GetValue("StationType", "Radio")?.ToString(), out StationType stationType))
+                        station.StationType = stationType;
 
                     if (DateTime.TryParse(key.GetValue("CreatedDate", "")?.ToString(), out DateTime created))
                         station.CreatedDate = created;

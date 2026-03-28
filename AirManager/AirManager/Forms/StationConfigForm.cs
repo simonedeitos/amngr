@@ -18,6 +18,11 @@ namespace AirManager.Forms
         private Label lblName;
         private TextBox txtName;
 
+        private Label lblStationType;
+        private RadioButton rbRadio;
+        private RadioButton rbRadioTV;
+        private Panel pnlStationType;
+
         private Label lblLogo;
         private TextBox txtLogoPath;
         private Button btnBrowseLogo;
@@ -66,6 +71,9 @@ namespace AirManager.Forms
 
             // ✅ LABELS
             lblName.Text = LanguageManager.GetString("StationConfig.Label.Name");
+            lblStationType.Text = LanguageManager.GetString("StationConfig.Label.StationType");
+            rbRadio.Text = "📻 " + LanguageManager.GetString("StationConfig.StationType.Radio");
+            rbRadioTV.Text = "📺 " + LanguageManager.GetString("StationConfig.StationType.RadioTV");
             lblLogo.Text = LanguageManager.GetString("StationConfig.Label.Logo");
             lblDatabase.Text = LanguageManager.GetString("StationConfig.Label.Database");
 
@@ -88,7 +96,7 @@ namespace AirManager.Forms
         private void InitializeCustomUI()
         {
             this.Text = _isEditMode ? "✏️ Modifica Emittente" : "➕ Nuova Emittente";
-            this.Size = new Size(700, 600);
+            this.Size = new Size(700, 630);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -135,12 +143,55 @@ namespace AirManager.Forms
             };
             this.Controls.Add(txtName);
 
+            // ✅ STATION TYPE SELECTION
+            lblStationType = new Label
+            {
+                Text = "Tipo Emittente:",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(30, 160),
+                Size = new Size(150, 25)
+            };
+            this.Controls.Add(lblStationType);
+
+            pnlStationType = new Panel
+            {
+                Location = new Point(190, 157),
+                Size = new Size(300, 30),
+                BackColor = Color.Transparent
+            };
+
+            rbRadio = new RadioButton
+            {
+                Text = "📻 Radio",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = AppTheme.AccentPrimary,
+                Location = new Point(0, 3),
+                AutoSize = true,
+                Checked = true,
+                FlatStyle = FlatStyle.Flat
+            };
+
+            rbRadioTV = new RadioButton
+            {
+                Text = "📺 Radio/TV",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = AppTheme.AccentPrimary,
+                Location = new Point(140, 3),
+                AutoSize = true,
+                FlatStyle = FlatStyle.Flat
+            };
+
+            pnlStationType.Controls.Add(rbRadio);
+            pnlStationType.Controls.Add(rbRadioTV);
+            this.Controls.Add(pnlStationType);
+
             lblLogo = new Label
             {
                 Text = "Logo (opzionale - consigliato 120x70 px):",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(30, 170),
+                Location = new Point(30, 200),
                 Size = new Size(350, 25)
             };
             this.Controls.Add(lblLogo);
@@ -148,7 +199,7 @@ namespace AirManager.Forms
             txtLogoPath = new TextBox
             {
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(30, 200),
+                Location = new Point(30, 230),
                 Size = new Size(480, 30),
                 BackColor = Color.FromArgb(50, 50, 50),
                 ForeColor = Color.White,
@@ -161,7 +212,7 @@ namespace AirManager.Forms
             btnBrowseLogo = new Button
             {
                 Text = "📁 Sfoglia",
-                Location = new Point(520, 198),
+                Location = new Point(520, 228),
                 Size = new Size(130, 34),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
@@ -175,7 +226,7 @@ namespace AirManager.Forms
 
             picLogoPreview = new PictureBox
             {
-                Location = new Point(30, 245),
+                Location = new Point(30, 275),
                 Size = new Size(120, 70),
                 BorderStyle = BorderStyle.FixedSingle,
                 SizeMode = PictureBoxSizeMode.Zoom,
@@ -188,7 +239,7 @@ namespace AirManager.Forms
                 Text = "Percorso Database (locale o rete):",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(30, 335),
+                Location = new Point(30, 365),
                 Size = new Size(350, 25)
             };
             this.Controls.Add(lblDatabase);
@@ -196,7 +247,7 @@ namespace AirManager.Forms
             txtDatabasePath = new TextBox
             {
                 Font = new Font("Segoe UI", 10),
-                Location = new Point(30, 365),
+                Location = new Point(30, 395),
                 Size = new Size(480, 30),
                 BackColor = Color.FromArgb(50, 50, 50),
                 ForeColor = Color.White,
@@ -208,7 +259,7 @@ namespace AirManager.Forms
             btnBrowseDatabase = new Button
             {
                 Text = "📁 Sfoglia",
-                Location = new Point(520, 363),
+                Location = new Point(520, 393),
                 Size = new Size(130, 34),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
@@ -225,7 +276,7 @@ namespace AirManager.Forms
                 Text = "⚪ Percorso non verificato",
                 Font = new Font("Segoe UI", 9, FontStyle.Regular),
                 ForeColor = Color.Gray,
-                Location = new Point(30, 405),
+                Location = new Point(30, 435),
                 Size = new Size(620, 20),
                 AutoSize = false
             };
@@ -234,7 +285,7 @@ namespace AirManager.Forms
             btnTestConnection = new Button
             {
                 Text = "🔍 Verifica Accessibilità",
-                Location = new Point(30, 435),
+                Location = new Point(30, 465),
                 Size = new Size(180, 35),
                 BackColor = Color.FromArgb(138, 43, 226),
                 ForeColor = Color.White,
@@ -249,7 +300,7 @@ namespace AirManager.Forms
             btnCancel = new Button
             {
                 Text = "✖ Annulla",
-                Location = new Point(430, 505),
+                Location = new Point(430, 535),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(220, 53, 69),
                 ForeColor = Color.White,
@@ -264,7 +315,7 @@ namespace AirManager.Forms
             btnSave = new Button
             {
                 Text = "💾 Salva",
-                Location = new Point(550, 505),
+                Location = new Point(550, 535),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(40, 167, 69),
                 ForeColor = Color.White,
@@ -286,6 +337,9 @@ namespace AirManager.Forms
                 txtName.Text = _station.Name;
                 txtLogoPath.Text = _station.LogoPath;
                 txtDatabasePath.Text = _station.DatabasePath;
+
+                rbRadio.Checked = _station.StationType == StationType.Radio;
+                rbRadioTV.Checked = _station.StationType == StationType.RadioTV;
 
                 LoadLogoPreview(_station.LogoPath);
                 ValidateDatabasePath(_station.DatabasePath);
@@ -513,6 +567,7 @@ namespace AirManager.Forms
             _station.Name = txtName.Text.Trim();
             _station.LogoPath = txtLogoPath.Text.Trim();
             _station.DatabasePath = txtDatabasePath.Text.Trim();
+            _station.StationType = rbRadioTV.Checked ? StationType.RadioTV : StationType.Radio;
 
             if (!Directory.Exists(_station.DatabasePath))
             {
