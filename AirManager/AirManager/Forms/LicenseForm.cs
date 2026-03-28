@@ -213,9 +213,5 @@ namespace AirManager.Forms
             }
         }
 
-        private void LicenseForm_Load(object? sender, EventArgs e)
-        {
-            // Load event
-        }
     }
 }
