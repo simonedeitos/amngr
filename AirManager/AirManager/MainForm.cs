@@ -44,14 +44,17 @@ namespace AirManager
         // ✅ RIFERIMENTI ALLE VOCI DI MENU ARCHIVES
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
+        private ToolStripMenuItem menuItemVideoConversion;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU REPORT
         private ToolStripMenuItem menuItemViewReport;
         private ToolStripMenuItem menuItemExportReport;
+        private ToolStripMenuItem menuItemBroadcastHistory;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU HELP
         private ToolStripMenuItem menuItemAbout;
         private ToolStripMenuItem menuItemManual;
+        private ToolStripMenuItem menuItemLicense;
 
         private StationManagerControl _stationManager;
         private ArchiveControl _archiveMusicControl;
@@ -138,6 +141,10 @@ namespace AirManager
             menuItemArchiveClips = new ToolStripMenuItem("⚡ Archivio Clips", null, MenuArchiveClips_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveClips);
 
+            menuArchives.DropDownItems.Add(new ToolStripSeparator());
+            menuItemVideoConversion = new ToolStripMenuItem("🎬 Video Conversion", null, MenuVideoConversion_Click);
+            menuArchives.DropDownItems.Add(menuItemVideoConversion);
+
             menuStrip.Items.Add(menuArchives);
 
             // ✅ MENU REPORT
@@ -147,6 +154,10 @@ namespace AirManager
             menuReport.DropDownItems.Add(menuItemViewReport);
             menuReport.DropDownItems.Add(new ToolStripSeparator());
 
+            menuItemBroadcastHistory = new ToolStripMenuItem("📜 Broadcast History", null, MenuBroadcastHistory_Click);
+            menuReport.DropDownItems.Add(menuItemBroadcastHistory);
+            menuReport.DropDownItems.Add(new ToolStripSeparator());
+
             menuItemExportReport = new ToolStripMenuItem("💾 Esporta CSV Avanzato...", null, MenuExportReport_Click);
             menuReport.DropDownItems.Add(menuItemExportReport);
 
@@ -154,6 +165,10 @@ namespace AirManager
 
             // ✅ MENU AIUTO
             menuHelp = new ToolStripMenuItem("❓ Aiuto");
+
+            menuItemLicense = new ToolStripMenuItem("🔑 License", null, MenuLicense_Click);
+            menuHelp.DropDownItems.Add(menuItemLicense);
+            menuHelp.DropDownItems.Add(new ToolStripSeparator());
 
             menuItemAbout = new ToolStripMenuItem("ℹ️ Informazioni", null, MenuAbout_Click);
             menuHelp.DropDownItems.Add(menuItemAbout);
@@ -252,14 +267,17 @@ namespace AirManager
             // ✅ MENU ARCHIVES
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
+            menuItemVideoConversion.Text = "🎬 " + LanguageManager.GetString("MainForm.Menu.Archives.VideoConversion");
 
             // ✅ MENU REPORT
             menuItemViewReport.Text = "📈 " + LanguageManager.GetString("MainForm.Menu.Report.View");
             menuItemExportReport.Text = "💾 " + LanguageManager.GetString("MainForm.Menu.Report.Export");
+            menuItemBroadcastHistory.Text = "📜 " + LanguageManager.GetString("MainForm.Menu.Report.BroadcastHistory");
 
             // ✅ MENU HELP
             menuItemAbout.Text = "ℹ️ " + LanguageManager.GetString("MainForm.Menu.Help.About");
             menuItemManual.Text = "📖 " + LanguageManager.GetString("MainForm.Menu.Help.Manual");
+            menuItemLicense.Text = "🔑 " + LanguageManager.GetString("MainForm.Menu.Help.License");
 
             // ✅ STATUS BAR
             if (lblStatus.Text == "Pronto" || lblStatus.Text.Contains("Ready"))
@@ -669,6 +687,30 @@ namespace AirManager
                 LanguageManager.GetString("MainForm.Manual.Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
+        }
+
+        private void MenuVideoConversion_Click(object sender, EventArgs e)
+        {
+            using (var form = new VideoConvertionForm())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        private void MenuBroadcastHistory_Click(object sender, EventArgs e)
+        {
+            using (var form = new BroadcastHistoryForm())
+            {
+                form.ShowDialog();
+            }
+        }
+
+        private void MenuLicense_Click(object sender, EventArgs e)
+        {
+            using (var form = new LicenseForm())
+            {
+                form.ShowDialog();
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

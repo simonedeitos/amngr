@@ -502,6 +502,92 @@ namespace AirManager.Services.Database
         }
 
         /// <summary>
+        /// Carica dati da file CSV usando un database path specifico
+        /// </summary>
+        public static List<T> LoadFromCsvPath<T>(string databasePath, string fileName)
+        {
+            string fullPath = Path.Combine(databasePath, fileName);
+
+            lock (_lock)
+            {
+                try
+                {
+                    if (!File.Exists(fullPath))
+                    {
+                        Console.WriteLine($"[DbcManager] ⚠️ File non trovato: {fullPath}");
+                        return new List<T>();
+                    }
+
+                    using (var reader = new StreamReader(fullPath, Encoding.UTF8))
+                    using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HasHeaderRecord = true,
+                        Delimiter = ",",
+                        MissingFieldFound = null,
+                        BadDataFound = null
+                    }))
+                    {
+                        var records = csv.GetRecords<T>().ToList();
+                        Console.WriteLine($"[DbcManager] ✅ Caricati {records.Count} record da {fullPath}");
+                        return records;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DbcManager] ❌ Errore caricamento {fullPath}: {ex.Message}");
+                    return new List<T>();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Salva dati in file CSV usando un database path specifico
+        /// </summary>
+        public static bool SaveToCsvPath<T>(string databasePath, string fileName, List<T> data)
+        {
+            string fullPath = Path.Combine(databasePath, fileName);
+
+            lock (_lock)
+            {
+                try
+                {
+                    if (File.Exists(fullPath))
+                    {
+                        string backupPath = fullPath + ".bak";
+                        File.Copy(fullPath, backupPath, true);
+                    }
+
+                    using (var writer = new StreamWriter(fullPath, false, Encoding.UTF8))
+                    using (var csv = new CsvWriter(writer, new CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HasHeaderRecord = true,
+                        Delimiter = ",",
+                        ShouldQuote = args => true
+                    }))
+                    {
+                        csv.WriteRecords(data);
+                    }
+
+                    Console.WriteLine($"[DbcManager] ✅ Salvati {data.Count} record in {fullPath}");
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DbcManager] ❌ Errore salvataggio {fullPath}: {ex.Message}");
+
+                    string backupPath = fullPath + ".bak";
+                    if (File.Exists(backupPath))
+                    {
+                        File.Copy(backupPath, fullPath, true);
+                        Console.WriteLine("[DbcManager] ⚠️ Backup ripristinato");
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
         /// Ricrea il file Clips.dbc (utility per fix corruzione)
         /// </summary>
         public static void RecreateClipsDbc()

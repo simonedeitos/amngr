@@ -59,16 +59,16 @@ namespace AirManager.Forms
                 _data.Count);
 
             // ✅ GRUPPI
-            grpColumns.Text = LanguageManager.GetString("ReportExport.Group. Columns");
+            grpColumns.Text = LanguageManager.GetString("ReportExport.Group.Columns");
             grpOptions.Text = LanguageManager.GetString("ReportExport.Group.Options");
 
             // ✅ CHECKBOXES COLONNE
             chkDate.Text = "📅 " + LanguageManager.GetString("ReportExport.Column.Date");
-            chkStartTime.Text = "🕐 " + LanguageManager.GetString("ReportExport. Column.StartTime");
+            chkStartTime.Text = "🕐 " + LanguageManager.GetString("ReportExport.Column.StartTime");
             chkEndTime.Text = "🕐 " + LanguageManager.GetString("ReportExport.Column.EndTime");
             chkArtist.Text = "🎤 " + LanguageManager.GetString("ReportExport.Column.Artist");
             chkTitle.Text = "🎶 " + LanguageManager.GetString("ReportExport.Column.Title");
-            chkType.Text = "🎵 " + LanguageManager.GetString("ReportExport.Column. Type");
+            chkType.Text = "🎵 " + LanguageManager.GetString("ReportExport.Column.Type");
             chkPlayDuration.Text = "⏱️ " + LanguageManager.GetString("ReportExport.Column.PlayDuration");
             chkFileDuration.Text = "📏 " + LanguageManager.GetString("ReportExport.Column.FileDuration");
 
@@ -301,7 +301,7 @@ namespace AirManager.Forms
             {
                 MessageBox.Show(
                     LanguageManager.GetString("ReportExport.Validation.SelectColumn"),
-                    LanguageManager.GetString("ReportExport. Title.NoColumn"),
+                    LanguageManager.GetString("ReportExport.Title.NoColumn"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 return;
@@ -321,7 +321,7 @@ namespace AirManager.Forms
 
                         MessageBox.Show(
                             string.Format(LanguageManager.GetString("ReportExport.Message.ExportSuccess"), _data.Count, sfd.FileName),
-                            LanguageManager.GetString("ReportExport. Title.ExportComplete"),
+                            LanguageManager.GetString("ReportExport.Title.ExportComplete"),
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Information);
 
