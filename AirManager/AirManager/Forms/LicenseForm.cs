@@ -1,7 +1,6 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using AirManager.Services.Licensing;
 using AirManager.Themes;
@@ -10,321 +9,209 @@ namespace AirManager.Forms
 {
     public partial class LicenseForm : Form
     {
-        private readonly LicenseManager _licenseManager;
-        public bool LicenseActivated { get; private set; } = false;
-
-        // UI Controls
-        private Panel mainPanel = null!;
-        private Label titleLabel = null!;
-        private Label subtitleLabel = null!;
-        private Label serialLabel = null!;
-        private TextBox serialTextBox = null!;
-        private Button activateButton = null!;
-        private Button exitButton = null!;
-        private Label statusLabel = null!;
-        private ProgressBar progressBar = null!;
-        private Label hardwareIdLabel = null!;
-        private Panel headerPanel = null!;
-
         public LicenseForm()
         {
             InitializeComponent();
-            _licenseManager = LicenseManager.Instance;
-            SetupUI();
+            InitializeCustomComponents();
         }
 
-        private void SetupUI()
+        private void InitializeCustomComponents()
         {
-            // Form settings
-            this.Text = "AirManager - License Activation";
-            this.Size = new Size(520, 420);
-            this.MinimumSize = new Size(520, 420);
+            this.Text = "License Activation";
+            this.ClientSize = new Size(620, 480);
+            this.MinimumSize = new Size(640, 520);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.BackColor = AppTheme.BgLight;
-            this.ForeColor = AppTheme.TextPrimary;
+            this.MinimizeBox = false;
+            this.BackColor = AppTheme.LicBgLight;
 
-            // Header panel
-            headerPanel = new Panel
+            // ===== HEADER =====
+            Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 80,
-                BackColor = AppTheme.BgPanel,
-                Padding = new Padding(20, 15, 20, 10)
+                Height = 110,
+                BackColor = AppTheme.Primary
             };
-            headerPanel.Paint += (s, e) =>
-            {
-                using (var pen = new Pen(AppTheme.AccentSecondary, 2))
-                {
-                    e.Graphics.DrawLine(pen, 0, headerPanel.Height - 1, headerPanel.Width, headerPanel.Height - 1);
-                }
-            };
-
-            // Title
-            titleLabel = new Label
-            {
-                Text = "🔐 AirManager License",
-                Font = new Font("Segoe UI", 16f, FontStyle.Bold),
-                ForeColor = AppTheme.TextPrimary,
-                AutoSize = true,
-                Location = new Point(20, 12)
-            };
-            headerPanel.Controls.Add(titleLabel);
-
-            // Subtitle
-            subtitleLabel = new Label
-            {
-                Text = "Enter your serial code to unlock AirManager",
-                Font = new Font("Segoe UI", 9f),
-                ForeColor = AppTheme.TextSecondary,
-                AutoSize = true,
-                Location = new Point(22, 48)
-            };
-            headerPanel.Controls.Add(subtitleLabel);
-
             this.Controls.Add(headerPanel);
 
-            // Main panel
-            mainPanel = new Panel
+            Label lblIcon = new Label
             {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(30, 20, 30, 20),
-                BackColor = AppTheme.BgLight
-            };
-            this.Controls.Add(mainPanel);
-
-            int yPos = 15;
-
-            // Serial code label
-            serialLabel = new Label
-            {
-                Text = "Serial Code:",
-                Font = new Font("Segoe UI", 10f, FontStyle.Bold),
-                ForeColor = AppTheme.TextPrimary,
-                Location = new Point(5, yPos),
+                Text = "🔐",
+                Font = new Font("Segoe UI", 30),
+                ForeColor = AppTheme.TextInverse,
+                Location = new Point(20, 20),
                 AutoSize = true
             };
-            mainPanel.Controls.Add(serialLabel);
+            headerPanel.Controls.Add(lblIcon);
 
-            yPos += 28;
-
-            // Serial code textbox
-            serialTextBox = new TextBox
+            Label lblTitle = new Label
             {
-                Font = new Font("Consolas", 13f),
-                ForeColor = AppTheme.TextPrimary,
-                BackColor = AppTheme.BgInput,
+                Text = "License Activation",
+                Font = new Font("Segoe UI", 20, FontStyle.Bold),
+                ForeColor = AppTheme.TextInverse,
+                AutoSize = false,
+                Size = new Size(460, 42),
+                Location = new Point(82, 18),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            headerPanel.Controls.Add(lblTitle);
+
+            Label lblSubtitle = new Label
+            {
+                Text = "Enter your serial code to unlock AirManager",
+                Font = new Font("Segoe UI", 9),
+                ForeColor = Color.FromArgb(200, 230, 255),
+                AutoSize = false,
+                Size = new Size(520, 22),
+                Location = new Point(82, 66),
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+            headerPanel.Controls.Add(lblSubtitle);
+
+            // ===== MAIN CARD =====
+            int margin = 20;
+            int cardTop = 110 + margin;
+
+            Panel cardPanel = new Panel
+            {
+                Location = new Point(margin, cardTop),
+                Size = new Size(580, 220),
+                BackColor = AppTheme.LicSurface,
+                Padding = new Padding(24)
+            };
+            cardPanel.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using (var pen = new Pen(AppTheme.LicBorderLight, 1))
+                    e.Graphics.DrawRectangle(pen, 0, 0, cardPanel.Width - 1, cardPanel.Height - 1);
+            };
+            this.Controls.Add(cardPanel);
+
+            // Owner Name Label
+            Label lblOwner = new Label
+            {
+                Text = "Name / Company",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = AppTheme.LicTextSecondary,
+                Location = new Point(24, 18),
+                AutoSize = true
+            };
+            cardPanel.Controls.Add(lblOwner);
+
+            TextBox txtOwner = new TextBox
+            {
+                Name = "txtOwner",
+                Font = new Font("Segoe UI", 11),
+                Location = new Point(24, 40),
+                Size = new Size(532, 34),
                 BorderStyle = BorderStyle.FixedSingle,
-                Location = new Point(5, yPos),
-                Size = new Size(440, 32),
-                MaxLength = 19,
+                BackColor = AppTheme.LicBgLight
+            };
+            cardPanel.Controls.Add(txtOwner);
+
+            // Serial Label
+            Label lblSerial = new Label
+            {
+                Text = "Serial Code",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                ForeColor = AppTheme.LicTextSecondary,
+                Location = new Point(24, 90),
+                AutoSize = true
+            };
+            cardPanel.Controls.Add(lblSerial);
+
+            TextBox txtSerial = new TextBox
+            {
+                Name = "txtSerial",
+                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                Location = new Point(24, 112),
+                Size = new Size(532, 36),
+                MaxLength = 18,
                 CharacterCasing = CharacterCasing.Upper,
-                PlaceholderText = "AMG-XXXX-XXXX-XXXX"
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = AppTheme.LicBgLight
             };
-            serialTextBox.TextChanged += SerialTextBox_TextChanged;
-            serialTextBox.KeyDown += (s, e) =>
+            cardPanel.Controls.Add(txtSerial);
+
+            Label lblFormat = new Label
             {
-                if (e.KeyCode == Keys.Enter)
-                {
-                    e.SuppressKeyPress = true;
-                    ActivateButton_Click(s!, e);
-                }
+                Text = $"Format: {Models.LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX",
+                Font = new Font("Segoe UI", 8, FontStyle.Italic),
+                ForeColor = AppTheme.LicTextSecondary,
+                Location = new Point(24, 160),
+                AutoSize = true
             };
-            mainPanel.Controls.Add(serialTextBox);
+            cardPanel.Controls.Add(lblFormat);
 
-            yPos += 48;
-
-            // Activate button
-            activateButton = new Button
+            // ===== ACTIVATE BUTTON =====
+            int btnActivateTop = cardTop + cardPanel.Height + margin;
+            Button btnActivate = new Button
             {
+                Name = "btnActivate",
                 Text = "🔓  Activate License",
-                Font = new Font("Segoe UI", 11f, FontStyle.Bold),
-                ForeColor = AppTheme.TextPrimary,
-                BackColor = AppTheme.AccentSecondary,
+                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                Location = new Point(margin, btnActivateTop),
+                Size = new Size(580, 52),
+                BackColor = AppTheme.Success,
+                ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Size = new Size(440, 42),
-                Location = new Point(5, yPos),
-                Cursor = Cursors.Hand,
-                Enabled = false
-            };
-            activateButton.FlatAppearance.BorderSize = 0;
-            activateButton.Click += ActivateButton_Click;
-            activateButton.MouseEnter += (s, e) =>
-            {
-                if (activateButton.Enabled)
-                    activateButton.BackColor = AppTheme.Lighten(AppTheme.AccentSecondary, 15);
-            };
-            activateButton.MouseLeave += (s, e) =>
-            {
-                if (activateButton.Enabled)
-                    activateButton.BackColor = AppTheme.AccentSecondary;
-            };
-            mainPanel.Controls.Add(activateButton);
-
-            yPos += 55;
-
-            // Progress bar
-            progressBar = new ProgressBar
-            {
-                Style = ProgressBarStyle.Marquee,
-                MarqueeAnimationSpeed = 30,
-                Location = new Point(5, yPos),
-                Size = new Size(440, 4),
-                Visible = false
-            };
-            mainPanel.Controls.Add(progressBar);
-
-            yPos += 15;
-
-            // Status label
-            statusLabel = new Label
-            {
-                Text = "",
-                Font = new Font("Segoe UI", 9f),
-                ForeColor = AppTheme.TextSecondary,
-                Location = new Point(5, yPos),
-                Size = new Size(440, 40),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            mainPanel.Controls.Add(statusLabel);
-
-            yPos += 50;
-
-            // Hardware ID label
-            string hwId = HardwareIdentifier.GetHardwareId();
-            hardwareIdLabel = new Label
-            {
-                Text = $"Hardware ID: {hwId}",
-                Font = new Font("Consolas", 7.5f),
-                ForeColor = AppTheme.TextSecondary,
-                Location = new Point(5, yPos),
-                Size = new Size(440, 18),
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            mainPanel.Controls.Add(hardwareIdLabel);
-
-            yPos += 30;
-
-            // Exit button
-            exitButton = new Button
-            {
-                Text = "Exit",
-                Font = new Font("Segoe UI", 9f),
-                ForeColor = AppTheme.TextSecondary,
-                BackColor = AppTheme.BgPanel,
-                FlatStyle = FlatStyle.Flat,
-                Size = new Size(100, 32),
-                Location = new Point(175, yPos),
                 Cursor = Cursors.Hand
             };
-            exitButton.FlatAppearance.BorderColor = AppTheme.BorderLight;
-            exitButton.FlatAppearance.BorderSize = 1;
-            exitButton.Click += (s, e) =>
+            btnActivate.FlatAppearance.BorderSize = 0;
+            btnActivate.Click += (s, e) => BtnActivate_Click(txtOwner.Text, txtSerial.Text);
+            this.Controls.Add(btnActivate);
+
+            // ===== INFO LABEL =====
+            int infoTop = btnActivateTop + btnActivate.Height + 14;
+            Label lblInfo = new Label
             {
-                LicenseActivated = false;
-                this.DialogResult = DialogResult.Cancel;
-                this.Close();
+                Text = "AirManager requires a valid license to work.\nPurchase your license at store.airdirector.app",
+                Font = new Font("Segoe UI", 8, FontStyle.Italic),
+                ForeColor = AppTheme.LicTextSecondary,
+                Location = new Point(margin, infoTop),
+                Size = new Size(580, 36),
+                TextAlign = ContentAlignment.MiddleCenter
             };
-            mainPanel.Controls.Add(exitButton);
+            this.Controls.Add(lblInfo);
 
-            // Bring main panel to front so it renders after header
-            mainPanel.BringToFront();
+            // Adjust client height based on content
+            this.ClientSize = new Size(620, infoTop + lblInfo.Height + margin);
         }
 
-        private void SerialTextBox_TextChanged(object? sender, EventArgs e)
+        private void BtnActivate_Click(string ownerName, string serial)
         {
-            string text = serialTextBox.Text.Trim();
-            bool validFormat = AirManager.Models.LicenseInfo.IsValidSerialFormat(text);
-
-            activateButton.Enabled = validFormat;
-
-            if (validFormat)
+            if (string.IsNullOrWhiteSpace(serial))
             {
-                serialTextBox.ForeColor = AppTheme.Success;
-                activateButton.BackColor = AppTheme.AccentSecondary;
-            }
-            else if (text.Length > 0)
-            {
-                serialTextBox.ForeColor = AppTheme.TextPrimary;
-                activateButton.BackColor = AppTheme.ButtonDisabled;
-            }
-            else
-            {
-                serialTextBox.ForeColor = AppTheme.TextPrimary;
-                activateButton.BackColor = AppTheme.ButtonDisabled;
-            }
-        }
-
-        private async void ActivateButton_Click(object? sender, EventArgs e)
-        {
-            string serial = serialTextBox.Text.Trim().ToUpper();
-
-            if (!AirManager.Models.LicenseInfo.IsValidSerialFormat(serial))
-            {
-                SetStatus("❌ Invalid serial code format", AppTheme.Danger);
+                MessageBox.Show("Please enter the serial code", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Disable UI during activation
-            SetUIEnabled(false);
-            progressBar.Visible = true;
-            SetStatus("🔄 Activating license...", AppTheme.Info);
+            bool success = LicenseManager.ActivateLicense(serial, ownerName, out string errorMessage);
 
-            try
+            if (success)
             {
-                var (success, message) = await _licenseManager.ActivateLicenseAsync(serial);
+                MessageBox.Show(
+                    "License activated successfully!",
+                    "Success",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
 
-                if (success)
-                {
-                    SetStatus("✅ " + message, AppTheme.Success);
-                    activateButton.Text = "✅  License Activated!";
-                    activateButton.BackColor = AppTheme.Success;
-                    LicenseActivated = true;
-
-                    // Close after short delay
-                    await Task.Delay(1500);
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
-                }
-                else
-                {
-                    SetStatus("❌ " + message, AppTheme.Danger);
-                    SetUIEnabled(true);
-                }
-            }
-            catch (Exception ex)
-            {
-                SetStatus($"❌ Error: {ex.Message}", AppTheme.Danger);
-                SetUIEnabled(true);
-            }
-            finally
-            {
-                progressBar.Visible = false;
-            }
-        }
-
-        private void SetStatus(string text, Color color)
-        {
-            if (statusLabel.InvokeRequired)
-            {
-                statusLabel.Invoke(new Action(() =>
-                {
-                    statusLabel.Text = text;
-                    statusLabel.ForeColor = color;
-                }));
+                this.DialogResult = DialogResult.OK;
+                this.Close();
             }
             else
             {
-                statusLabel.Text = text;
-                statusLabel.ForeColor = color;
+                MessageBox.Show(
+                    "Error during activation:\n\n" + errorMessage,
+                    "Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
         }
 
-        private void SetUIEnabled(bool enabled)
-        {
-            serialTextBox.Enabled = enabled;
-            activateButton.Enabled = enabled;
-        }
     }
 }

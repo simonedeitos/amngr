@@ -14,509 +14,454 @@ namespace AirManager.Services.Licensing
     /// <summary>
     /// Manages license validation, activation, and persistence for AirManager
     /// </summary>
-    public class LicenseManager
+    public static class LicenseManager
     {
-        // API Configuration
-        private const string API_BASE = "https://store.airdirector.app/api/";
-        private const string DEFAULT_API_KEY = "73a434a1107442481e13ed52ceba1a574648adb12fd5bc0e0c967f25f6743731";
-
-        // Storage paths
+        // ── License file path ──────────────────────────────────────────────
         private static readonly string AppDataPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "AirManager");
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "AirManager"
+        );
+
         private static readonly string LicenseFilePath = Path.Combine(AppDataPath, "AirManager.lic");
 
-        // Registry key
+        // ── API ───────────────────────────────────────────────────────────────
+        private const string API_BASE = "https://store.airdirector.app/api/";
+
+        private static readonly string API_KEY = LoadApiKey();
+
+        private static readonly HttpClient _http = CreateHttpClient();
+
         private const string REGISTRY_KEY = @"SOFTWARE\AirManager";
+        private const string REGISTRY_VALUE_NAME = "ApiKey";
 
-        // Encryption
-        private const string EncPassphrase = "AirManager.Lic.2024#Secure";
-
-        // Singleton
-        private static LicenseManager? _instance;
-        private static readonly object _lock = new object();
-
-        // Current license
-        public LicenseInfo? CurrentLicense { get; private set; }
-
-        private LicenseManager() { }
+        private const string DEFAULT_API_KEY = "73a434a1107442481e13ed52ceba1a574648adb12fd5bc0e0c967f25f6743731";
 
         /// <summary>
-        /// Gets the singleton instance of LicenseManager
+        /// Loads the API key from the Windows Registry (HKCU\SOFTWARE\AirManager\ApiKey).
+        /// If the value does not exist, creates it with the default key.
         /// </summary>
-        public static LicenseManager Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (_lock)
-                    {
-                        _instance ??= new LicenseManager();
-                    }
-                }
-                return _instance;
-            }
-        }
-
-        /// <summary>
-        /// Checks if a valid license exists
-        /// </summary>
-        public bool IsLicensed()
-        {
-            try
-            {
-                if (CurrentLicense == null)
-                    LoadLicense();
-
-                return CurrentLicense != null && CurrentLicense.IsValid();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error checking license: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Loads the license from file
-        /// </summary>
-        public void LoadLicense()
-        {
-            try
-            {
-                if (File.Exists(LicenseFilePath))
-                {
-                    string encryptedData = File.ReadAllText(LicenseFilePath);
-                    string jsonData = Decrypt(encryptedData);
-                    CurrentLicense = JsonConvert.DeserializeObject<LicenseInfo>(jsonData);
-                    Console.WriteLine("[LicenseManager] License loaded successfully");
-                }
-                else
-                {
-                    // Try loading from registry as fallback
-                    LoadLicenseFromRegistry();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error loading license: {ex.Message}");
-                CurrentLicense = null;
-            }
-        }
-
-        /// <summary>
-        /// Saves the license to file
-        /// </summary>
-        private void SaveLicense()
-        {
-            try
-            {
-                if (CurrentLicense == null)
-                    return;
-
-                // Ensure directory exists
-                if (!Directory.Exists(AppDataPath))
-                    Directory.CreateDirectory(AppDataPath);
-
-                string jsonData = JsonConvert.SerializeObject(CurrentLicense, Formatting.Indented);
-                string encryptedData = Encrypt(jsonData);
-                File.WriteAllText(LicenseFilePath, encryptedData);
-
-                // Also save to registry as backup
-                SaveLicenseToRegistry();
-
-                Console.WriteLine("[LicenseManager] License saved successfully");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error saving license: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Saves license data to Windows Registry
-        /// </summary>
-        private void SaveLicenseToRegistry()
+        private static string LoadApiKey()
         {
             try
             {
                 using (RegistryKey? key = Registry.CurrentUser.CreateSubKey(REGISTRY_KEY))
                 {
-                    if (key != null && CurrentLicense != null)
+                    object? val = key?.GetValue(REGISTRY_VALUE_NAME);
+                    if (val != null)
                     {
-                        string jsonData = JsonConvert.SerializeObject(CurrentLicense);
-                        string encryptedData = Encrypt(jsonData);
-                        key.SetValue("LicenseData", encryptedData);
+                        string apiKey = val.ToString() ?? string.Empty;
+                        if (!string.IsNullOrWhiteSpace(apiKey))
+                            return apiKey;
                     }
+
+                    // Value not found → create the field with the default API key
+                    key?.SetValue(REGISTRY_VALUE_NAME, DEFAULT_API_KEY, RegistryValueKind.String);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[LicenseManager] Error saving to registry: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Loads license data from Windows Registry
-        /// </summary>
-        private void LoadLicenseFromRegistry()
-        {
-            try
-            {
-                using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(REGISTRY_KEY))
-                {
-                    if (key != null)
-                    {
-                        string? encryptedData = key.GetValue("LicenseData") as string;
-                        if (!string.IsNullOrEmpty(encryptedData))
-                        {
-                            string jsonData = Decrypt(encryptedData);
-                            CurrentLicense = JsonConvert.DeserializeObject<LicenseInfo>(jsonData);
-                            Console.WriteLine("[LicenseManager] License loaded from registry");
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error loading from registry: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Activates a license with the given serial code via API
-        /// </summary>
-        public async Task<(bool Success, string Message)> ActivateLicenseAsync(string serialCode)
-        {
-            try
-            {
-                serialCode = serialCode.Trim().ToUpper();
-
-                if (!LicenseInfo.IsValidSerialFormat(serialCode))
-                    return (false, "Invalid serial code format. Expected: AMG-XXXX-XXXX-XXXX");
-
-                string hardwareId = HardwareIdentifier.GetHardwareId();
-
-                using (HttpClient client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(30);
-
-                    var requestData = new
-                    {
-                        serial_code = serialCode,
-                        hardware_id = hardwareId,
-                        product_name = LicenseInfo.ProductName,
-                        api_key = GetApiKey()
-                    };
-
-                    string jsonContent = JsonConvert.SerializeObject(requestData);
-                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.PostAsync($"{API_BASE}license/activate", content);
-                    string responseBody = await response.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        JObject result = JObject.Parse(responseBody);
-
-                        bool success = result["success"]?.Value<bool>() ?? false;
-                        string message = result["message"]?.Value<string>() ?? "Unknown response";
-
-                        if (success)
-                        {
-                            JObject? licenseData = result["license"] as JObject;
-
-                            CurrentLicense = new LicenseInfo
-                            {
-                                SerialCode = serialCode,
-                                LicenseKey = licenseData?["license_key"]?.Value<string>() ?? string.Empty,
-                                HardwareId = hardwareId,
-                                CustomerName = licenseData?["customer_name"]?.Value<string>() ?? string.Empty,
-                                CustomerEmail = licenseData?["customer_email"]?.Value<string>() ?? string.Empty,
-                                ProductVersion = licenseData?["product_version"]?.Value<string>() ?? string.Empty,
-                                ActivationDate = DateTime.UtcNow,
-                                ExpirationDate = ParseExpirationDate(licenseData?["expiration_date"]?.Value<string>()),
-                                LicenseType = licenseData?["license_type"]?.Value<string>() ?? "Standard",
-                                IsActivated = true,
-                                MaxActivations = licenseData?["max_activations"]?.Value<int>() ?? 1,
-                                CurrentActivations = licenseData?["current_activations"]?.Value<int>() ?? 1,
-                                Status = "Active"
-                            };
-
-                            SaveLicense();
-
-                            return (true, message);
-                        }
-                        else
-                        {
-                            return (false, message);
-                        }
-                    }
-                    else
-                    {
-                        // Try to parse error message from response
-                        try
-                        {
-                            JObject errorResult = JObject.Parse(responseBody);
-                            string errorMessage = errorResult["message"]?.Value<string>() ?? $"Server error: {response.StatusCode}";
-                            return (false, errorMessage);
-                        }
-                        catch
-                        {
-                            return (false, $"Server error: {response.StatusCode}");
-                        }
-                    }
-                }
-            }
-            catch (HttpRequestException ex)
-            {
-                Console.WriteLine($"[LicenseManager] Network error: {ex.Message}");
-                return (false, "Network error. Please check your internet connection and try again.");
-            }
-            catch (TaskCanceledException)
-            {
-                return (false, "Connection timeout. Please check your internet connection and try again.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Activation error: {ex.Message}");
-                return (false, $"Activation error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Deactivates the current license
-        /// </summary>
-        public async Task<(bool Success, string Message)> DeactivateLicenseAsync()
-        {
-            try
-            {
-                if (CurrentLicense == null || !CurrentLicense.IsActivated)
-                    return (false, "No active license found");
-
-                using (HttpClient client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(30);
-
-                    var requestData = new
-                    {
-                        serial_code = CurrentLicense.SerialCode,
-                        hardware_id = CurrentLicense.HardwareId,
-                        product_name = LicenseInfo.ProductName,
-                        api_key = GetApiKey()
-                    };
-
-                    string jsonContent = JsonConvert.SerializeObject(requestData);
-                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.PostAsync($"{API_BASE}license/deactivate", content);
-                    string responseBody = await response.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        JObject result = JObject.Parse(responseBody);
-                        bool success = result["success"]?.Value<bool>() ?? false;
-                        string message = result["message"]?.Value<string>() ?? "License deactivated";
-
-                        if (success)
-                        {
-                            // Clear local license
-                            CurrentLicense = null;
-                            DeleteLicenseFiles();
-                            return (true, message);
-                        }
-
-                        return (false, message);
-                    }
-
-                    return (false, $"Server error: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Deactivation error: {ex.Message}");
-                return (false, $"Deactivation error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Validates the current license against the API
-        /// </summary>
-        public async Task<(bool Valid, string Message)> ValidateLicenseAsync()
-        {
-            try
-            {
-                if (CurrentLicense == null)
-                    return (false, "No license found");
-
-                using (HttpClient client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromSeconds(15);
-
-                    var requestData = new
-                    {
-                        serial_code = CurrentLicense.SerialCode,
-                        hardware_id = HardwareIdentifier.GetHardwareId(),
-                        product_name = LicenseInfo.ProductName,
-                        api_key = GetApiKey()
-                    };
-
-                    string jsonContent = JsonConvert.SerializeObject(requestData);
-                    var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-                    HttpResponseMessage response = await client.PostAsync($"{API_BASE}license/validate", content);
-                    string responseBody = await response.Content.ReadAsStringAsync();
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        JObject result = JObject.Parse(responseBody);
-                        bool valid = result["valid"]?.Value<bool>() ?? false;
-                        string message = result["message"]?.Value<string>() ?? "Validation complete";
-                        return (valid, message);
-                    }
-
-                    // If server is unreachable, allow offline validation
-                    return (CurrentLicense.IsValid(), "Offline validation (server unavailable)");
-                }
-            }
-            catch (Exception)
-            {
-                // Allow offline validation when server is unavailable
-                if (CurrentLicense != null)
-                    return (CurrentLicense.IsValid(), "Offline validation (server unavailable)");
-
-                return (false, "No license found");
-            }
-        }
-
-        /// <summary>
-        /// Deletes all license data
-        /// </summary>
-        private void DeleteLicenseFiles()
-        {
-            try
-            {
-                if (File.Exists(LicenseFilePath))
-                    File.Delete(LicenseFilePath);
-
-                using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(REGISTRY_KEY, true))
-                {
-                    key?.DeleteValue("LicenseData", false);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error deleting license files: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Gets the API key from registry or uses default
-        /// </summary>
-        private string GetApiKey()
-        {
-            try
-            {
-                using (RegistryKey? key = Registry.CurrentUser.OpenSubKey(REGISTRY_KEY))
-                {
-                    string? apiKey = key?.GetValue("ApiKey") as string;
-                    if (!string.IsNullOrEmpty(apiKey))
-                        return apiKey;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LicenseManager] Error reading API key from registry: {ex.Message}");
+                Console.WriteLine($"Error reading ApiKey from Registry: {ex.Message}");
             }
 
             return DEFAULT_API_KEY;
         }
 
-        /// <summary>
-        /// Parses an expiration date string, returns DateTime.MinValue for perpetual licenses
-        /// </summary>
-        private DateTime ParseExpirationDate(string? dateStr)
+        private static HttpClient CreateHttpClient()
         {
-            if (string.IsNullOrEmpty(dateStr) || dateStr.Equals("never", StringComparison.OrdinalIgnoreCase))
-                return DateTime.MinValue;
-
-            if (DateTime.TryParse(dateStr, out DateTime result))
-                return result;
-
-            return DateTime.MinValue;
+            var client = new HttpClient();
+            if (!string.IsNullOrEmpty(API_KEY))
+                client.DefaultRequestHeaders.Add("X-API-Key", API_KEY);
+            client.Timeout = TimeSpan.FromSeconds(15);
+            return client;
         }
 
-        // ==================== ENCRYPTION ====================
+        // ── License file encryption (AES-256-CBC) ─────────────────────────────
+        private const string EncPassphrase = "AirManager.Lic.2024#Secure";
+        private const int PBKDF2_ITERATIONS = 100_000;
+        private static readonly byte[] EncSalt =
+        {
+            0x4A, 0x69, 0x2E, 0xAC, 0x7B, 0xF3, 0x1D, 0x88,
+            0x5C, 0x40, 0xE2, 0x9A, 0x3F, 0xC1, 0x55, 0x7E
+        };
+
+        private static (byte[] key, byte[] iv) DeriveKeyAndIV()
+        {
+            using var kdf = new Rfc2898DeriveBytes(
+                EncPassphrase, EncSalt, PBKDF2_ITERATIONS, HashAlgorithmName.SHA256);
+            return (kdf.GetBytes(32), kdf.GetBytes(16));
+        }
+
+        private static string EncryptLicense(string plainText)
+        {
+            var (key, iv) = DeriveKeyAndIV();
+            using var aes = Aes.Create();
+            aes.Key = key;
+            aes.IV = iv;
+
+            using var ms = new MemoryStream();
+            using (var cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
+            using (var sw = new StreamWriter(cs, Encoding.UTF8))
+            {
+                sw.Write(plainText);
+                sw.Flush();
+            }
+
+            return Convert.ToBase64String(ms.ToArray());
+        }
+
+        private static string DecryptLicense(string cipherText)
+        {
+            var (key, iv) = DeriveKeyAndIV();
+            byte[] cipherBytes = Convert.FromBase64String(cipherText);
+
+            using var aes = Aes.Create();
+            aes.Key = key;
+            aes.IV = iv;
+
+            using var ms = new MemoryStream(cipherBytes);
+            using var cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            using var sr = new StreamReader(cs, Encoding.UTF8);
+            return sr.ReadToEnd();
+        }
+
+        // ── Cache ─────────────────────────────────────────────────────────────
+        private static LicenseInfo? _cachedLicense = null;
+
+        // ── License reading ───────────────────────────────────────────────────
 
         /// <summary>
-        /// Encrypts a string using AES encryption
+        /// Gets the current license (from cache or file).
+        /// Returns null if no valid license is found.
         /// </summary>
-        private string Encrypt(string plainText)
+        public static LicenseInfo? GetCurrentLicense()
         {
-            byte[] key = DeriveKey(EncPassphrase);
-            using (Aes aes = Aes.Create())
+            if (_cachedLicense != null)
+                return _cachedLicense;
+
+            if (File.Exists(LicenseFilePath))
             {
-                aes.Key = key;
-                aes.GenerateIV();
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
-
-                using (ICryptoTransform encryptor = aes.CreateEncryptor())
+                try
                 {
-                    byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
-                    byte[] encryptedBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+                    string fileContent = File.ReadAllText(LicenseFilePath);
 
-                    // Prepend IV to encrypted data
-                    byte[] result = new byte[aes.IV.Length + encryptedBytes.Length];
-                    Array.Copy(aes.IV, 0, result, 0, aes.IV.Length);
-                    Array.Copy(encryptedBytes, 0, result, aes.IV.Length, encryptedBytes.Length);
+                    string json;
+                    bool wasEncrypted = true;
+                    try
+                    {
+                        json = DecryptLicense(fileContent);
+                    }
+                    catch (FormatException)
+                    {
+                        json = fileContent;
+                        wasEncrypted = false;
+                    }
+                    catch (CryptographicException)
+                    {
+                        json = fileContent;
+                        wasEncrypted = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[LicenseManager] Unexpected decryption error: {ex.Message}");
+                        json = fileContent;
+                        wasEncrypted = false;
+                    }
 
-                    return Convert.ToBase64String(result);
+                    var loaded = JsonConvert.DeserializeObject<LicenseInfo>(json);
+                    if (loaded != null && loaded.IsValid())
+                    {
+                        // If the file was unencrypted, rewrite it encrypted
+                        if (!wasEncrypted)
+                            SaveLicenseToFile(loaded, out _);
+
+                        _cachedLicense = loaded;
+                        return loaded;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[LicenseManager] Error loading license: {ex.Message}");
                 }
             }
+
+            // No valid license found
+            return null;
         }
 
         /// <summary>
-        /// Decrypts an AES encrypted string
+        /// Checks if the license is activated and valid
         /// </summary>
-        private string Decrypt(string encryptedText)
+        public static bool IsLicenseValid()
         {
-            byte[] key = DeriveKey(EncPassphrase);
-            byte[] fullData = Convert.FromBase64String(encryptedText);
+            var license = GetCurrentLicense();
+            return license != null && license.IsActivated;
+        }
 
-            using (Aes aes = Aes.Create())
+        // ── Activation ───────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Verifies and activates the license through the server API.
+        /// Returns true if activation was successful.
+        /// </summary>
+        public static bool ActivateLicense(string serialKey, string ownerName, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(serialKey))
             {
-                aes.Key = key;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
+                errorMessage = "Please enter the serial code";
+                return false;
+            }
 
-                // Extract IV from the beginning of the data
-                byte[] iv = new byte[aes.BlockSize / 8];
-                byte[] encryptedBytes = new byte[fullData.Length - iv.Length];
+            serialKey = serialKey.ToUpper().Trim();
 
-                Array.Copy(fullData, 0, iv, 0, iv.Length);
-                Array.Copy(fullData, iv.Length, encryptedBytes, 0, encryptedBytes.Length);
+            if (!LicenseInfo.IsValidSerialFormat(serialKey))
+            {
+                errorMessage = $"Invalid serial format.\nCorrect format: {LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX";
+                return false;
+            }
 
-                aes.IV = iv;
+            string hwId = HardwareIdentifier.GetMachineID();
 
-                using (ICryptoTransform decryptor = aes.CreateDecryptor())
+            try
+            {
+                // 1. Check license on server
+                var checkResult = Task.Run(() => CheckLicenseOnServerAsync(serialKey))
+                                      .GetAwaiter().GetResult();
+
+                if (!checkResult.exists)
                 {
-                    byte[] decryptedBytes = decryptor.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
-                    return Encoding.UTF8.GetString(decryptedBytes);
+                    errorMessage = "Invalid serial";
+                    return false;
                 }
+
+                if (!checkResult.orderConfirmed)
+                {
+                    errorMessage = "Order awaiting confirmation";
+                    return false;
+                }
+
+                if (checkResult.expired)
+                {
+                    errorMessage = "License expired";
+                    return false;
+                }
+
+                if (checkResult.isActive && checkResult.hardwareId != hwId)
+                {
+                    errorMessage = "License already active on another device.\nPlease deactivate it first from your account.";
+                    return false;
+                }
+
+                // 2. If not yet active on this PC → activate
+                if (!checkResult.isActive)
+                {
+                    var activateResult = Task.Run(() => ActivateLicenseOnServerAsync(serialKey, hwId))
+                                             .GetAwaiter().GetResult();
+                    if (!activateResult)
+                    {
+                        errorMessage = "Error during server activation";
+                        return false;
+                    }
+                }
+
+                // 3. Create and save the local license
+                var license = new LicenseInfo
+                {
+                    SerialKey   = serialKey,
+                    OwnerName   = string.IsNullOrWhiteSpace(ownerName) ? serialKey : ownerName.Trim(),
+                    ActivatedOn = DateTime.Now,
+                    MachineID   = hwId,
+                    ProductName = "AirManager",
+                    Version     = "1.0.0",
+                    IsActivated = true
+                };
+
+                if (!SaveLicenseToFile(license, out string saveError))
+                {
+                    errorMessage = saveError;
+                    return false;
+                }
+
+                _cachedLicense = license;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error connecting to the license server:\n{ex.Message}";
+                return false;
             }
         }
 
+        // ── Deactivation ────────────────────────────────────────────────────
+
         /// <summary>
-        /// Derives a 256-bit key from a passphrase using SHA256
+        /// Removes the local license and deactivates it on the server.
         /// </summary>
-        private byte[] DeriveKey(string passphrase)
+        public static bool RemoveLicense(out string errorMessage)
         {
-            using (SHA256 sha256 = SHA256.Create())
+            errorMessage = string.Empty;
+
+            var current = GetCurrentLicense();
+
+            if (current == null)
             {
-                return sha256.ComputeHash(Encoding.UTF8.GetBytes(passphrase));
+                errorMessage = "No active license to remove";
+                return false;
             }
+
+            try
+            {
+                bool serverOk = Task.Run(() => DeactivateLicenseOnServerAsync(current.SerialKey))
+                                    .GetAwaiter().GetResult();
+
+                if (!serverOk)
+                {
+                    errorMessage = "Error during server deactivation";
+                    return false;
+                }
+
+                if (File.Exists(LicenseFilePath))
+                    File.Delete(LicenseFilePath);
+
+                _cachedLicense = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error removing license: {ex.Message}";
+                return false;
+            }
+        }
+
+        // ── Periodic check ───────────────────────────────────────────────────
+
+        /// <summary>
+        /// Periodic license check on the server (call at startup or every 24 hours).
+        /// If the license is deactivated, it removes it.
+        /// </summary>
+        public static bool PeriodicCheck(out string statusMessage)
+        {
+            statusMessage = string.Empty;
+
+            var current = GetCurrentLicense();
+            if (current == null)
+                return false;
+
+            try
+            {
+                var result = Task.Run(() => CheckLicenseOnServerAsync(current.SerialKey))
+                                  .GetAwaiter().GetResult();
+
+                if (!result.exists || !result.isActive)
+                {
+                    if (File.Exists(LicenseFilePath))
+                        File.Delete(LicenseFilePath);
+                    _cachedLicense = null;
+                    statusMessage = "License deactivated. The software will close.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // No connection → continue working locally
+                Console.WriteLine($"[LicenseManager] PeriodicCheck: no connection — {ex.Message}");
+                return true;
+            }
+        }
+
+        // ── API calls ──────────────────────────────────────────────────────
+
+        private static async Task<(bool exists, bool orderConfirmed, bool expired, bool isActive, string hardwareId)>
+            CheckLicenseOnServerAsync(string serial)
+        {
+            var response = await _http.GetAsync($"{API_BASE}license_check.php?serial={Uri.EscapeDataString(serial)}");
+            string json = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Server error ({(int)response.StatusCode}): {json}");
+
+            var obj = JObject.Parse(json);
+
+            bool exists         = obj["exists"]?.Value<bool>() ?? false;
+            bool orderOk        = obj["order_confirmed"]?.Value<bool>() ?? false;
+            bool expired        = obj["expired"]?.Value<bool>() ?? false;
+            bool isActive       = (obj["is_active"]?.Value<int>() ?? 0) == 1;
+            string hwId         = obj["hardware_id"]?.Value<string>() ?? string.Empty;
+
+            return (exists, orderOk, expired, isActive, hwId);
+        }
+
+        private static async Task<bool> ActivateLicenseOnServerAsync(string serial, string hardwareId)
+        {
+            var body = JsonConvert.SerializeObject(new { serial, hardware_id = hardwareId });
+            var content = new StringContent(body, Encoding.UTF8, "application/json");
+
+            var response = await _http.PostAsync($"{API_BASE}license_activate.php", content);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                return true;
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Activation error ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync()}");
+
+            string json = await response.Content.ReadAsStringAsync();
+            var obj = JObject.Parse(json);
+
+            bool success       = obj["success"]?.Value<bool>() ?? false;
+            bool alreadyActive = obj["already_active"]?.Value<bool>() ?? false;
+
+            return success || alreadyActive;
+        }
+
+        private static async Task<bool> DeactivateLicenseOnServerAsync(string serial)
+        {
+            var body = JsonConvert.SerializeObject(new { serial });
+            var content = new StringContent(body, Encoding.UTF8, "application/json");
+
+            var response = await _http.PostAsync($"{API_BASE}license_deactivate.php", content);
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Deactivation error ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync()}");
+
+            string json = await response.Content.ReadAsStringAsync();
+            var obj = JObject.Parse(json);
+
+            bool success = obj["success"]?.Value<bool>() ?? false;
+            return success;
+        }
+
+        // ── Utilities ──────────────────────────────────────────────────────
+
+        private static bool SaveLicenseToFile(LicenseInfo license, out string errorMessage)
+        {
+            errorMessage = string.Empty;
+            try
+            {
+                if (!Directory.Exists(AppDataPath))
+                    Directory.CreateDirectory(AppDataPath);
+
+                string json = JsonConvert.SerializeObject(license, Formatting.Indented);
+                File.WriteAllText(LicenseFilePath, EncryptLicense(json));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error saving license: {ex.Message}";
+                return false;
+            }
+        }
+
+        /// <summary>License file path</summary>
+        public static string GetLicenseFilePath() => LicenseFilePath;
+
+        /// <summary>Force reload the license from file</summary>
+        public static void ReloadLicense()
+        {
+            _cachedLicense = null;
+            GetCurrentLicense();
         }
     }
 }
