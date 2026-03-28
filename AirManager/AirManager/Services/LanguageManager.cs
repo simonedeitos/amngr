@@ -12,6 +12,7 @@ namespace AirManager.Services
         private static readonly object _lock = new object();
 
         private Dictionary<string, string> _translations;
+        private readonly Dictionary<string, string> _missingKeys;
         private string _currentLanguage;
         private string _languagesPath;
 
@@ -20,9 +21,9 @@ namespace AirManager.Services
         private LanguageManager()
         {
             _translations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            _missingKeys = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             _languagesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Languages");
 
-            // ✅ LEGGI LINGUA SALVATA DAL REGISTRY
             string savedLanguage = GetSavedLanguage();
             _currentLanguage = !string.IsNullOrEmpty(savedLanguage) ? savedLanguage : "Italiano";
 
@@ -48,8 +49,14 @@ namespace AirManager.Services
         }
 
         /// <summary>
-        /// ✅ LEGGE LA LINGUA SALVATA DAL REGISTRY
+        /// Initializes the LanguageManager singleton instance.
+        /// Call this at application startup to ensure the language is loaded early.
         /// </summary>
+        public static void Initialize()
+        {
+            _ = Instance;
+        }
+
         private string GetSavedLanguage()
         {
             try
@@ -72,7 +79,7 @@ namespace AirManager.Services
             }
             catch
             {
-                // Silenzioso
+                // Silent
             }
 
             return null;
@@ -88,10 +95,10 @@ namespace AirManager.Services
                 {
                     if (languageName != "English")
                     {
-                        string italianPath = Path.Combine(_languagesPath, "English.ini");
-                        if (File.Exists(italianPath))
+                        string englishPath = Path.Combine(_languagesPath, "English.ini");
+                        if (File.Exists(englishPath))
                         {
-                            filePath = italianPath;
+                            filePath = englishPath;
                             languageName = "English";
                         }
                         else
@@ -106,6 +113,7 @@ namespace AirManager.Services
                 }
 
                 _translations.Clear();
+                _missingKeys.Clear();
                 _currentLanguage = languageName;
 
                 string currentSection = "";
@@ -137,7 +145,7 @@ namespace AirManager.Services
             }
             catch
             {
-                // Silenzioso
+                // Silent
             }
         }
 
@@ -145,10 +153,80 @@ namespace AirManager.Services
         {
             if (Instance._translations.TryGetValue(key, out string value))
             {
-                return value;
+                return value.Replace("\\n", Environment.NewLine);
+            }
+
+            // Track missing keys for diagnostics
+            if (!Instance._missingKeys.ContainsKey(key))
+            {
+                Instance._missingKeys[key] = defaultValue ?? key;
             }
 
             return defaultValue ?? key;
+        }
+
+        /// <summary>
+        /// Saves all missing translation keys to the current language file.
+        /// Keys are appended under a [MissingKeys] section at the end of the file.
+        /// </summary>
+        public static void SaveMissingKeysToFile()
+        {
+            try
+            {
+                if (Instance._missingKeys.Count == 0)
+                    return;
+
+                string filePath = Path.Combine(Instance._languagesPath, $"{Instance._currentLanguage}.ini");
+
+                if (!File.Exists(filePath))
+                    return;
+
+                var lines = new List<string>
+                {
+                    "",
+                    "; ============================================",
+                    "; MISSING KEYS (auto-generated)",
+                    "; ============================================"
+                };
+
+                // Group missing keys by section prefix
+                var grouped = Instance._missingKeys
+                    .OrderBy(k => k.Key)
+                    .GroupBy(k =>
+                    {
+                        int dotIndex = k.Key.LastIndexOf('.');
+                        return dotIndex > 0 ? k.Key.Substring(0, dotIndex) : "General";
+                    });
+
+                foreach (var group in grouped)
+                {
+                    lines.Add("");
+                    lines.Add($"[{group.Key}]");
+                    foreach (var kvp in group)
+                    {
+                        string shortKey = kvp.Key;
+                        int dotIndex = kvp.Key.LastIndexOf('.');
+                        if (dotIndex > 0)
+                            shortKey = kvp.Key.Substring(dotIndex + 1);
+
+                        lines.Add($"{shortKey}={kvp.Value}");
+                    }
+                }
+
+                File.AppendAllLines(filePath, lines);
+            }
+            catch
+            {
+                // Silent
+            }
+        }
+
+        /// <summary>
+        /// Returns the dictionary of missing translation keys found at runtime.
+        /// </summary>
+        public static IReadOnlyDictionary<string, string> GetMissingKeys()
+        {
+            return Instance._missingKeys;
         }
 
         public static void SetLanguage(string languageName)
