@@ -49,6 +49,9 @@ namespace AirManager.Controls
         // ✅ CONTEXT MENU ITEMS (per traduzione)
         private ToolStripMenuItem menuItemPreview;
         private ToolStripMenuItem menuItemBatchEdit;
+        private ToolStripMenuItem menuItemCopyToStations;
+        private ToolStripMenuItem menuItemShowFolder;
+        private ToolStripMenuItem menuItemExportFiles;
 
         public event EventHandler<string> StatusChanged;
 
@@ -131,6 +134,9 @@ namespace AirManager.Controls
             // ✅ CONTEXT MENU
             menuItemPreview.Text = "🎧 " + LanguageManager.GetString("Archive.ContextMenu.Preview");
             menuItemBatchEdit.Text = "✏️ " + LanguageManager.GetString("Archive.ContextMenu.BatchEdit");
+            menuItemCopyToStations.Text = "📋 " + LanguageManager.GetString("Archive.ContextMenu.CopyToStations");
+            menuItemShowFolder.Text = "📁 " + LanguageManager.GetString("Archive.ContextMenu.ShowFolder");
+            menuItemExportFiles.Text = "📤 " + LanguageManager.GetString("Archive.ContextMenu.ExportFiles");
 
             // ✅ MINIPLAYER
             if (!_isPreviewPlaying)
@@ -511,6 +517,19 @@ namespace AirManager.Controls
             menuItemBatchEdit = new ToolStripMenuItem("✏️ Modifica Genere/Categoria", null, MenuBatchEdit_Click);
             contextMenu.Items.Add(menuItemBatchEdit);
 
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            menuItemCopyToStations = new ToolStripMenuItem("📋 Copia su altre emittenti...", null, MenuCopyToStations_Click);
+            contextMenu.Items.Add(menuItemCopyToStations);
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            menuItemShowFolder = new ToolStripMenuItem("📁 Mostra cartella file", null, MenuShowFolder_Click);
+            contextMenu.Items.Add(menuItemShowFolder);
+
+            menuItemExportFiles = new ToolStripMenuItem("📤 Esporta file selezionati", null, MenuExportFiles_Click);
+            contextMenu.Items.Add(menuItemExportFiles);
+
             dgvArchive.ContextMenuStrip = contextMenu;
 
             dgvArchive.CellDoubleClick += DgvArchive_CellDoubleClick;
@@ -730,6 +749,336 @@ namespace AirManager.Controls
             {
                 Console.WriteLine($"[UpdateGenre] ❌ Errore:  {ex.Message}");
                 return false;
+            }
+        }
+
+        // ✅ COPY TO OTHER STATIONS
+
+        private void MenuCopyToStations_Click(object sender, EventArgs e)
+        {
+            if (dgvArchive.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("Archive.Validation.SelectAtLeastOne"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Collect selected entry IDs
+            var selectedIds = new List<int>();
+            foreach (DataGridViewRow row in dgvArchive.SelectedRows)
+            {
+                if (row.Tag is MusicEntry musicEntry)
+                    selectedIds.Add(musicEntry.ID);
+                else if (row.Tag is ClipEntry clipEntry)
+                    selectedIds.Add(clipEntry.ID);
+            }
+
+            if (selectedIds.Count == 0) return;
+
+            using (var copyForm = new CopyToStationsForm(selectedIds, _archiveType))
+            {
+                if (copyForm.ShowDialog() == DialogResult.OK)
+                {
+                    PerformCopyToStations(copyForm);
+                }
+            }
+        }
+
+        private void PerformCopyToStations(CopyToStationsForm copyForm)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            int totalCopied = 0;
+            int totalErrors = 0;
+            string dbcFileName = _archiveType == "Musica" ? "Music.dbc" : "Clips.dbc";
+
+            try
+            {
+                // Load source entries
+                var sourceEntries = new List<object>();
+                foreach (DataGridViewRow row in dgvArchive.SelectedRows)
+                {
+                    if (row.Tag != null)
+                        sourceEntries.Add(row.Tag);
+                }
+
+                foreach (string stationId in copyForm.SelectedStationIds)
+                {
+                    try
+                    {
+                        var station = StationRegistry.LoadStation(stationId);
+                        if (station == null || string.IsNullOrEmpty(station.DatabasePath))
+                        {
+                            Console.WriteLine($"[CopyToStations] ⚠️ Stazione non trovata o senza path: {stationId}");
+                            totalErrors++;
+                            continue;
+                        }
+
+                        // Ensure target database directory exists
+                        if (!Directory.Exists(station.DatabasePath))
+                        {
+                            Directory.CreateDirectory(station.DatabasePath);
+                        }
+
+                        if (_archiveType == "Musica")
+                        {
+                            totalCopied += CopyMusicEntries(sourceEntries, station.DatabasePath, dbcFileName, copyForm);
+                        }
+                        else
+                        {
+                            totalCopied += CopyClipEntries(sourceEntries, station.DatabasePath, dbcFileName, copyForm);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CopyToStations] ❌ Errore stazione {stationId}: {ex.Message}");
+                        totalErrors++;
+                    }
+                }
+
+                MessageBox.Show(
+                    string.Format(LanguageManager.GetString("Archive.Message.CopyComplete"),
+                        totalCopied, copyForm.SelectedStationIds.Count, totalErrors),
+                    LanguageManager.GetString("Archive.Title.CopyComplete"),
+                    MessageBoxButtons.OK,
+                    totalErrors > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+                StatusChanged?.Invoke(this, string.Format(
+                    LanguageManager.GetString("Archive.Status.Copied"),
+                    totalCopied, copyForm.SelectedStationIds.Count));
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private int CopyMusicEntries(List<object> sourceEntries, string targetDbPath, string dbcFileName, CopyToStationsForm copyForm)
+        {
+            var targetEntries = DbcManager.LoadFromCsvPath<MusicEntry>(targetDbPath, dbcFileName);
+            int copied = 0;
+
+            foreach (var entry in sourceEntries)
+            {
+                if (entry is not MusicEntry source) continue;
+
+                // Find existing entry by FilePath in target
+                var existing = targetEntries.FirstOrDefault(t => t.FilePath == source.FilePath);
+
+                if (existing != null)
+                {
+                    // Update only selected fields
+                    if (copyForm.CopyGenre) existing.Genre = source.Genre;
+                    if (copyForm.CopyCategories) existing.Categories = source.Categories;
+                    if (copyForm.CopyMarkers)
+                    {
+                        existing.MarkerIN = source.MarkerIN;
+                        existing.MarkerINTRO = source.MarkerINTRO;
+                        existing.MarkerMIX = source.MarkerMIX;
+                        existing.MarkerOUT = source.MarkerOUT;
+                    }
+                    if (copyForm.CopyHours) existing.ValidHours = source.ValidHours;
+                    if (copyForm.CopyDays) existing.ValidDays = source.ValidDays;
+                    if (copyForm.CopyMonths) existing.ValidMonths = source.ValidMonths;
+                }
+                else
+                {
+                    // Create new entry with all base data + selected fields
+                    var newEntry = new MusicEntry
+                    {
+                        FilePath = source.FilePath,
+                        Artist = source.Artist,
+                        Title = source.Title,
+                        Album = source.Album,
+                        Year = source.Year,
+                        Duration = source.Duration,
+                        FileSize = source.FileSize,
+                        Format = source.Format,
+                        Bitrate = source.Bitrate,
+                        SampleRate = source.SampleRate,
+                        Channels = source.Channels,
+                        AddedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                    };
+
+                    if (copyForm.CopyGenre) newEntry.Genre = source.Genre;
+                    if (copyForm.CopyCategories) newEntry.Categories = source.Categories;
+                    if (copyForm.CopyMarkers)
+                    {
+                        newEntry.MarkerIN = source.MarkerIN;
+                        newEntry.MarkerINTRO = source.MarkerINTRO;
+                        newEntry.MarkerMIX = source.MarkerMIX;
+                        newEntry.MarkerOUT = source.MarkerOUT;
+                    }
+                    if (copyForm.CopyHours) newEntry.ValidHours = source.ValidHours;
+                    if (copyForm.CopyDays) newEntry.ValidDays = source.ValidDays;
+                    if (copyForm.CopyMonths) newEntry.ValidMonths = source.ValidMonths;
+
+                    // Assign new ID
+                    int newId = targetEntries.Count > 0 ? targetEntries.Max(x => x.ID) + 1 : 1;
+                    newEntry.ID = newId;
+                    targetEntries.Add(newEntry);
+                }
+
+                copied++;
+            }
+
+            DbcManager.SaveToCsvPath(targetDbPath, dbcFileName, targetEntries);
+            return copied;
+        }
+
+        private int CopyClipEntries(List<object> sourceEntries, string targetDbPath, string dbcFileName, CopyToStationsForm copyForm)
+        {
+            var targetEntries = DbcManager.LoadFromCsvPath<ClipEntry>(targetDbPath, dbcFileName);
+            int copied = 0;
+
+            foreach (var entry in sourceEntries)
+            {
+                if (entry is not ClipEntry source) continue;
+
+                var existing = targetEntries.FirstOrDefault(t => t.FilePath == source.FilePath);
+
+                if (existing != null)
+                {
+                    if (copyForm.CopyGenre) existing.Genre = source.Genre;
+                    if (copyForm.CopyCategories) existing.Categories = source.Categories;
+                    if (copyForm.CopyMarkers)
+                    {
+                        existing.MarkerIN = source.MarkerIN;
+                        existing.MarkerINTRO = source.MarkerINTRO;
+                        existing.MarkerMIX = source.MarkerMIX;
+                        existing.MarkerOUT = source.MarkerOUT;
+                    }
+                    if (copyForm.CopyHours) existing.ValidHours = source.ValidHours;
+                    if (copyForm.CopyDays) existing.ValidDays = source.ValidDays;
+                    if (copyForm.CopyMonths) existing.ValidMonths = source.ValidMonths;
+                }
+                else
+                {
+                    var newEntry = new ClipEntry
+                    {
+                        FilePath = source.FilePath,
+                        Title = source.Title,
+                        Duration = source.Duration,
+                        AddedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                    };
+
+                    if (copyForm.CopyGenre) newEntry.Genre = source.Genre;
+                    if (copyForm.CopyCategories) newEntry.Categories = source.Categories;
+                    if (copyForm.CopyMarkers)
+                    {
+                        newEntry.MarkerIN = source.MarkerIN;
+                        newEntry.MarkerINTRO = source.MarkerINTRO;
+                        newEntry.MarkerMIX = source.MarkerMIX;
+                        newEntry.MarkerOUT = source.MarkerOUT;
+                    }
+                    if (copyForm.CopyHours) newEntry.ValidHours = source.ValidHours;
+                    if (copyForm.CopyDays) newEntry.ValidDays = source.ValidDays;
+                    if (copyForm.CopyMonths) newEntry.ValidMonths = source.ValidMonths;
+
+                    int newId = targetEntries.Count > 0 ? targetEntries.Max(x => x.ID) + 1 : 1;
+                    newEntry.ID = newId;
+                    targetEntries.Add(newEntry);
+                }
+
+                copied++;
+            }
+
+            DbcManager.SaveToCsvPath(targetDbPath, dbcFileName, targetEntries);
+            return copied;
+        }
+
+        // ✅ SHOW FILE FOLDER
+
+        private void MenuShowFolder_Click(object sender, EventArgs e)
+        {
+            if (dgvArchive.SelectedRows.Count == 0) return;
+
+            DataGridViewRow selectedRow = dgvArchive.SelectedRows[0];
+            string filePath = "";
+
+            if (selectedRow.Tag is MusicEntry musicEntry)
+                filePath = musicEntry.FilePath;
+            else if (selectedRow.Tag is ClipEntry clipEntry)
+                filePath = clipEntry.FilePath;
+
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                string folder = Path.GetDirectoryName(filePath);
+                if (Directory.Exists(folder))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{filePath}\"");
+                }
+            }
+            else
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("Archive.Error.FileNotFound"),
+                    LanguageManager.GetString("Common.Error"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+        }
+
+        // ✅ EXPORT SELECTED FILES
+
+        private void MenuExportFiles_Click(object sender, EventArgs e)
+        {
+            if (dgvArchive.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("Archive.Validation.SelectAtLeastOne"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.Description = LanguageManager.GetString("Archive.Export.SelectFolder");
+
+                if (fbd.ShowDialog() == DialogResult.OK)
+                {
+                    int exported = 0;
+                    int errors = 0;
+
+                    foreach (DataGridViewRow row in dgvArchive.SelectedRows)
+                    {
+                        string filePath = "";
+
+                        if (row.Tag is MusicEntry musicEntry)
+                            filePath = musicEntry.FilePath;
+                        else if (row.Tag is ClipEntry clipEntry)
+                            filePath = clipEntry.FilePath;
+
+                        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                        {
+                            try
+                            {
+                                string destPath = Path.Combine(fbd.SelectedPath, Path.GetFileName(filePath));
+                                File.Copy(filePath, destPath, true);
+                                exported++;
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[ExportFiles] ❌ Errore: {ex.Message}");
+                                errors++;
+                            }
+                        }
+                        else
+                        {
+                            errors++;
+                        }
+                    }
+
+                    MessageBox.Show(
+                        string.Format(LanguageManager.GetString("Archive.Message.ExportComplete"), exported, errors),
+                        LanguageManager.GetString("Archive.Title.ExportComplete"),
+                        MessageBoxButtons.OK,
+                        errors > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+                }
             }
         }
 
