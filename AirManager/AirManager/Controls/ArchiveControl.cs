@@ -1078,7 +1078,10 @@ namespace AirManager.Controls
 
             if (string.IsNullOrWhiteSpace(artist) && string.IsNullOrWhiteSpace(title))
             {
-                MessageBox.Show("Nessun artista/titolo disponibile per questo brano.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(
+                    LanguageManager.GetString("Archive.NoArtistTitle", "No artist/title available for this track."),
+                    LanguageManager.GetString("Common.Info", "Info"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 

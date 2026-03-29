@@ -821,10 +821,10 @@ namespace AirManager.Forms
             }
 
             string statusMsg = compatible > 0
-                ? $"✅  {compatible} file(s) already compatible – toggle is OFF.  Press \"Start Conversion\"."
-                : "Ready.  Press \"Start Conversion\".";
+                ? string.Format(LanguageManager.GetString("VideoConversion.CompatibleFiles", "✅  {0} file(s) already compatible – toggle is OFF.  Press \"Start Conversion\"."), compatible)
+                : LanguageManager.GetString("VideoConversion.Ready", "Ready.  Press \"Start Conversion\".");
             if (dupCount > 0)
-                statusMsg += $"  ⚠️ {dupCount} duplicate(s) ignored.";
+                statusMsg += "  " + string.Format(LanguageManager.GetString("VideoConversion.DuplicatesIgnored", "⚠️ {0} duplicate(s) ignored."), dupCount);
             lblStatus.Text = statusMsg;
 
             progressOverall.Maximum = PROGRESS_MAX; // use weighted progress

@@ -2,6 +2,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using AirManager.Services;
 using AirManager.Services.Licensing;
 using AirManager.Themes;
 
@@ -17,7 +18,7 @@ namespace AirManager.Forms
 
         private void InitializeCustomComponents()
         {
-            this.Text = "License Activation";
+            this.Text = LanguageManager.GetString("License.Title", "License Activation");
             this.ClientSize = new Size(620, 480);
             this.MinimumSize = new Size(640, 520);
             this.StartPosition = FormStartPosition.CenterScreen;
@@ -47,7 +48,7 @@ namespace AirManager.Forms
 
             Label lblTitle = new Label
             {
-                Text = "License Activation",
+                Text = LanguageManager.GetString("License.Title", "License Activation"),
                 Font = new Font("Segoe UI", 20, FontStyle.Bold),
                 ForeColor = AppTheme.TextInverse,
                 AutoSize = false,
@@ -59,7 +60,7 @@ namespace AirManager.Forms
 
             Label lblSubtitle = new Label
             {
-                Text = "Enter your serial code to unlock AirManager",
+                Text = LanguageManager.GetString("License.Subtitle", "Enter your serial code to unlock AirManager"),
                 Font = new Font("Segoe UI", 9),
                 ForeColor = Color.FromArgb(200, 230, 255),
                 AutoSize = false,
@@ -91,7 +92,7 @@ namespace AirManager.Forms
             // Owner Name Label
             Label lblOwner = new Label
             {
-                Text = "Name / Company",
+                Text = LanguageManager.GetString("License.OwnerName", "Name / Company"),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 ForeColor = AppTheme.LicTextSecondary,
                 Location = new Point(24, 18),
@@ -113,7 +114,7 @@ namespace AirManager.Forms
             // Serial Label
             Label lblSerial = new Label
             {
-                Text = "Serial Code",
+                Text = LanguageManager.GetString("License.SerialCode", "Serial Code"),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 ForeColor = AppTheme.LicTextSecondary,
                 Location = new Point(24, 90),
@@ -136,7 +137,7 @@ namespace AirManager.Forms
 
             Label lblFormat = new Label
             {
-                Text = $"Format: {Models.LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX",
+                Text = LanguageManager.GetString("License.Format", $"Format: {Models.LicenseInfo.SERIAL_PREFIX}XXXX-XXXX-XXXX"),
                 Font = new Font("Segoe UI", 8, FontStyle.Italic),
                 ForeColor = AppTheme.LicTextSecondary,
                 Location = new Point(24, 160),
@@ -149,7 +150,7 @@ namespace AirManager.Forms
             Button btnActivate = new Button
             {
                 Name = "btnActivate",
-                Text = "🔓  Activate License",
+                Text = "🔓  " + LanguageManager.GetString("License.Activate", "Activate License"),
                 Font = new Font("Segoe UI", 13, FontStyle.Bold),
                 Location = new Point(margin, btnActivateTop),
                 Size = new Size(580, 52),
@@ -166,7 +167,7 @@ namespace AirManager.Forms
             int infoTop = btnActivateTop + btnActivate.Height + 14;
             Label lblInfo = new Label
             {
-                Text = "AirManager requires a valid license to work.\nPurchase your license at store.airdirector.app",
+                Text = LanguageManager.GetString("License.Info", "AirManager requires a valid license to work.\nPurchase your license at store.airdirector.app"),
                 Font = new Font("Segoe UI", 8, FontStyle.Italic),
                 ForeColor = AppTheme.LicTextSecondary,
                 Location = new Point(margin, infoTop),
@@ -183,7 +184,9 @@ namespace AirManager.Forms
         {
             if (string.IsNullOrWhiteSpace(serial))
             {
-                MessageBox.Show("Please enter the serial code", "Error",
+                MessageBox.Show(
+                    LanguageManager.GetString("License.Required", "Please enter the serial code"),
+                    LanguageManager.GetString("Common.Error", "Error"),
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -193,8 +196,8 @@ namespace AirManager.Forms
             if (success)
             {
                 MessageBox.Show(
-                    "License activated successfully!",
-                    "Success",
+                    LanguageManager.GetString("License.Success", "License activated successfully!"),
+                    LanguageManager.GetString("Common.Success", "Success"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
                 );
@@ -205,8 +208,8 @@ namespace AirManager.Forms
             else
             {
                 MessageBox.Show(
-                    "Error during activation:\n\n" + errorMessage,
-                    "Error",
+                    LanguageManager.GetString("License.Error", "Error during activation") + ":\n\n" + errorMessage,
+                    LanguageManager.GetString("Common.Error", "Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
                 );

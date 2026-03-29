@@ -304,7 +304,7 @@ namespace AirManager.Forms
             btnApplyVolume.FlatAppearance.BorderSize = 0;
             btnApplyVolume.Cursor = System.Windows.Forms.Cursors.Hand;
 
-            chkColoredPeaks.Text = "🎨 Picchi colorati";
+            chkColoredPeaks.Text = "🎨 " + AirManager.Services.LanguageManager.GetString("MusicEditor.ColoredPeaks", "Colored peaks");
             chkColoredPeaks.Name = "chkColoredPeaks";
             chkColoredPeaks.Font = new System.Drawing.Font("Segoe UI", 8F);
             chkColoredPeaks.ForeColor = System.Drawing.Color.White;
