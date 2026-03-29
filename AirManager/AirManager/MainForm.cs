@@ -582,7 +582,7 @@ namespace AirManager
 
             if (_archiveMusicControl == null)
             {
-                _archiveMusicControl = new ArchiveControl("Musica");
+                _archiveMusicControl = new ArchiveControl("Music");
                 _archiveMusicControl.StatusChanged += (s, msg) => lblStatus.Text = msg;
             }
 
