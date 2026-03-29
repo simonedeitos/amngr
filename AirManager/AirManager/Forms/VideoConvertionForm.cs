@@ -70,6 +70,13 @@ namespace AirManager.Forms
         private readonly Dictionary<string, (int MarkerInMs, int MarkerOutMs)> _preEditResults
             = new Dictionary<string, (int, int)>();
 
+        // ── output→input path mapping (for tag reading after conversion) ──
+        // Maps converted output file path → original input file path so that
+        // GetArtistTitleForFile can read tags from the original file even after
+        // ffmpeg conversion (which may not preserve all ID3 tags).
+        private readonly Dictionary<string, string> _outputToInputPath
+            = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
         // ═════════════════════════════════════════════════════════════════
         // Windows Shell Property Store – P/Invoke
         // ═════════════════════════════════════════════════════════════════
@@ -701,9 +708,16 @@ namespace AirManager.Forms
 
         /// <summary>
         /// Get artist and title for a given file path using the current tag source mode.
+        /// If the path is a converted output file, uses the original input file for tag
+        /// reading so that metadata from the source file is not lost after ffmpeg conversion.
         /// </summary>
         public (string Artist, string Title) GetArtistTitleForFile(string filePath)
         {
+            // If this is a converted output file, read tags from the original input file
+            // so that metadata is not lost even if ffmpeg didn't preserve ID3 tags.
+            if (_outputToInputPath.TryGetValue(filePath, out string originalPath))
+                return GetArtistTitle(originalPath);
+
             return GetArtistTitle(filePath);
         }
 
@@ -1628,6 +1642,10 @@ namespace AirManager.Forms
                 Path.GetDirectoryName(filePath) ?? "",
                 Path.GetFileNameWithoutExtension(filePath) + ".mp4");
 
+            // Store mapping so tag reading can use the original input file
+            if (!string.Equals(outputPath, filePath, StringComparison.OrdinalIgnoreCase))
+                _outputToInputPath[outputPath] = filePath;
+
             _fileRows.Add(new FileRow
             {
                 Container = container,
@@ -1830,6 +1848,10 @@ namespace AirManager.Forms
             string outputPath = Path.Combine(
                 Path.GetDirectoryName(filePath) ?? "",
                 Path.GetFileNameWithoutExtension(filePath) + outputExt);
+
+            // Store mapping so tag reading can use the original input file
+            if (!string.Equals(outputPath, filePath, StringComparison.OrdinalIgnoreCase))
+                _outputToInputPath[outputPath] = filePath;
 
             _fileRows.Add(new FileRow
             {
@@ -2307,15 +2329,15 @@ namespace AirManager.Forms
 
             if (isTargetWav)
             {
-                // Convert to WAV 16-bit PCM
+                // Convert to WAV 16-bit PCM (preserve metadata from source)
                 int targetRate = (spec != null && spec.SampleRate == 48000) ? 48000 : 44100;
-                ffArgs = $"-y -i \"{prefixed}\" -acodec pcm_s16le -ar {targetRate} -ac 2 \"{row.OutputPath}\"";
+                ffArgs = $"-y -i \"{prefixed}\" -map_metadata 0 -acodec pcm_s16le -ar {targetRate} -ac 2 \"{row.OutputPath}\"";
             }
             else
             {
-                // Convert to MP3 CBR 320 kbps
+                // Convert to MP3 CBR 320 kbps (preserve metadata from source)
                 int targetRate = (spec != null && spec.SampleRate == 48000) ? 48000 : 44100;
-                ffArgs = $"-y -i \"{prefixed}\" -acodec libmp3lame -b:a 320k -ar {targetRate} -ac 2 \"{row.OutputPath}\"";
+                ffArgs = $"-y -i \"{prefixed}\" -map_metadata 0 -acodec libmp3lame -b:a 320k -ar {targetRate} -ac 2 \"{row.OutputPath}\"";
             }
 
             double totalSec = (spec != null && spec.DurationSeconds > 0) ? spec.DurationSeconds : 1;
