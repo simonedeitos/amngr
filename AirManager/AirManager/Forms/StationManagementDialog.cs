@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using AirManager.Controls;
+using AirManager.Services;
 using AirManager.Themes;
 
 namespace AirManager.Forms
@@ -18,7 +19,7 @@ namespace AirManager.Forms
 
         private void InitializeCustomUI()
         {
-            this.Text = "⚙️ Gestione Emittenti";
+            this.Text = "⚙️ " + LanguageManager.GetString("StationManager.HeaderTitle", "Station Management");
             this.Size = new Size(1200, 800);
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = AppTheme.BgLight;

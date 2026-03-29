@@ -1,3 +1,5 @@
+using AirManager.Services;
+
 namespace AirManager.Forms
 {
     partial class VideoConvertionForm
@@ -53,7 +55,7 @@ namespace AirManager.Forms
             this.pnlTop.Controls.Add(this.lblHint);
 
             // lblTitle
-            this.lblTitle.Text = "\U0001F4C2  File Importer Converter";
+            this.lblTitle.Text = "📂  " + LanguageManager.GetString("VideoConversion.FileImporter", "File Importer Converter");
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 14, System.Drawing.FontStyle.Bold);
             this.lblTitle.ForeColor = System.Drawing.Color.White;
             this.lblTitle.AutoSize = true;
@@ -61,9 +63,9 @@ namespace AirManager.Forms
             this.lblTitle.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left;
 
             // lblHint
-            this.lblHint.Text =
-                "\u2139\uFE0F  Target: H.264 16:9 AAC 48kHz 2ch MP4 (video) | MP3 CBR 320kbps or WAV 16bit (audio).\r\n" +
-                "    Compatible files can be skipped via per-file toggles. Originals moved to subfolders.";
+            this.lblHint.Text = LanguageManager.GetString("VideoConversion.HintDefault",
+                "ℹ️  Target: H.264 16:9 AAC 48kHz 2ch MP4 (video) | MP3 CBR 320kbps or WAV 16bit (audio).\r\n" +
+                "    Compatible files can be skipped via per-file toggles. Originals moved to subfolders.");
             this.lblHint.Font = new System.Drawing.Font("Segoe UI", 8.5F);
             this.lblHint.ForeColor = System.Drawing.Color.FromArgb(170, 200, 255);
             this.lblHint.Location = new System.Drawing.Point(12, 42);
@@ -136,7 +138,7 @@ namespace AirManager.Forms
                 System.Windows.Forms.AnchorStyles.Left |
                 System.Windows.Forms.AnchorStyles.Right;
 
-            this.lblOverall.Text = "Reading specs\u2026";
+            this.lblOverall.Text = LanguageManager.GetString("VideoConversion.ReadingSpecs", "Reading specs…");
             this.lblOverall.Location = new System.Drawing.Point(10, 30);
             this.lblOverall.Height = 16;
             this.lblOverall.Font = new System.Drawing.Font("Segoe UI", 8);
@@ -157,7 +159,7 @@ namespace AirManager.Forms
                 System.Windows.Forms.AnchorStyles.Right;
 
             // btnStart
-            this.btnStart.Text = "\u25B6  Start Conversion";
+            this.btnStart.Text = "▶  " + LanguageManager.GetString("VideoConversion.Button.Start", "Start Conversion");
             this.btnStart.Height = 30;
             this.btnStart.Width = 160;
             this.btnStart.BackColor = System.Drawing.Color.FromArgb(40, 167, 69);
@@ -175,7 +177,7 @@ namespace AirManager.Forms
             this.btnStart.Click += this.btnStart_Click;
 
             // btnSkipConvert
-            this.btnSkipConvert.Text = "\u26A0  Skip Conversion (Not Recommended)";
+            this.btnSkipConvert.Text = "⚠  " + LanguageManager.GetString("VideoConversion.Button.Skip", "Skip Conversion (Not Recommended)");
             this.btnSkipConvert.Height = 30;
             this.btnSkipConvert.Width = 245;
             this.btnSkipConvert.BackColor = System.Drawing.Color.FromArgb(160, 90, 0);
@@ -193,7 +195,7 @@ namespace AirManager.Forms
             this.btnSkipConvert.Click += this.btnSkipConvert_Click;
 
             // btnCancel
-            this.btnCancel.Text = "\u23F9  Cancel";
+            this.btnCancel.Text = "⏹  " + LanguageManager.GetString("Common.Cancel", "Cancel");
             this.btnCancel.Height = 30;
             this.btnCancel.Width = 100;
             this.btnCancel.BackColor = System.Drawing.Color.FromArgb(220, 53, 69);
@@ -211,7 +213,7 @@ namespace AirManager.Forms
             this.btnCancel.Click += this.btnCancel_Click;
 
             // btnClose
-            this.btnClose.Text = "\u2716  Close";
+            this.btnClose.Text = "✖  " + LanguageManager.GetString("Common.Close", "Close");
             this.btnClose.Height = 30;
             this.btnClose.Width = 100;
             this.btnClose.BackColor = System.Drawing.Color.FromArgb(108, 117, 125);
@@ -255,7 +257,7 @@ namespace AirManager.Forms
             this.btnSkipConvert.BringToFront();
 
             // Form
-            this.Text = "File Importer Converter \u2014 AirManager";
+            this.Text = LanguageManager.GetString("VideoConversion.FileImporter", "File Importer Converter") + " — AirManager";
             this.ClientSize = new System.Drawing.Size(920, 600);
             this.MinimumSize = new System.Drawing.Size(920, 480);
             this.MaximumSize = new System.Drawing.Size(920, System.Int32.MaxValue);
