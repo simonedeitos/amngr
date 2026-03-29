@@ -546,6 +546,9 @@ namespace AirManager.Controls
             contextMenu.Items.Add(miCtxShowFolder);
             var miCtxExport = new ToolStripMenuItem("📤 " + LanguageManager.GetString("Archive.ExportSelectedFiles", "Esporta file selezionati"), null, MenuExportFiles_Click) { Tag = "ctx_export" };
             contextMenu.Items.Add(miCtxExport);
+            contextMenu.Items.Add(new ToolStripSeparator() { Tag = "ctx_sep5" });
+            var miCtxCopyToStations = new ToolStripMenuItem("📋 " + LanguageManager.GetString("Archive.ContextMenu.CopyToStations", "Copia su altre emittenti..."), null, MenuCopyToStations_Click) { Tag = "ctx_copy_stations" };
+            contextMenu.Items.Add(miCtxCopyToStations);
             contextMenu.Opening += ContextMenu_Opening;
             dgvArchive.ContextMenuStrip = contextMenu;
 
@@ -1205,6 +1208,210 @@ namespace AirManager.Controls
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
             }
+        }
+
+        private async void MenuCopyToStations_Click(object sender, EventArgs e)
+        {
+            if (dgvArchive.SelectedRows.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("Archive.SelectAtLeastOne", "Seleziona almeno un elemento"),
+                    LanguageManager.GetString("Common.Warning", "Attenzione"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            var selectedIds = new List<int>();
+            foreach (DataGridViewRow row in dgvArchive.SelectedRows)
+            {
+                if (row.Tag is MusicEntry me)
+                    selectedIds.Add(me.ID);
+                else if (row.Tag is ClipEntry ce)
+                    selectedIds.Add(ce.ID);
+            }
+
+            using (var copyForm = new CopyToStationsForm(selectedIds, _archiveType))
+            {
+                if (copyForm.ShowDialog() == DialogResult.OK)
+                {
+                    await ApplyCopyToStationsAsync(copyForm);
+                }
+            }
+        }
+
+        private async Task ApplyCopyToStationsAsync(CopyToStationsForm copyForm)
+        {
+            var rows = dgvArchive.SelectedRows.Cast<DataGridViewRow>().ToList();
+            int total = rows.Count * copyForm.SelectedStationIds.Count;
+            string archiveType = _archiveType;
+
+            // Resolve target station database paths
+            var allStations = StationRegistry.LoadAllStations();
+            var targetStations = allStations
+                .Where(s => copyForm.SelectedStationIds.Contains(s.Id))
+                .ToList();
+
+            if (targetStations.Count == 0) return;
+
+            bool copyGenre = copyForm.CopyGenre;
+            bool copyCategories = copyForm.CopyCategories;
+            bool copyMarkers = copyForm.CopyMarkers;
+            bool copyHours = copyForm.CopyHours;
+            bool copyDays = copyForm.CopyDays;
+            bool copyMonths = copyForm.CopyMonths;
+
+            SetBatchEditButtonsEnabled(false);
+            this.Cursor = Cursors.WaitCursor;
+            ShowBatchProgressPanel(total);
+
+            int updated = 0, errors = 0;
+
+            var progress = new Progress<int>(current =>
+            {
+                UpdateBatchProgressPanel(current, total);
+            });
+
+            try
+            {
+                (updated, errors) = await Task.Run(() =>
+                {
+                    int updatedCount = 0, errorCount = 0;
+                    int current = 0;
+
+                    foreach (var station in targetStations)
+                    {
+                        string dbPath = station.DatabasePath;
+                        if (string.IsNullOrEmpty(dbPath) || !Directory.Exists(dbPath))
+                        {
+                            Log($"[CopyToStations] ⚠️ Database path non valido per '{station.Name}': {dbPath}");
+                            errorCount += rows.Count;
+                            current += rows.Count;
+                            ((IProgress<int>)progress).Report(current);
+                            continue;
+                        }
+
+                        string dbcFile = archiveType == "Music" ? "Music.dbc" : "Clips.dbc";
+
+                        if (archiveType == "Music")
+                        {
+                            var targetEntries = DbcManager.LoadFromCsvPath<MusicEntry>(dbPath, dbcFile);
+
+                            foreach (var row in rows)
+                            {
+                                current++;
+                                ((IProgress<int>)progress).Report(current);
+
+                                if (!(row.Tag is MusicEntry sourceEntry)) { errorCount++; continue; }
+
+                                try
+                                {
+                                    var targetEntry = targetEntries.FirstOrDefault(
+                                        t => string.Equals(t.FilePath, sourceEntry.FilePath, StringComparison.OrdinalIgnoreCase));
+
+                                    if (targetEntry == null)
+                                    {
+                                        Log($"[CopyToStations] ⚠️ Elemento non trovato nel DB di '{station.Name}': {sourceEntry.FilePath}");
+                                        errorCount++;
+                                        continue;
+                                    }
+
+                                    if (copyGenre) targetEntry.Genre = sourceEntry.Genre;
+                                    if (copyCategories) targetEntry.Categories = sourceEntry.Categories;
+                                    if (copyMarkers)
+                                    {
+                                        targetEntry.MarkerIN = sourceEntry.MarkerIN;
+                                        targetEntry.MarkerINTRO = sourceEntry.MarkerINTRO;
+                                        targetEntry.MarkerMIX = sourceEntry.MarkerMIX;
+                                        targetEntry.MarkerOUT = sourceEntry.MarkerOUT;
+                                    }
+                                    if (copyHours) targetEntry.ValidHours = sourceEntry.ValidHours;
+                                    if (copyDays) targetEntry.ValidDays = sourceEntry.ValidDays;
+                                    if (copyMonths) targetEntry.ValidMonths = sourceEntry.ValidMonths;
+
+                                    updatedCount++;
+                                }
+                                catch (Exception ex)
+                                {
+                                    LogErr($"[CopyToStations] Errore copia musica su '{station.Name}'", ex);
+                                    errorCount++;
+                                }
+                            }
+
+                            if (!DbcManager.SaveToCsvPath(dbPath, dbcFile, targetEntries))
+                            {
+                                Log($"[CopyToStations] ❌ Errore salvataggio {dbcFile} per '{station.Name}'");
+                                errorCount++;
+                            }
+                        }
+                        else
+                        {
+                            var targetEntries = DbcManager.LoadFromCsvPath<ClipEntry>(dbPath, dbcFile);
+
+                            foreach (var row in rows)
+                            {
+                                current++;
+                                ((IProgress<int>)progress).Report(current);
+
+                                if (!(row.Tag is ClipEntry sourceEntry)) { errorCount++; continue; }
+
+                                try
+                                {
+                                    var targetEntry = targetEntries.FirstOrDefault(
+                                        t => string.Equals(t.FilePath, sourceEntry.FilePath, StringComparison.OrdinalIgnoreCase));
+
+                                    if (targetEntry == null)
+                                    {
+                                        Log($"[CopyToStations] ⚠️ Elemento non trovato nel DB di '{station.Name}': {sourceEntry.FilePath}");
+                                        errorCount++;
+                                        continue;
+                                    }
+
+                                    if (copyGenre) targetEntry.Genre = sourceEntry.Genre;
+                                    if (copyCategories) targetEntry.Categories = sourceEntry.Categories;
+                                    if (copyMarkers)
+                                    {
+                                        targetEntry.MarkerIN = sourceEntry.MarkerIN;
+                                        targetEntry.MarkerINTRO = sourceEntry.MarkerINTRO;
+                                        targetEntry.MarkerMIX = sourceEntry.MarkerMIX;
+                                        targetEntry.MarkerOUT = sourceEntry.MarkerOUT;
+                                    }
+                                    if (copyHours) targetEntry.ValidHours = sourceEntry.ValidHours;
+                                    if (copyDays) targetEntry.ValidDays = sourceEntry.ValidDays;
+                                    if (copyMonths) targetEntry.ValidMonths = sourceEntry.ValidMonths;
+
+                                    updatedCount++;
+                                }
+                                catch (Exception ex)
+                                {
+                                    LogErr($"[CopyToStations] Errore copia clip su '{station.Name}'", ex);
+                                    errorCount++;
+                                }
+                            }
+
+                            if (!DbcManager.SaveToCsvPath(dbPath, dbcFile, targetEntries))
+                            {
+                                Log($"[CopyToStations] ❌ Errore salvataggio {dbcFile} per '{station.Name}'");
+                                errorCount++;
+                            }
+                        }
+                    }
+
+                    return (updatedCount, errorCount);
+                });
+            }
+            finally
+            {
+                HideBatchProgressPanel();
+                SetBatchEditButtonsEnabled(true);
+                this.Cursor = Cursors.Default;
+            }
+
+            MessageBox.Show(
+                string.Format(LanguageManager.GetString("Archive.Message.CopyComplete", "Copia completata: {0} elementi copiati su {1} emittente/i"), updated, targetStations.Count),
+                LanguageManager.GetString("Archive.Title.CopyComplete", "Copia Completata"),
+                MessageBoxButtons.OK,
+                errors > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
         }
 
         private async Task ApplyBatchEditAsync(bool modifyGenre, string newGenre, bool modifyCategory, string newCategory, bool modifyYear = false, int? newYear = null)
