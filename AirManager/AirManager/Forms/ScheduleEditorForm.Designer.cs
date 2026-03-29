@@ -188,9 +188,9 @@ namespace AirManager.Forms
             numMiniPLSID.Font = new Font("Segoe UI", 9F);
             numMiniPLSID.Location = new Point(201, 85);
             numMiniPLSID.Minimum = 1;
-            numMiniPLSID.Maximum = 100;
+            numMiniPLSID.Maximum = 9999;
             numMiniPLSID.Name = "numMiniPLSID";
-            numMiniPLSID.Size = new Size(60, 23);
+            numMiniPLSID.Size = new Size(44, 23);
             numMiniPLSID.TabIndex = 6;
 
             radTimeSignal.Location = new Point(10, 115);
@@ -200,7 +200,7 @@ namespace AirManager.Forms
             radTimeSignal.Text = "⏰ Segnale Orario";
             radTimeSignal.CheckedChanged += RadAction_CheckedChanged;
 
-            radURLStreaming.Location = new Point(280, 115);
+            radURLStreaming.Location = new Point(10, 145);
             radURLStreaming.Name = "radURLStreaming";
             radURLStreaming.Size = new Size(155, 25);
             radURLStreaming.TabIndex = 8;
@@ -209,15 +209,16 @@ namespace AirManager.Forms
 
             lblStreamURL.Enabled = false;
             lblStreamURL.Font = new Font("Segoe UI", 9F);
-            lblStreamURL.Location = new Point(170, 88);
+            lblStreamURL.Location = new Point(170, 147);
             lblStreamURL.Name = "lblStreamURL";
-            lblStreamURL.Size = new Size(30, 16);
+            lblStreamURL.Size = new Size(35, 20);
             lblStreamURL.TabIndex = 9;
             lblStreamURL.Text = "URL:";
+            lblStreamURL.Visible = false;
 
             txtStreamURL.Enabled = false;
             txtStreamURL.Font = new Font("Segoe UI", 9F);
-            txtStreamURL.Location = new Point(205, 85);
+            txtStreamURL.Location = new Point(170, 145);
             txtStreamURL.Name = "txtStreamURL";
             txtStreamURL.Size = new Size(393, 23);
             txtStreamURL.TabIndex = 10;

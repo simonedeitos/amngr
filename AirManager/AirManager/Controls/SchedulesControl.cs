@@ -15,6 +15,7 @@ namespace AirManager.Controls
     {
         private FlowLayoutPanel flowSchedules;
         private Label lblStatus;
+        private Label lblTitle;
         private Button btnNew;
         private Button btnRefresh;
 
@@ -38,6 +39,9 @@ namespace AirManager.Controls
 
         private void ApplyLanguage()
         {
+            if (lblTitle != null)
+                lblTitle.Text = LanguageManager.GetString("Schedules.Title", "📅 GESTIONE SCHEDULAZIONI");
+
             if (btnNew != null)
                 btnNew.Text = "➕ " + LanguageManager.GetString("Schedules.NewSchedule", "Nuova Schedulazione");
 
@@ -64,16 +68,28 @@ namespace AirManager.Controls
             Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 60,
+                Height = 70,
                 BackColor = AppTheme.Surface
             };
             this.Controls.Add(headerPanel);
 
+            lblTitle = new Label
+            {
+                Name = "lblTitle",
+                Text = "📅 GESTIONE SCHEDULAZIONI",
+                Location = new Point(12, 8),
+                Size = new Size(300, 26),
+                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
+                ForeColor = AppTheme.Primary,
+                BackColor = Color.Transparent
+            };
+            headerPanel.Controls.Add(lblTitle);
+
             btnNew = new Button
             {
                 Text = "➕ Nuova Schedulazione",
-                Location = new Point(10, 15),
-                Size = new Size(180, 35),
+                Location = new Point(12, 38),
+                Size = new Size(180, 28),
                 BackColor = AppTheme.Success,
                 ForeColor = AppTheme.TextInverse,
                 FlatStyle = FlatStyle.Flat,
@@ -87,8 +103,8 @@ namespace AirManager.Controls
             btnRefresh = new Button
             {
                 Text = "🔄 Aggiorna",
-                Location = new Point(200, 15),
-                Size = new Size(110, 35),
+                Location = new Point(200, 38),
+                Size = new Size(110, 28),
                 BackColor = AppTheme.Info,
                 ForeColor = AppTheme.TextInverse,
                 FlatStyle = FlatStyle.Flat,
@@ -101,8 +117,8 @@ namespace AirManager.Controls
 
             lblStatus = new Label
             {
-                Location = new Point(320, 20),
-                Size = new Size(600, 25),
+                Location = new Point(320, 42),
+                Size = new Size(600, 20),
                 Font = new Font("Segoe UI", 9, FontStyle.Italic),
                 ForeColor = AppTheme.TextSecondary,
                 TextAlign = ContentAlignment.MiddleLeft
@@ -276,7 +292,7 @@ namespace AirManager.Controls
                 Location = new Point(95, 8),
                 Size = new Size(cardWidth - 265, 18),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = isEnabled ? AppTheme.TextPrimary : Color.Gray,
+                ForeColor = isEnabled ? Color.Black : Color.Gray,
                 AutoEllipsis = true
             };
             card.Controls.Add(lblTitle);
