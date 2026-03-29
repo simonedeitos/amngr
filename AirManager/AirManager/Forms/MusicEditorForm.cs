@@ -135,6 +135,7 @@ namespace AirManager.Forms
             SetupZoomControls();
             SetupVolumeControls();
             SetupVuMeter();
+            SetupVideoPreview();
             LoadGenreSuggestions();
             LoadCategorySuggestions();
 
@@ -161,8 +162,6 @@ namespace AirManager.Forms
                     _musicEntry.MarkerOUT = _originalMarkerOUT;
                 }
             };
-
-            SetupVideoPreview();
         }
 
         #region ============ GENRE / CATEGORY SUGGESTIONS ============
@@ -1815,87 +1814,105 @@ namespace AirManager.Forms
             _btnVideoPreview.Click += BtnVideoPreview_Click;
             toolbarPanel.Controls.Add(_btnVideoPreview);
 
-            this.Shown += (s, ev) => OpenVideoPreviewBottomLeft();
+            // Check registry if user had video preview open last time
+            try
+            {
+                using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AirManager"))
+                {
+                    if (key != null)
+                    {
+                        var val = key.GetValue("VideoPreviewOpen");
+                        if (val != null && val.ToString() == "1")
+                        {
+                            this.Shown += (s, ev) => OpenVideoPreviewBottomLeft();
+                        }
+                    }
+                }
+            }
+            catch { }
         }
 
         private void BtnVideoPreview_Click(object sender, EventArgs e)
         {
             if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed)
             {
+                _videoPreviewForm.BringToFront();
                 _videoPreviewForm.Focus();
                 return;
             }
             OpenVideoPreviewBottomLeft();
+
+            // Sync video to current audio state
+            if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed)
+            {
+                if (_isPlaying && _audioReader != null)
+                {
+                    SyncVideoSeek((int)_audioReader.CurrentTime.TotalMilliseconds);
+                    SyncVideoPlay();
+                }
+            }
         }
 
         private void OpenVideoPreviewBottomLeft()
         {
-            if (string.IsNullOrEmpty(_videoPath)) return;
-
-            try
+            if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed)
             {
-                _videoPreviewForm = new VideoPreviewForm(_videoPath);
-
-                // Restore saved position from registry
-                int x = 50, y = 400;
-                try
-                {
-                    using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AirManager"))
-                    {
-                        if (key != null)
-                        {
-                            x = (int)(key.GetValue("VideoPreviewX", x) ?? x);
-                            y = (int)(key.GetValue("VideoPreviewY", y) ?? y);
-                        }
-                    }
-                }
-                catch { }
-
-                _videoPreviewForm.Location = new Point(x, y);
-
-                _videoPreviewForm.FormClosed += (s, ev) =>
-                {
-                    try
-                    {
-                        using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AirManager"))
-                        {
-                            if (key != null && _videoPreviewForm != null)
-                            {
-                                key.SetValue("VideoPreviewX", _videoPreviewForm.Location.X);
-                                key.SetValue("VideoPreviewY", _videoPreviewForm.Location.Y);
-                            }
-                        }
-                    }
-                    catch { }
-                    _videoPreviewForm = null;
-                };
-
-                _videoPreviewForm.Show(this);
+                _videoPreviewForm.BringToFront();
+                return;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[MusicEditor] VideoPreview error: {ex.Message}");
-            }
-        }
 
-        private void SyncVideoPlay()
-        {
-            try { _videoPreviewForm?.SyncPlay(); } catch { }
-        }
+            _videoPreviewForm = new VideoPreviewForm(_videoPath);
+            _videoPreviewForm.StartPosition = FormStartPosition.Manual;
 
-        private void SyncVideoPause()
-        {
-            try { _videoPreviewForm?.SyncPause(); } catch { }
-        }
+            var screen = Screen.FromControl(this);
+            var wa = screen.WorkingArea;
+            _videoPreviewForm.Location = new Point(wa.Left + 10, wa.Bottom - _videoPreviewForm.Height - 10);
 
-        private void SyncVideoStop()
-        {
-            try { _videoPreviewForm?.SyncStop(); } catch { }
+            _videoPreviewForm.FormClosed += (s2, e2) => _videoPreviewForm = null;
+            _videoPreviewForm.Show(this);
         }
 
         private void SyncVideoSeek(int audioMs)
         {
-            try { _videoPreviewForm?.SyncSeek(audioMs); } catch { }
+            try
+            {
+                if (_videoPreviewForm == null || _videoPreviewForm.IsDisposed) return;
+                _videoPreviewForm.SyncSeek(audioMs);
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[MusicEditorForm] ⚠️ SyncVideoSeek error: {ex.Message}"); }
+        }
+
+        private void SyncVideoPlay()
+        {
+            try
+            {
+                if (_videoPreviewForm == null || _videoPreviewForm.IsDisposed) return;
+                _videoPreviewForm.SyncPlay();
+                // Sync to current audio position
+                if (_waveOut != null && _audioReader != null)
+                    _videoPreviewForm.SyncSeek((int)_audioReader.CurrentTime.TotalMilliseconds);
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[MusicEditorForm] ⚠️ SyncVideoPlay error: {ex.Message}"); }
+        }
+
+        private void SyncVideoPause()
+        {
+            try
+            {
+                if (_videoPreviewForm == null || _videoPreviewForm.IsDisposed) return;
+                _videoPreviewForm.SyncPause();
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[MusicEditorForm] ⚠️ SyncVideoPause error: {ex.Message}"); }
+        }
+
+        private void SyncVideoStop()
+        {
+            try
+            {
+                if (_videoPreviewForm == null || _videoPreviewForm.IsDisposed) return;
+                _videoPreviewForm.SyncStop();
+            }
+            catch (Exception ex) { Console.Error.WriteLine($"[MusicEditorForm] ⚠️ SyncVideoStop error: {ex.Message}"); }
         }
 
         private void btnSetMarkerIn_Click(object sender, EventArgs e) => SetMarkerToCurrent("In");
@@ -2469,6 +2486,20 @@ namespace AirManager.Forms
                 _waveOut?.Dispose();
                 _audioReader?.Dispose();
                 _waveformBitmap?.Dispose();
+
+                // Save video preview state
+                try
+                {
+                    if (_videoPath != null)
+                    {
+                        bool isOpen = _videoPreviewForm != null && !_videoPreviewForm.IsDisposed;
+                        using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AirManager"))
+                        {
+                            key?.SetValue("VideoPreviewOpen", isOpen ? 1 : 0);
+                        }
+                    }
+                }
+                catch { }
 
                 try { if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed) { _videoPreviewForm.Close(); _videoPreviewForm.Dispose(); _videoPreviewForm = null; } } catch { }
 
