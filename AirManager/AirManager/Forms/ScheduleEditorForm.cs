@@ -449,8 +449,5 @@ namespace AirManager.Forms
             }
         }
 
-        private void lblStreamDuration_Click(object sender, EventArgs e)
-        {
-        }
     }
 }
