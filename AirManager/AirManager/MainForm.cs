@@ -244,7 +244,7 @@ namespace AirManager
         {
             // ✅ MENU PRINCIPALI
             menuFile.Text = "📁 " + LanguageManager.GetString("mainform.menu.File");
-            menuStations.Text = "📻 " + LanguageManager.GetString("mainform.menu.Stations");
+            menuStations.Text = "" + LanguageManager.GetString("mainform.menu.Stations");
             menuArchives.Text = "🗂️ " + LanguageManager.GetString("mainform.menu.Archives");
             menuReport.Text = "📊 " + LanguageManager.GetString("MainForm.Menu.Report");
             menuHelp.Text = "❓ " + LanguageManager.GetString("MainForm.Menu.Help");
