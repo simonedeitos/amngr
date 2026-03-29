@@ -45,7 +45,6 @@ namespace AirManager
         // ✅ RIFERIMENTI ALLE VOCI DI MENU ARCHIVES
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
-        private ToolStripMenuItem menuItemVideoConversion;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU REPORT
         private ToolStripMenuItem menuItemViewReport;
@@ -141,10 +140,6 @@ namespace AirManager
 
             menuItemArchiveClips = new ToolStripMenuItem("⚡ Archivio Clips", null, MenuArchiveClips_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveClips);
-
-            menuArchives.DropDownItems.Add(new ToolStripSeparator());
-            menuItemVideoConversion = new ToolStripMenuItem("🎬 Video Conversion", null, MenuVideoConversion_Click);
-            menuArchives.DropDownItems.Add(menuItemVideoConversion);
 
             menuStrip.Items.Add(menuArchives);
 
@@ -268,7 +263,6 @@ namespace AirManager
             // ✅ MENU ARCHIVES
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
-            menuItemVideoConversion.Text = "🎬 " + LanguageManager.GetString("MainForm.Menu.Archives.VideoConversion");
 
             // ✅ MENU REPORT
             menuItemViewReport.Text = "📈 " + LanguageManager.GetString("MainForm.Menu.Report.View");
@@ -688,14 +682,6 @@ namespace AirManager
                 LanguageManager.GetString("MainForm.Manual.Title"),
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
-        }
-
-        private void MenuVideoConversion_Click(object sender, EventArgs e)
-        {
-            using (var form = new VideoConvertionForm())
-            {
-                form.ShowDialog();
-            }
         }
 
         private void MenuBroadcastHistory_Click(object sender, EventArgs e)

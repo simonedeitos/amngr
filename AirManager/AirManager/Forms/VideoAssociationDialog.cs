@@ -1,282 +1,346 @@
+using AirManager.Services;
+using AirManager.Services.Database;
+using AirManager.Themes;
 using System;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using AirManager.Services;
-using AirManager.Services.Database;
-using AirManager.Themes;
 using Microsoft.Win32;
 
 namespace AirManager.Forms
 {
     public partial class VideoAssociationDialog : Form
     {
-        private Label lblTitle;
-        private Label lblCurrentVideo;
-        private Label lblVideoPath;
+        private readonly object _entry;
+
+        // UI Controls
+        private RadioButton rbNone;
+        private RadioButton rbStaticVideo;
+        private RadioButton rbBufferVideo;
+
+        private Panel pnlStaticVideo;
         private TextBox txtVideoPath;
-        private Button btnBrowse;
-        private Button btnPreview;
-        private Button btnRemove;
-        private Button btnOk;
-        private Button btnCancel;
-        private Panel pnlPreview;
-        private PictureBox picPreview;
+        private Button btnBrowseVideo;
+        private Label lblVideoInfo;
 
-        private string _artist;
-        private string _title;
-        private string _currentVideoPath;
+        private Button btnSave;
+        private Button btnCancelBtn;
 
-        public string SelectedVideoPath => txtVideoPath?.Text ?? "";
+        // Result
+        public VideoSourceType SelectedVideoSource { get; private set; }
+        public string SelectedVideoPath { get; private set; }
+        public string SelectedNDISource { get; private set; } = "";
 
-        public VideoAssociationDialog(string artist, string title, string currentVideoPath = "")
+        public VideoAssociationDialog(object entry, bool isClip = false)
         {
-            _artist = artist ?? "";
-            _title = title ?? "";
-            _currentVideoPath = currentVideoPath ?? "";
+            _entry = entry;
 
             InitializeComponent();
             InitializeCustomUI();
-            ApplyLanguage();
-
-            LanguageManager.LanguageChanged += OnLanguageChanged;
-        }
-
-        private void OnLanguageChanged(object? sender, EventArgs e)
-        {
-            ApplyLanguage();
-        }
-
-        private void ApplyLanguage()
-        {
-            this.Text = "🎬 " + LanguageManager.GetString("VideoAssociation.Title", "Associa Video");
-            lblTitle.Text = $"🎬 {LanguageManager.GetString("VideoAssociation.Title", "Associa Video")}";
-            lblCurrentVideo.Text = LanguageManager.GetString("VideoAssociation.CurrentVideo", "Video associato:");
-            lblVideoPath.Text = LanguageManager.GetString("VideoAssociation.VideoPath", "Percorso video:");
-            btnBrowse.Text = "📂 " + LanguageManager.GetString("VideoAssociation.Browse", "Sfoglia...");
-            btnPreview.Text = "▶ " + LanguageManager.GetString("VideoAssociation.Preview", "Anteprima");
-            btnRemove.Text = "🗑 " + LanguageManager.GetString("VideoAssociation.Remove", "Rimuovi");
-            btnOk.Text = LanguageManager.GetString("Common.OK", "OK");
-            btnCancel.Text = LanguageManager.GetString("Common.Cancel", "Annulla");
+            LoadCurrentSettings();
         }
 
         private void InitializeCustomUI()
         {
-            this.Text = "🎬 Associa Video";
-            this.Size = new Size(600, 420);
-            this.MinimumSize = new Size(500, 380);
-            this.StartPosition = FormStartPosition.CenterParent;
+            this.Text = "�� " + LanguageManager.GetString("VideoAssociation.Title", "Associa Video");
+            this.Size = new Size(600, 430);
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.StartPosition = FormStartPosition.CenterParent;
             this.MaximizeBox = false;
-            this.BackColor = AppTheme.BgLight;
+            this.MinimizeBox = false;
+            this.BackColor = AppTheme.BgDark;
             this.ForeColor = Color.White;
 
-            // Header panel
-            Panel headerPanel = new Panel
+            // HEADER
+            Label lblTitle = new Label
             {
-                Dock = DockStyle.Top,
-                Height = 55,
-                BackColor = AppTheme.BgDark
-            };
-
-            lblTitle = new Label
-            {
-                Text = "🎬 ASSOCIA VIDEO",
-                Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                Text = "🎬 " + LanguageManager.GetString("VideoAssociation.Header", "ASSOCIA VIDEO"),
+                Font = new Font("Segoe UI", 14, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(15, 8),
+                Location = new Point(20, 20),
                 AutoSize = true
             };
-            headerPanel.Controls.Add(lblTitle);
+            this.Controls.Add(lblTitle);
 
-            Label lblTrackInfo = new Label
+            string entryTitle = "";
+            if (_entry is MusicEntry musicEntry)
+                entryTitle = $"{musicEntry.Artist} - {musicEntry.Title}";
+            else if (_entry is ClipEntry clipEntry)
+                entryTitle = clipEntry.Title;
+
+            Label lblEntryName = new Label
             {
-                Text = $"{_artist} - {_title}",
-                Font = new Font("Segoe UI", 9, FontStyle.Italic),
-                ForeColor = AppTheme.TextSecondary,
-                Location = new Point(15, 32),
+                Text = $"📝 {entryTitle}",
+                Font = new Font("Segoe UI", 10, FontStyle.Regular),
+                ForeColor = Color.LightGray,
+                Location = new Point(20, 50),
+                Size = new Size(550, 20)
+            };
+            this.Controls.Add(lblEntryName);
+
+            // RADIO BUTTONS
+            int yPos = 90;
+
+            rbNone = new RadioButton
+            {
+                Text = "🎵 " + LanguageManager.GetString("VideoAssociation.NoVideo", "Nessun video (solo audio)"),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(30, yPos),
+                AutoSize = true,
+                Checked = true
+            };
+            rbNone.CheckedChanged += RadioButton_CheckedChanged;
+            this.Controls.Add(rbNone);
+
+            yPos += 40;
+
+            rbStaticVideo = new RadioButton
+            {
+                Text = "🎬 " + LanguageManager.GetString("VideoAssociation.StaticVideo", "File video statico (MP4, MOV, AVI, MKV)"),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(30, yPos),
                 AutoSize = true
             };
-            headerPanel.Controls.Add(lblTrackInfo);
-            this.Controls.Add(headerPanel);
+            rbStaticVideo.CheckedChanged += RadioButton_CheckedChanged;
+            this.Controls.Add(rbStaticVideo);
 
-            // Content panel
-            Panel contentPanel = new Panel
+            yPos += 35;
+
+            // Panel Static Video
+            pnlStaticVideo = new Panel
             {
-                Dock = DockStyle.Fill,
-                Padding = new Padding(20, 15, 20, 10),
-                BackColor = AppTheme.BgLight
+                Location = new Point(50, yPos),
+                Size = new Size(520, 80),
+                BackColor = Color.FromArgb(50, 50, 50),
+                Visible = false,
+                BorderStyle = BorderStyle.FixedSingle
             };
-
-            int y = 15;
-
-            lblCurrentVideo = new Label
-            {
-                Text = "Video associato:",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = AppTheme.TextSecondary,
-                Location = new Point(20, y),
-                AutoSize = true
-            };
-            contentPanel.Controls.Add(lblCurrentVideo);
-            y += 25;
-
-            Label lblCurrentPath = new Label
-            {
-                Text = string.IsNullOrEmpty(_currentVideoPath)
-                    ? LanguageManager.GetString("VideoAssociation.NoVideo", "Nessun video associato")
-                    : Path.GetFileName(_currentVideoPath),
-                Font = new Font("Segoe UI", 9),
-                ForeColor = string.IsNullOrEmpty(_currentVideoPath) ? AppTheme.TextDisabled : AppTheme.AccentPrimary,
-                Location = new Point(20, y),
-                AutoSize = true
-            };
-            contentPanel.Controls.Add(lblCurrentPath);
-            y += 35;
-
-            lblVideoPath = new Label
-            {
-                Text = "Percorso video:",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = AppTheme.TextSecondary,
-                Location = new Point(20, y),
-                AutoSize = true
-            };
-            contentPanel.Controls.Add(lblVideoPath);
-            y += 25;
 
             txtVideoPath = new TextBox
             {
-                Text = _currentVideoPath,
+                Location = new Point(10, 10),
+                Size = new Size(420, 25),
                 Font = new Font("Segoe UI", 9),
-                Location = new Point(20, y),
-                Size = new Size(400, 25),
-                BackColor = AppTheme.BgInput,
-                ForeColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle
+                ReadOnly = true,
+                BackColor = Color.FromArgb(40, 40, 40),
+                ForeColor = Color.White
             };
-            contentPanel.Controls.Add(txtVideoPath);
+            pnlStaticVideo.Controls.Add(txtVideoPath);
 
-            btnBrowse = new Button
+            btnBrowseVideo = new Button
             {
-                Text = "📂 Sfoglia...",
-                Font = new Font("Segoe UI", 8, FontStyle.Bold),
-                Size = new Size(110, 25),
-                Location = new Point(430, y),
-                BackColor = AppTheme.ButtonPrimary,
+                Text = "📁 " + LanguageManager.GetString("VideoAssociation.Browse", "Sfoglia"),
+                Location = new Point(440, 8),
+                Size = new Size(70, 28),
+                BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
-            btnBrowse.FlatAppearance.BorderSize = 0;
-            btnBrowse.Click += BtnBrowse_Click;
-            contentPanel.Controls.Add(btnBrowse);
-            y += 40;
+            btnBrowseVideo.FlatAppearance.BorderSize = 0;
+            btnBrowseVideo.Click += BtnBrowseVideo_Click;
+            pnlStaticVideo.Controls.Add(btnBrowseVideo);
 
-            // Action buttons row
-            btnPreview = new Button
+            lblVideoInfo = new Label
             {
-                Text = "▶ Anteprima",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Size = new Size(120, 30),
-                Location = new Point(20, y),
-                BackColor = AppTheme.ButtonInfo,
+                Text = LanguageManager.GetString("VideoAssociation.SupportedFormats", "Formati supportati: MP4, MOV, AVI, MKV, WMV"),
+                Location = new Point(10, 45),
+                Size = new Size(500, 20),
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.LightGray
+            };
+            pnlStaticVideo.Controls.Add(lblVideoInfo);
+
+            this.Controls.Add(pnlStaticVideo);
+
+            yPos += 90;
+
+            // BUFFER VIDEO
+            rbBufferVideo = new RadioButton
+            {
+                Text = "🖼️ " + LanguageManager.GetString("VideoAssociation.BufferVideo", "Video tampone casuale (dalla cartella configurata)"),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(30, yPos),
+                AutoSize = true
+            };
+            rbBufferVideo.CheckedChanged += RadioButton_CheckedChanged;
+            this.Controls.Add(rbBufferVideo);
+
+            yPos += 40;
+
+            Label lblBufferInfo = new Label
+            {
+                Text = $"📂 Cartella tampone: {GetBufferVideoPath()}",
+                Location = new Point(50, yPos),
+                Size = new Size(520, 20),
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.LightGray
+            };
+            this.Controls.Add(lblBufferInfo);
+
+            // BUTTONS
+            btnCancelBtn = new Button
+            {
+                Text = "❌ " + LanguageManager.GetString("Common.Cancel", "Annulla"),
+                Location = new Point(350, 350),
+                Size = new Size(110, 35),
+                BackColor = Color.FromArgb(220, 53, 69),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
-            };
-            btnPreview.FlatAppearance.BorderSize = 0;
-            btnPreview.Click += BtnPreview_Click;
-            contentPanel.Controls.Add(btnPreview);
-
-            btnRemove = new Button
-            {
-                Text = "🗑 Rimuovi",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Size = new Size(110, 30),
-                Location = new Point(150, y),
-                BackColor = AppTheme.ButtonDanger,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
-            };
-            btnRemove.FlatAppearance.BorderSize = 0;
-            btnRemove.Click += BtnRemove_Click;
-            contentPanel.Controls.Add(btnRemove);
-            y += 45;
-
-            // Preview area
-            pnlPreview = new Panel
-            {
-                Location = new Point(20, y),
-                Size = new Size(520, 80),
-                BackColor = AppTheme.BgDark,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-
-            picPreview = new PictureBox
-            {
-                Dock = DockStyle.Fill,
-                SizeMode = PictureBoxSizeMode.Zoom,
-                BackColor = AppTheme.BgDark
-            };
-            pnlPreview.Controls.Add(picPreview);
-
-            Label lblPreviewPlaceholder = new Label
-            {
-                Text = LanguageManager.GetString("VideoAssociation.PreviewArea", "Area anteprima video"),
-                Font = new Font("Segoe UI", 9, FontStyle.Italic),
-                ForeColor = AppTheme.TextDisabled,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
-            };
-            pnlPreview.Controls.Add(lblPreviewPlaceholder);
-            contentPanel.Controls.Add(pnlPreview);
-
-            this.Controls.Add(contentPanel);
-
-            // Bottom button panel
-            Panel bottomPanel = new Panel
-            {
-                Dock = DockStyle.Bottom,
-                Height = 50,
-                BackColor = AppTheme.BgDark
-            };
-
-            btnCancel = new Button
-            {
-                Text = "Annulla",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Size = new Size(100, 32),
-                Location = new Point(470, 9),
-                BackColor = AppTheme.ButtonSecondary,
-                ForeColor = Color.White,
-                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Cursor = Cursors.Hand,
                 DialogResult = DialogResult.Cancel
             };
-            btnCancel.FlatAppearance.BorderSize = 0;
-            bottomPanel.Controls.Add(btnCancel);
+            btnCancelBtn.FlatAppearance.BorderSize = 0;
+            this.Controls.Add(btnCancelBtn);
 
-            btnOk = new Button
+            btnSave = new Button
             {
-                Text = "OK",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                Size = new Size(100, 32),
-                Location = new Point(360, 9),
-                BackColor = AppTheme.ButtonSuccess,
+                Text = "💾 " + LanguageManager.GetString("Common.Save", "Salva"),
+                Location = new Point(470, 350),
+                Size = new Size(110, 35),
+                BackColor = Color.FromArgb(40, 167, 69),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
-            btnOk.FlatAppearance.BorderSize = 0;
-            btnOk.Click += BtnOk_Click;
-            bottomPanel.Controls.Add(btnOk);
+            btnSave.FlatAppearance.BorderSize = 0;
+            btnSave.Click += BtnSave_Click;
+            this.Controls.Add(btnSave);
 
-            this.Controls.Add(bottomPanel);
+            this.CancelButton = btnCancelBtn;
+        }
 
-            this.AcceptButton = btnOk;
-            this.CancelButton = btnCancel;
+        private void LoadCurrentSettings()
+        {
+            VideoSourceType currentSource = VideoSourceType.None;
+            string currentVideoPath = "";
+
+            if (_entry is MusicEntry musicEntry)
+            {
+                currentSource = musicEntry.VideoSource;
+                currentVideoPath = musicEntry.VideoFilePath ?? "";
+            }
+            else if (_entry is ClipEntry clipEntry)
+            {
+                currentSource = clipEntry.VideoSource;
+                currentVideoPath = clipEntry.VideoFilePath ?? "";
+            }
+
+            switch (currentSource)
+            {
+                case VideoSourceType.None:
+                    rbNone.Checked = true;
+                    break;
+
+                case VideoSourceType.StaticVideo:
+                    rbStaticVideo.Checked = true;
+                    txtVideoPath.Text = currentVideoPath;
+                    break;
+
+                case VideoSourceType.BufferVideo:
+                    rbBufferVideo.Checked = true;
+                    break;
+
+                default:
+                    rbNone.Checked = true;
+                    break;
+            }
+        }
+
+        private void RadioButton_CheckedChanged(object sender, EventArgs e)
+        {
+            RadioButton rb = sender as RadioButton;
+            if (rb == null || !rb.Checked) return;
+
+            pnlStaticVideo.Visible = (rb == rbStaticVideo);
+        }
+
+        private void BtnBrowseVideo_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = LanguageManager.GetString("VideoAssociation.SelectFile", "Seleziona file video");
+                ofd.Filter = "Video Files|*.mp4;*.mov;*.avi;*.mkv;*.wmv;*.m4v|All Files|*.*";
+                ofd.Multiselect = false;
+
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    txtVideoPath.Text = ofd.FileName;
+
+                    try
+                    {
+                        FileInfo fi = new FileInfo(ofd.FileName);
+                        double sizeMB = fi.Length / (1024.0 * 1024.0);
+                        lblVideoInfo.Text = $"✅ {fi.Name} ({sizeMB:F2} MB)";
+                        lblVideoInfo.ForeColor = Color.LightGreen;
+                    }
+                    catch
+                    {
+                        lblVideoInfo.Text = LanguageManager.GetString("VideoAssociation.FileSelected", "✅ File selezionato");
+                        lblVideoInfo.ForeColor = Color.LightGreen;
+                    }
+                }
+            }
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
+        {
+            if (rbNone.Checked)
+            {
+                SelectedVideoSource = VideoSourceType.None;
+                SelectedVideoPath = "";
+            }
+            else if (rbStaticVideo.Checked)
+            {
+                if (string.IsNullOrWhiteSpace(txtVideoPath.Text))
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("VideoAssociation.SelectVideoWarning", "⚠️ Seleziona un file video!"),
+                        LanguageManager.GetString("VideoAssociation.MissingVideo", "Video Mancante"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                if (!File.Exists(txtVideoPath.Text))
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("VideoAssociation.FileNotFound", "❌ Il file video selezionato non esiste!"),
+                        LanguageManager.GetString("VideoAssociation.FileNotFoundTitle", "File Non Trovato"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
+                }
+
+                SelectedVideoSource = VideoSourceType.StaticVideo;
+                SelectedVideoPath = txtVideoPath.Text;
+            }
+            else if (rbBufferVideo.Checked)
+            {
+                string bufferPath = GetBufferVideoPath();
+
+                if (string.IsNullOrWhiteSpace(bufferPath) || !Directory.Exists(bufferPath))
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("VideoAssociation.BufferNotConfigured", "⚠️ Cartella video tampone non configurata!\n\nVai in Configurazione → Video → Cartella Video Tampone"),
+                        LanguageManager.GetString("VideoAssociation.BufferMissing", "Cartella Tampone Mancante"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
+
+                SelectedVideoSource = VideoSourceType.BufferVideo;
+                SelectedVideoPath = "";
+            }
+
+            this.DialogResult = DialogResult.OK;
+            this.Close();
         }
 
         private static string GetBufferVideoPath()
@@ -291,101 +355,9 @@ namespace AirManager.Forms
                         return value;
                 }
             }
-            catch
-            {
-                // Registry access may fail
-            }
+            catch { }
 
             return @"C:\AirManager\BufferVideo";
-        }
-
-        private void BtnBrowse_Click(object? sender, EventArgs e)
-        {
-            string initialDir = GetBufferVideoPath();
-
-            using var ofd = new OpenFileDialog
-            {
-                Title = LanguageManager.GetString("VideoAssociation.Browse.Title", "Seleziona file video"),
-                Filter = "Video Files (*.mp4;*.avi;*.mkv;*.wmv;*.mov)|*.mp4;*.avi;*.mkv;*.wmv;*.mov|All Files (*.*)|*.*",
-                InitialDirectory = Directory.Exists(initialDir) ? initialDir : ""
-            };
-
-            if (ofd.ShowDialog() == DialogResult.OK)
-            {
-                txtVideoPath.Text = ofd.FileName;
-            }
-        }
-
-        private void BtnPreview_Click(object? sender, EventArgs e)
-        {
-            string path = txtVideoPath.Text.Trim();
-
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("VideoAssociation.Error.FileNotFound", "File video non trovato."),
-                    LanguageManager.GetString("Common.Warning", "Attenzione"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                using var previewForm = new VideoPreviewForm(path);
-                previewForm.ShowDialog(this);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[VideoAssociationDialog] ❌ Errore anteprima: {ex.Message}");
-                MessageBox.Show(
-                    LanguageManager.GetString("VideoAssociation.Error.Preview", "Errore durante l'anteprima del video."),
-                    LanguageManager.GetString("Common.Error", "Errore"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-        }
-
-        private void BtnRemove_Click(object? sender, EventArgs e)
-        {
-            var result = MessageBox.Show(
-                LanguageManager.GetString("VideoAssociation.Confirm.Remove", "Vuoi rimuovere l'associazione video?"),
-                LanguageManager.GetString("Common.Confirm", "Conferma"),
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question);
-
-            if (result == DialogResult.Yes)
-            {
-                txtVideoPath.Text = "";
-            }
-        }
-
-        private void BtnOk_Click(object? sender, EventArgs e)
-        {
-            string path = txtVideoPath.Text.Trim();
-
-            if (!string.IsNullOrEmpty(path) && !File.Exists(path))
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("VideoAssociation.Error.FileNotFound", "File video non trovato."),
-                    LanguageManager.GetString("Common.Warning", "Attenzione"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            this.DialogResult = DialogResult.OK;
-            this.Close();
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                LanguageManager.LanguageChanged -= OnLanguageChanged;
-                components?.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }

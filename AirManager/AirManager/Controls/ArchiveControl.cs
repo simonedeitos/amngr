@@ -1467,7 +1467,7 @@ namespace AirManager.Controls
 
             try
             {
-                int deviceNumber = ConfigurationControl.GetPreviewOutputDeviceNumber();
+                int deviceNumber = -1;
 
                 _previewAudioFile = new AudioFileReader(filePath);
                 _previewPlayer = new WaveOutEvent();
@@ -2029,7 +2029,7 @@ namespace AirManager.Controls
                 catch { duration = 180000; }
             }
 
-            int mixDuration = ConfigurationControl.GetMixDuration();
+            int mixDuration = 5000;
 
             return new MusicEntry
             {
@@ -2108,7 +2108,7 @@ namespace AirManager.Controls
                 Log($"[ArchiveControl] ⚠️ Impossibile leggere metadata video: {ex.Message}");
             }
 
-            int mixDuration = ConfigurationControl.GetMixDuration();
+            int mixDuration = 5000;
 
             return new MusicEntry
             {
@@ -2172,7 +2172,7 @@ namespace AirManager.Controls
                 catch { duration = 30000; }
             }
 
-            int mixDuration = ConfigurationControl.GetMixDuration();
+            int mixDuration = 5000;
 
             return new ClipEntry
             {
@@ -2226,7 +2226,7 @@ namespace AirManager.Controls
                 Log($"[ArchiveControl] ⚠️ Impossibile leggere metadata video:  {ex.Message}");
             }
 
-            int mixDuration = ConfigurationControl.GetMixDuration();
+            int mixDuration = 5000;
 
             return new ClipEntry
             {
