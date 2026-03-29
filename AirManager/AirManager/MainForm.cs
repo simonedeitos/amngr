@@ -48,9 +48,6 @@ namespace AirManager
         private ToolStripMenuItem menuItemArchiveClips;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU PROGRAMMING
-        private ToolStripMenuItem menuItemClocks;
-        private ToolStripMenuItem menuItemSchedules;
-
         // ✅ RIFERIMENTI ALLE VOCI DI MENU REPORT
         private ToolStripMenuItem menuItemViewReport;
         private ToolStripMenuItem menuItemExportReport;
@@ -151,12 +148,7 @@ namespace AirManager
 
             // ✅ MENU PROGRAMMAZIONE
             menuProgramming = new ToolStripMenuItem("📅 Programmazione");
-
-            menuItemClocks = new ToolStripMenuItem("🕐 Clocks", null, MenuProgrammingClocks_Click);
-            menuProgramming.DropDownItems.Add(menuItemClocks);
-
-            menuItemSchedules = new ToolStripMenuItem("📅 Schedulazioni", null, MenuProgrammingSchedules_Click);
-            menuProgramming.DropDownItems.Add(menuItemSchedules);
+            menuProgramming.Click += (s, e) => ShowProgrammingControl();
 
             menuStrip.Items.Add(menuProgramming);
 
@@ -283,8 +275,6 @@ namespace AirManager
 
             // ✅ MENU PROGRAMMING
             menuProgramming.Text = "📅 " + LanguageManager.GetString("MainForm.Menu.Programming");
-            menuItemClocks.Text = "🕐 " + LanguageManager.GetString("MainForm.Menu.Programming.Clocks");
-            menuItemSchedules.Text = "📅 " + LanguageManager.GetString("MainForm.Menu.Programming.Schedules");
 
             // ✅ MENU REPORT
             menuItemViewReport.Text = "📈 " + LanguageManager.GetString("MainForm.Menu.Report.View");
@@ -640,16 +630,6 @@ namespace AirManager
             _archiveClipsControl.RefreshArchive();
 
             lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.ArchiveClips")} - {_currentStation.Name}";
-        }
-
-        private void MenuProgrammingClocks_Click(object sender, EventArgs e)
-        {
-            ShowProgrammingControl();
-        }
-
-        private void MenuProgrammingSchedules_Click(object sender, EventArgs e)
-        {
-            ShowProgrammingControl();
         }
 
         private void ShowProgrammingControl()

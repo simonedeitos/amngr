@@ -215,7 +215,7 @@ namespace AirManager.Controls
                 Location = new Point(12, 8),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                ForeColor = AppTheme.TextPrimary,
+                ForeColor = Color.Black,
                 BackColor = Color.Transparent
             };
             card.Controls.Add(lblName);

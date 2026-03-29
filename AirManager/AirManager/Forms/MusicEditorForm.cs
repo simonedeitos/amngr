@@ -1100,9 +1100,9 @@ namespace AirManager.Forms
             try
             {
                 string[] monthKeys = {
-                    "Common.MonthJan", "Common.MonthFeb", "Common.MonthMar", "Common.MonthApr",
-                    "Common.MonthMay", "Common.MonthJun", "Common.MonthJul", "Common.MonthAug",
-                    "Common.MonthSep", "Common.MonthOct", "Common.MonthNov", "Common.MonthDec"
+                    "MusicEditor.Month.1", "MusicEditor.Month.2", "MusicEditor.Month.3", "MusicEditor.Month.4",
+                    "MusicEditor.Month.5", "MusicEditor.Month.6", "MusicEditor.Month.7", "MusicEditor.Month.8",
+                    "MusicEditor.Month.9", "MusicEditor.Month.10", "MusicEditor.Month.11", "MusicEditor.Month.12"
                 };
 
                 string[] defaultMonths = { "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic" };
@@ -1126,8 +1126,8 @@ namespace AirManager.Forms
             try
             {
                 string[] dayKeys = {
-                    "Common.DaySunday", "Common.DayMonday", "Common.DayTuesday", "Common.DayWednesday",
-                    "Common.DayThursday", "Common.DayFriday", "Common.DaySaturday"
+                    "MusicEditor.Day.0", "MusicEditor.Day.1", "MusicEditor.Day.2", "MusicEditor.Day.3",
+                    "MusicEditor.Day.4", "MusicEditor.Day.5", "MusicEditor.Day.6"
                 };
 
                 string[] defaultDays = { "Dom", "Lun", "Mar", "Mer", "Gio", "Ven", "Sab" };
