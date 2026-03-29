@@ -81,6 +81,12 @@ namespace AirManager.Forms
         private List<string> _allCategories = new List<string>();
         private HashSet<string> _checkedCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // ✅ VIDEO PREVIEW (RadioTV mode) – separate preview window
+        private string _videoPath;
+        private int _videoSyncTickCounter;
+        private VideoPreviewForm _videoPreviewForm;
+        private Button _btnVideoPreview;
+
         public MusicEditorForm(MusicEntry musicEntry, bool isClip = false)
         {
             InitializeComponent();
@@ -155,6 +161,8 @@ namespace AirManager.Forms
                     _musicEntry.MarkerOUT = _originalMarkerOUT;
                 }
             };
+
+            SetupVideoPreview();
         }
 
         #region ============ GENRE / CATEGORY SUGGESTIONS ============
@@ -1721,6 +1729,7 @@ namespace AirManager.Forms
                 btnPlay.BackColor = Color.FromArgb(40, 160, 40);
 
                 // Pause video preview
+                SyncVideoPause();
             }
             else
             {
@@ -1737,6 +1746,9 @@ namespace AirManager.Forms
                 btnPlay.BackColor = Color.FromArgb(200, 100, 0);
 
                 // Sync and play video preview
+                if (_audioReader != null)
+                    SyncVideoSeek((int)_audioReader.CurrentTime.TotalMilliseconds);
+                SyncVideoPlay();
             }
         }
 
@@ -1754,12 +1766,137 @@ namespace AirManager.Forms
             picWaveform.Invalidate();
 
             // Stop and reset video preview
+            SyncVideoStop();
         }
 
         // ═════════════════════════════════════════════════════════════════
         // VIDEO PREVIEW – sync helpers
         // ═════════════════════════════════════════════════════════════════
 
+        private void SetupVideoPreview()
+        {
+            // Check if current station is RadioTV
+            var station = StationRegistry.GetActiveStation();
+            bool isRadioTV = station != null && station.StationType == StationType.RadioTV;
+
+            string videoPath = _musicEntry.VideoFilePath;
+            bool hasVideo = !string.IsNullOrEmpty(videoPath) && File.Exists(videoPath);
+
+            if (!hasVideo)
+            {
+                string ext = Path.GetExtension(_musicEntry.FilePath ?? "").ToLowerInvariant();
+                if (ext == ".mp4" || ext == ".avi" || ext == ".mkv" || ext == ".mov" ||
+                    ext == ".wmv" || ext == ".ts" || ext == ".mts" || ext == ".m2ts" || ext == ".webm")
+                {
+                    videoPath = _musicEntry.FilePath;
+                    hasVideo = !string.IsNullOrEmpty(videoPath) && File.Exists(videoPath);
+                }
+            }
+
+            // Show button only if RadioTV station and has video, or if has explicit VideoFilePath
+            if (!hasVideo) return;
+            if (!isRadioTV && string.IsNullOrEmpty(_musicEntry.VideoFilePath)) return;
+
+            _videoPath = videoPath;
+
+            _btnVideoPreview = new Button
+            {
+                Text = "📺 VIDEO\nPREVIEW",
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(60, 60, 120),
+                ForeColor = Color.White,
+                Size = new Size(100, 46),
+                Location = new Point(grpVolume.Right + 10, 2),
+                Cursor = Cursors.Hand
+            };
+            _btnVideoPreview.FlatAppearance.BorderSize = 1;
+            _btnVideoPreview.FlatAppearance.BorderColor = Color.FromArgb(100, 100, 200);
+            _btnVideoPreview.Click += BtnVideoPreview_Click;
+            toolbarPanel.Controls.Add(_btnVideoPreview);
+
+            this.Shown += (s, ev) => OpenVideoPreviewBottomLeft();
+        }
+
+        private void BtnVideoPreview_Click(object sender, EventArgs e)
+        {
+            if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed)
+            {
+                _videoPreviewForm.Focus();
+                return;
+            }
+            OpenVideoPreviewBottomLeft();
+        }
+
+        private void OpenVideoPreviewBottomLeft()
+        {
+            if (string.IsNullOrEmpty(_videoPath)) return;
+
+            try
+            {
+                _videoPreviewForm = new VideoPreviewForm(_videoPath);
+
+                // Restore saved position from registry
+                int x = 50, y = 400;
+                try
+                {
+                    using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AirManager"))
+                    {
+                        if (key != null)
+                        {
+                            x = (int)(key.GetValue("VideoPreviewX", x) ?? x);
+                            y = (int)(key.GetValue("VideoPreviewY", y) ?? y);
+                        }
+                    }
+                }
+                catch { }
+
+                _videoPreviewForm.Location = new Point(x, y);
+
+                _videoPreviewForm.FormClosed += (s, ev) =>
+                {
+                    try
+                    {
+                        using (var key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AirManager"))
+                        {
+                            if (key != null && _videoPreviewForm != null)
+                            {
+                                key.SetValue("VideoPreviewX", _videoPreviewForm.Location.X);
+                                key.SetValue("VideoPreviewY", _videoPreviewForm.Location.Y);
+                            }
+                        }
+                    }
+                    catch { }
+                    _videoPreviewForm = null;
+                };
+
+                _videoPreviewForm.Show(this);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] VideoPreview error: {ex.Message}");
+            }
+        }
+
+        private void SyncVideoPlay()
+        {
+            try { _videoPreviewForm?.SyncPlay(); } catch { }
+        }
+
+        private void SyncVideoPause()
+        {
+            try { _videoPreviewForm?.SyncPause(); } catch { }
+        }
+
+        private void SyncVideoStop()
+        {
+            try { _videoPreviewForm?.SyncStop(); } catch { }
+        }
+
+        private void SyncVideoSeek(int audioMs)
+        {
+            try { _videoPreviewForm?.SyncSeek(audioMs); } catch { }
+        }
 
         private void btnSetMarkerIn_Click(object sender, EventArgs e) => SetMarkerToCurrent("In");
         private void btnSetMarkerIntro_Click(object sender, EventArgs e) => SetMarkerToCurrent("Intro");
@@ -1898,6 +2035,7 @@ namespace AirManager.Forms
             _audioReader.CurrentTime = TimeSpan.FromMilliseconds(ms);
 
             // Sync video to this marker position
+            SyncVideoSeek(ms);
 
             if (!_isPlaying)
             {
@@ -1914,6 +2052,13 @@ namespace AirManager.Forms
                 lblCurrentPositionMs.Text = $"{currentMs} ms";
 
                 // ✅ Periodic video sync: re-align if drift > 500ms (check every ~500ms)
+                _videoSyncTickCounter++;
+                if (_videoSyncTickCounter >= 10) // 10 * 50ms = 500ms
+                {
+                    _videoSyncTickCounter = 0;
+                    if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed && _isPlaying)
+                        SyncVideoSeek(currentMs);
+                }
 
                 // ✅ Auto-scroll zoom: centra la posizione corrente se fuori dalla vista
                 // Solo se l'utente non ha scrollato manualmente
@@ -2044,6 +2189,7 @@ namespace AirManager.Forms
             _audioReader.CurrentTime = TimeSpan.FromMilliseconds(clickMs);
 
             // Sync video to click position
+            SyncVideoSeek(clickMs);
 
             picWaveform.Invalidate();
         }
@@ -2323,6 +2469,8 @@ namespace AirManager.Forms
                 _waveOut?.Dispose();
                 _audioReader?.Dispose();
                 _waveformBitmap?.Dispose();
+
+                try { if (_videoPreviewForm != null && !_videoPreviewForm.IsDisposed) { _videoPreviewForm.Close(); _videoPreviewForm.Dispose(); _videoPreviewForm = null; } } catch { }
 
                 if (components != null)
                 {

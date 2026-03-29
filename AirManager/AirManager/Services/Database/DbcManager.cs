@@ -640,6 +640,16 @@ namespace AirManager.Services.Database
         public int IgnoreHourlySeparation { get; set; }
     }
 
+    public enum VideoSourceType
+    {
+        None = 0,
+        StaticVideo = 1,
+        NDISource = 2,
+        BufferVideo = 3,
+        StaticImage = 4,
+        SolidColor = 5
+    }
+
     public class MusicEntry : IDbcEntry
     {
         public int ID { get; set; }
@@ -668,6 +678,10 @@ namespace AirManager.Services.Database
         public string LastPlayed { get; set; } = "";
         public int PlayCount { get; set; }
         public string AddedDate { get; set; } = "";
+        // Campi Video
+        public string VideoFilePath { get; set; } = "";
+        public string NDISourceName { get; set; } = "";
+        public VideoSourceType VideoSource { get; set; } = VideoSourceType.None;
     }
 
     public class ClipEntry : IDbcEntry
@@ -690,6 +704,10 @@ namespace AirManager.Services.Database
         public string AddedDate { get; set; } = "";
         public string LastPlayed { get; set; } = "";
         public int PlayCount { get; set; }
+        // Campi Video
+        public string VideoFilePath { get; set; } = "";
+        public string NDISourceName { get; set; } = "";
+        public VideoSourceType VideoSource { get; set; } = VideoSourceType.None;
     }
 
     public class MiniPLSEntry : IDbcEntry
