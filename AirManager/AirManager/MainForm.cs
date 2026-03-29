@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO;
@@ -257,7 +257,7 @@ namespace AirManager
             menuItemExit.Text = "❌ " + LanguageManager.GetString("MainForm.Menu.File.Exit");
 
             // ✅ MENU STATIONS
-            menuItemManageStations.Text = "🏠 " + LanguageManager.GetString("MainForm.Menu.Stations.Manage");
+            menuItemManageStations.Text = "" + LanguageManager.GetString("MainForm.Menu.Stations.Manage");
             menuItemNewStation.Text = "➕ " + LanguageManager.GetString("MainForm.Menu.Stations.New");
 
             // ✅ MENU ARCHIVES
