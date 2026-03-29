@@ -8,6 +8,7 @@ using NAudio.Wave;
 using AirManager.Controls;
 using AirManager.Services;
 using AirManager.Services.Database;
+using AirManager.Services.Licensing;
 using AirManager.Themes;
 using AirManager.Forms;
 
@@ -707,9 +708,27 @@ namespace AirManager
 
         private void MenuLicense_Click(object sender, EventArgs e)
         {
-            using (var form = new LicenseForm())
+            if (LicenseManager.IsLicenseValid())
             {
-                form.ShowDialog();
+                using (var infoForm = new LicenseInfoForm())
+                {
+                    if (infoForm.ShowDialog(this) == DialogResult.OK && infoForm.LicenseRemoved)
+                    {
+                        MessageBox.Show(
+                            LanguageManager.GetString("MainForm.LicenseRemoved", "Licenza rimossa con successo. L'applicazione verrà chiusa."),
+                            LanguageManager.GetString("Common.Success", "Successo"),
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                        Application.Exit();
+                    }
+                }
+            }
+            else
+            {
+                using (var form = new LicenseForm())
+                {
+                    form.ShowDialog();
+                }
             }
         }
 

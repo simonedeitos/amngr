@@ -15,7 +15,7 @@ namespace AirManager.Controls
     public partial class ArchiveControl : UserControl
     {
         private string _archiveType;
-        private DataGridView dgvArchive;
+        private ArchiveDataGridView dgvArchive;
         private Panel headerPanel;
         private Label lblHeader;
         private TextBox txtSearch;
@@ -352,7 +352,7 @@ namespace AirManager.Controls
 
             this.Controls.Add(headerPanel);
 
-            dgvArchive = new DataGridView
+            dgvArchive = new ArchiveDataGridView
             {
                 Location = new Point(0, 80),
                 Size = new Size(this.Width, this.Height - 80),
@@ -2029,5 +2029,41 @@ namespace AirManager.Controls
 
             base.Dispose(disposing);
         }
+
+        private string GetVideoIcon(object entry)
+        {
+            if (_archiveType == "Musica" && entry is MusicEntry musicEntry)
+            {
+                if (musicEntry.VideoSource == VideoSourceType.StaticVideo && !string.IsNullOrEmpty(musicEntry.VideoFilePath))
+                    return "🎬";
+                else if (musicEntry.VideoSource == VideoSourceType.BufferVideo)
+                    return "🖼️";
+                else
+                    return "🎵";
+            }
+            else if (_archiveType == "Clips" && entry is ClipEntry clipEntry)
+            {
+                if (clipEntry.VideoSource == VideoSourceType.StaticVideo && !string.IsNullOrEmpty(clipEntry.VideoFilePath))
+                    return "🎬";
+                else if (clipEntry.VideoSource == VideoSourceType.BufferVideo)
+                    return "🖼️";
+                else
+                    return "🎵";
+            }
+            return "🎵";
+        }
     }
-}
+
+    internal class ArchiveDataGridView : System.Windows.Forms.DataGridView
+    {
+        protected override void OnMouseDown(System.Windows.Forms.MouseEventArgs e)
+        {
+            if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                var hitTest = HitTest(e.X, e.Y);
+                if (hitTest.RowIndex >= 0 && hitTest.RowIndex < Rows.Count && Rows[hitTest.RowIndex].Selected)
+                    return;
+            }
+            base.OnMouseDown(e);
+        }
+    }}
