@@ -2200,6 +2200,10 @@ namespace AirManager.Controls
             int year = DateTime.Now.Year;
             string genre = "Unknown";
             int duration = 0;
+            int sampleRate = 0;
+            int bitrate = 0;
+            int channels = 0;
+            string format = Path.GetExtension(filePath).TrimStart('.').ToUpper();
 
             try
             {
@@ -2218,6 +2222,9 @@ namespace AirManager.Controls
                     genre = tagFile.Tag.FirstGenre;
 
                 duration = (int)tagFile.Properties.Duration.TotalMilliseconds;
+                sampleRate = tagFile.Properties.AudioSampleRate;
+                bitrate = tagFile.Properties.AudioBitrate;
+                channels = tagFile.Properties.AudioChannels;
 
                 tagFile.Dispose();
             }
@@ -2234,7 +2241,14 @@ namespace AirManager.Controls
                 try
                 {
                     using (var reader = new AudioFileReader(filePath))
+                    {
                         duration = (int)reader.TotalTime.TotalMilliseconds;
+                        sampleRate = reader.WaveFormat.SampleRate;
+                        channels = reader.WaveFormat.Channels;
+                        // Bitrate approximation from WaveFormat (accurate for PCM, approximate for compressed)
+                        if (reader.WaveFormat.AverageBytesPerSecond > 0)
+                            bitrate = reader.WaveFormat.AverageBytesPerSecond * 8 / 1000;
+                    }
                 }
                 catch { duration = 180000; }
             }
@@ -2251,10 +2265,10 @@ namespace AirManager.Controls
                 Year = year,
                 Duration = duration,
                 FileSize = 0,
-                Format = "",
-                Bitrate = 0,
-                SampleRate = 0,
-                Channels = 0,
+                Format = format,
+                Bitrate = bitrate,
+                SampleRate = sampleRate,
+                Channels = channels,
                 Categories = "",
                 MarkerIN = 0,
                 MarkerINTRO = 0,
@@ -2293,6 +2307,9 @@ namespace AirManager.Controls
             }
 
             // ✅ Prova a leggere metadata video
+            int sampleRate = 0;
+            int bitrate = 0;
+            int channels = 0;
             try
             {
                 TagLib.File tagFile = TagLib.File.Create(filePath);
@@ -2310,6 +2327,9 @@ namespace AirManager.Controls
                     genre = tagFile.Tag.FirstGenre;
 
                 duration = (int)tagFile.Properties.Duration.TotalMilliseconds;
+                sampleRate = tagFile.Properties.AudioSampleRate;
+                bitrate = tagFile.Properties.AudioBitrate;
+                channels = tagFile.Properties.AudioChannels;
 
                 tagFile.Dispose();
             }
@@ -2331,9 +2351,9 @@ namespace AirManager.Controls
                 Duration = duration,
                 FileSize = 0,
                 Format = "MP4",
-                Bitrate = 0,
-                SampleRate = 0,
-                Channels = 0,
+                Bitrate = bitrate,
+                SampleRate = sampleRate,
+                Channels = channels,
                 Categories = "",
                 MarkerIN = 0,
                 MarkerINTRO = 0,
