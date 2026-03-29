@@ -28,6 +28,7 @@ namespace AirManager
         private ToolStripMenuItem menuFile;
         private ToolStripMenuItem menuStations;
         private ToolStripMenuItem menuArchives;
+        private ToolStripMenuItem menuProgramming;
         private ToolStripMenuItem menuReport;
         private ToolStripMenuItem menuHelp;
 
@@ -46,6 +47,10 @@ namespace AirManager
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
 
+        // ✅ RIFERIMENTI ALLE VOCI DI MENU PROGRAMMING
+        private ToolStripMenuItem menuItemClocks;
+        private ToolStripMenuItem menuItemSchedules;
+
         // ✅ RIFERIMENTI ALLE VOCI DI MENU REPORT
         private ToolStripMenuItem menuItemViewReport;
         private ToolStripMenuItem menuItemExportReport;
@@ -60,6 +65,7 @@ namespace AirManager
         private ArchiveControl _archiveMusicControl;
         private ArchiveControl _archiveClipsControl;
         private ReportAdvancedControl _reportControl;
+        private ProgrammingControl _programmingControl;
 
         private StationConfig _currentStation;
 
@@ -142,6 +148,17 @@ namespace AirManager
             menuArchives.DropDownItems.Add(menuItemArchiveClips);
 
             menuStrip.Items.Add(menuArchives);
+
+            // ✅ MENU PROGRAMMAZIONE
+            menuProgramming = new ToolStripMenuItem("📅 Programmazione");
+
+            menuItemClocks = new ToolStripMenuItem("🕐 Clocks", null, MenuProgrammingClocks_Click);
+            menuProgramming.DropDownItems.Add(menuItemClocks);
+
+            menuItemSchedules = new ToolStripMenuItem("📅 Schedulazioni", null, MenuProgrammingSchedules_Click);
+            menuProgramming.DropDownItems.Add(menuItemSchedules);
+
+            menuStrip.Items.Add(menuProgramming);
 
             // ✅ MENU REPORT
             menuReport = new ToolStripMenuItem("📊 Report");
@@ -263,6 +280,11 @@ namespace AirManager
             // ✅ MENU ARCHIVES
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
+
+            // ✅ MENU PROGRAMMING
+            menuProgramming.Text = "📅 " + LanguageManager.GetString("MainForm.Menu.Programming");
+            menuItemClocks.Text = "🕐 " + LanguageManager.GetString("MainForm.Menu.Programming.Clocks");
+            menuItemSchedules.Text = "📅 " + LanguageManager.GetString("MainForm.Menu.Programming.Schedules");
 
             // ✅ MENU REPORT
             menuItemViewReport.Text = "📈 " + LanguageManager.GetString("MainForm.Menu.Report.View");
@@ -620,6 +642,43 @@ namespace AirManager
             lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.ArchiveClips")} - {_currentStation.Name}";
         }
 
+        private void MenuProgrammingClocks_Click(object sender, EventArgs e)
+        {
+            ShowProgrammingControl();
+        }
+
+        private void MenuProgrammingSchedules_Click(object sender, EventArgs e)
+        {
+            ShowProgrammingControl();
+        }
+
+        private void ShowProgrammingControl()
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            contentPanel.Controls.Clear();
+
+            if (_programmingControl == null)
+            {
+                _programmingControl = new ProgrammingControl();
+                _programmingControl.StatusChanged += (s, msg) => lblStatus.Text = msg;
+            }
+
+            _programmingControl.Dock = DockStyle.Fill;
+            contentPanel.Controls.Add(_programmingControl);
+            _programmingControl.RefreshAll();
+
+            lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.Programming", "Programmazione")} - {_currentStation.Name}";
+        }
+
         private void MenuViewReport_Click(object sender, EventArgs e)
         {
             if (_currentStation == null)
@@ -738,6 +797,7 @@ namespace AirManager
                     _archiveClipsControl?.Dispose();
                     _reportControl?.Dispose();
                     _stationManager?.Dispose();
+                    _programmingControl?.Dispose();
                 }
                 catch (Exception ex)
                 {

@@ -735,6 +735,7 @@ namespace AirManager.Services.Database
         public string AudioFilePath { get; set; } = "";
         public int MiniPLSID { get; set; }
         public int IsEnabled { get; set; } = 1;
+        public string VideoBufferPath { get; set; } = "";
     }
 
     public class ClockEntry : IDbcEntry
