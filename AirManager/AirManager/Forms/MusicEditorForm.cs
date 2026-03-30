@@ -2512,6 +2512,10 @@ namespace AirManager.Forms
             base.Dispose(disposing);
         }
 
+        private void txtCategoriesDisplay_Click(object sender, EventArgs e) => ShowCategoryPopup();
+
+        private void btnCategoriesDropdown_Click(object sender, EventArgs e) => ShowCategoryPopup();
+
         #endregion
     }
 }

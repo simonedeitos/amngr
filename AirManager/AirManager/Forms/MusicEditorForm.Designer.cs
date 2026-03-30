@@ -816,7 +816,7 @@ namespace AirManager.Forms
             txtCategoriesDisplay.TabIndex = 11;
             txtCategoriesDisplay.ReadOnly = true;
             txtCategoriesDisplay.Cursor = System.Windows.Forms.Cursors.Hand;
-            txtCategoriesDisplay.Click += (s, e) => ShowCategoryPopup();
+            txtCategoriesDisplay.Click += new System.EventHandler(this.txtCategoriesDisplay_Click);
 
             // btnCategoriesDropdown
             btnCategoriesDropdown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
@@ -827,7 +827,7 @@ namespace AirManager.Forms
             btnCategoriesDropdown.TabIndex = 12;
             btnCategoriesDropdown.Text = "▼";
             btnCategoriesDropdown.UseVisualStyleBackColor = true;
-            btnCategoriesDropdown.Click += (s, e) => ShowCategoryPopup();
+            btnCategoriesDropdown.Click += new System.EventHandler(this.btnCategoriesDropdown_Click);
 
             // lblFilePath
             lblFilePath.AutoSize = true;
