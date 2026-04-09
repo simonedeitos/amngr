@@ -175,7 +175,7 @@ namespace AirManager.Controls
             {
                 Text = "Oggi",
                 Location = new Point(440, 71),
-                Size = new Size(70, 29),
+                Size = new Size(80, 29),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -189,8 +189,8 @@ namespace AirManager.Controls
             btnYesterday = new Button
             {
                 Text = "Ieri",
-                Location = new Point(520, 71),
-                Size = new Size(70, 29),
+                Location = new Point(530, 71),
+                Size = new Size(80, 29),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -204,8 +204,8 @@ namespace AirManager.Controls
             btnLast7Days = new Button
             {
                 Text = "7 giorni",
-                Location = new Point(600, 71),
-                Size = new Size(80, 29),
+                Location = new Point(620, 71),
+                Size = new Size(110, 29),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
@@ -219,8 +219,8 @@ namespace AirManager.Controls
             btnLast30Days = new Button
             {
                 Text = "30 giorni",
-                Location = new Point(690, 71),
-                Size = new Size(85, 29),
+                Location = new Point(740, 71),
+                Size = new Size(110, 29),
                 BackColor = Color.FromArgb(0, 120, 215),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,

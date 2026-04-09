@@ -61,7 +61,7 @@ namespace AirManager.Forms
         {
             this.Text = "📻 " + LanguageManager.GetString("BroadcastHistory.Title", "Broadcast History");
 
-            lblTitle.Text = "📻 " + LanguageManager.GetString("BroadcastHistory.Title", "Broadcast History");
+            // lblTitle.Text = "📻 " + LanguageManager.GetString("BroadcastHistory.Title", "Broadcast History");
 
             // Filter labels
             lblDateFrom.Text = LanguageManager.GetString("BroadcastHistory.DateFrom", "From:");
@@ -103,24 +103,6 @@ namespace AirManager.Forms
             this.StartPosition = FormStartPosition.CenterParent;
             this.BackColor = AppTheme.BgLight;
 
-            // ✅ HEADER PANEL
-            Panel headerPanel = new Panel
-            {
-                Dock = DockStyle.Top,
-                Height = 60,
-                BackColor = AppTheme.BgDark
-            };
-
-            lblTitle = new Label
-            {
-                Text = "📻 BROADCAST HISTORY",
-                Font = new Font("Segoe UI", 14, FontStyle.Bold),
-                ForeColor = Color.White,
-                Location = new Point(20, 15),
-                AutoSize = true
-            };
-            headerPanel.Controls.Add(lblTitle);
-            this.Controls.Add(headerPanel);
 
             // ✅ FILTER PANEL
             pnlFilters = new Panel
