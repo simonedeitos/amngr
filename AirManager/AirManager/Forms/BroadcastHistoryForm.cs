@@ -41,6 +41,7 @@ namespace AirManager.Forms
         private Label lblStatDuration;
         private Label lblStatTopArtist;
         private Label lblStatTopTrack;
+        private Button btnStatistics;
 
         public BroadcastHistoryForm()
         {
@@ -80,6 +81,7 @@ namespace AirManager.Forms
             // Buttons
             btnRefresh.Text = "🔄 " + LanguageManager.GetString("BroadcastHistory.Refresh", "Refresh");
             btnExport.Text = "💾 " + LanguageManager.GetString("BroadcastHistory.Export", "Export CSV");
+            btnStatistics.Text = "📊 " + LanguageManager.GetString("BroadcastHistory.Statistics", "Statistics");
 
             // Grid columns
             if (dgvHistory.Columns.Count >= 6)
@@ -243,8 +245,6 @@ namespace AirManager.Forms
             btnExport.Click += BtnExport_Click;
             pnlFilters.Controls.Add(btnExport);
 
-            this.Controls.Add(pnlFilters);
-
             // ✅ STATISTICS PANEL (bottom)
             pnlStats = new Panel
             {
@@ -294,7 +294,29 @@ namespace AirManager.Forms
             };
             pnlStats.Controls.Add(lblStatTopTrack);
 
+            btnStatistics = new Button
+            {
+                Text = "📊 Statistics",
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Location = new Point(900, 10),
+                Size = new Size(130, 50),
+                BackColor = AppTheme.ButtonSecondary,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                Anchor = AnchorStyles.Right | AnchorStyles.Top
+            };
+            btnStatistics.FlatAppearance.BorderSize = 0;
+            btnStatistics.Click += BtnStatistics_Click;
+            pnlStats.Controls.Add(btnStatistics);
+            pnlStats.Layout += (s, e) =>
+            {
+                btnStatistics.Location = new Point(pnlStats.ClientSize.Width - btnStatistics.Width - 15, 10);
+            };
+
+            // ✅ CORRECT DOCK ORDER: Bottom first, then Top, then Fill
             this.Controls.Add(pnlStats);
+            this.Controls.Add(pnlFilters);
 
             // ✅ DATAGRIDVIEW (fills remaining space)
             dgvHistory = new DataGridView
@@ -462,13 +484,16 @@ namespace AirManager.Forms
 
         private void UpdateStatisticsLabels()
         {
-            // Total items
-            string totalLabel = LanguageManager.GetString("BroadcastHistory.Stats.Total", "Total items:");
-            lblStatTotal.Text = $"📊 {totalLabel} {_filteredData.Count}";
+            // Stats are computed on Music-only data (Clips and other types excluded)
+            var musicData = _filteredData.Where(r => string.Equals(r.Type, "Music", StringComparison.OrdinalIgnoreCase)).ToList();
 
-            // Total duration
+            // Total items (Music only)
+            string totalLabel = LanguageManager.GetString("BroadcastHistory.Stats.Total", "Total items:");
+            lblStatTotal.Text = $"📊 {totalLabel} {musicData.Count}";
+
+            // Total duration (Music only)
             TimeSpan totalDuration = TimeSpan.Zero;
-            foreach (var entry in _filteredData)
+            foreach (var entry in musicData)
             {
                 if (TimeSpan.TryParse(entry.PlayDuration, out TimeSpan dur))
                     totalDuration += dur;
@@ -476,9 +501,9 @@ namespace AirManager.Forms
             string durationLabel = LanguageManager.GetString("BroadcastHistory.Stats.Duration", "Total duration:");
             lblStatDuration.Text = $"⏱️ {durationLabel} {(int)totalDuration.TotalHours:D2}:{totalDuration.Minutes:D2}:{totalDuration.Seconds:D2}";
 
-            // Most played artist
+            // Most played artist (Music only)
             string topArtistLabel = LanguageManager.GetString("BroadcastHistory.Stats.TopArtist", "Most played artist:");
-            var topArtist = _filteredData
+            var topArtist = musicData
                 .Where(r => !string.IsNullOrWhiteSpace(r.Artist))
                 .GroupBy(r => r.Artist)
                 .OrderByDescending(g => g.Count())
@@ -487,9 +512,9 @@ namespace AirManager.Forms
                 ? $"🎤 {topArtistLabel} {topArtist.Key} ({topArtist.Count()}x)"
                 : $"🎤 {topArtistLabel} —";
 
-            // Most played track
+            // Most played track (Music only)
             string topTrackLabel = LanguageManager.GetString("BroadcastHistory.Stats.TopTrack", "Most played track:");
-            var topTrack = _filteredData
+            var topTrack = musicData
                 .Where(r => !string.IsNullOrWhiteSpace(r.Title))
                 .GroupBy(r => $"{r.Artist} - {r.Title}")
                 .OrderByDescending(g => g.Count())
@@ -511,6 +536,14 @@ namespace AirManager.Forms
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
             LoadData();
+        }
+
+        private void BtnStatistics_Click(object sender, EventArgs e)
+        {
+            using (var form = new MusicStatisticsForm())
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void BtnExport_Click(object sender, EventArgs e)
