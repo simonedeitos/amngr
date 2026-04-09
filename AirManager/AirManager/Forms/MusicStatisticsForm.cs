@@ -596,7 +596,8 @@ namespace AirManager.Forms
                 return;
             }
 
-            string selected = cmbSingleTrack.SelectedItem.ToString()!;
+            string? selected = cmbSingleTrack.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(selected)) { AddNoDataLabel(pnlSingleTrack); return; }
             var trackData = _data
                 .Where(r => $"{r.Artist} – {r.Title}" == selected)
                 .ToList();
@@ -622,7 +623,7 @@ namespace AirManager.Forms
             var byWeekday = new double[7];
             foreach (var r in trackData)
             {
-                if (TimeSpan.TryParse(r.StartTime, out var ts)) byHour[ts.Hours]++;
+                if (TimeSpan.TryParse(r.StartTime, out var ts) && ts.Hours < 24) byHour[ts.Hours]++;
                 int idx = ((int)r.Date.DayOfWeek + 6) % 7;
                 byWeekday[idx]++;
             }
@@ -686,7 +687,8 @@ namespace AirManager.Forms
                 return;
             }
 
-            string selected = cmbSingleArtist.SelectedItem.ToString()!;
+            string? selected = cmbSingleArtist.SelectedItem?.ToString();
+            if (string.IsNullOrEmpty(selected)) { AddNoDataLabel(pnlSingleArtist); return; }
             var artistData = _data
                 .Where(r => string.Equals(r.Artist, selected, StringComparison.OrdinalIgnoreCase))
                 .ToList();
@@ -717,7 +719,7 @@ namespace AirManager.Forms
             var byWeekday = new double[7];
             foreach (var r in artistData)
             {
-                if (TimeSpan.TryParse(r.StartTime, out var ts)) byHour[ts.Hours]++;
+                if (TimeSpan.TryParse(r.StartTime, out var ts) && ts.Hours < 24) byHour[ts.Hours]++;
                 int idx = ((int)r.Date.DayOfWeek + 6) % 7;
                 byWeekday[idx]++;
             }
