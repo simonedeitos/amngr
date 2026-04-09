@@ -18,6 +18,7 @@ namespace AirManager.Forms
         private Label lblTitle;
         private GroupBox grpColumns;
         private GroupBox grpOptions;
+        private GroupBox grpExportMode;
         private Label lblDelimiter;
 
         private CheckBox chkDate;
@@ -29,12 +30,20 @@ namespace AirManager.Forms
         private CheckBox chkPlayDuration;
         private CheckBox chkFileDuration;
 
+        private RadioButton rbStandardReport;
+        private RadioButton rbAdvSpots;
+        private RadioButton rbAdvHourly;
+
         private ComboBox cmbDelimiter;
         private CheckBox chkIncludeHeader;
         private Button btnSelectAll;
         private Button btnDeselectAll;
         private Button btnExport;
         private Button btnCancel;
+
+        // ADV filter: titles starting with these prefixes are excluded
+        private static readonly string[] _advExcludedPrefixes =
+            { "OPENER", "INFRASPOT", "CLOSER" };
 
         public ReportExportDialog(List<ReportEntry> data)
         {
@@ -61,6 +70,12 @@ namespace AirManager.Forms
             // ✅ GRUPPI
             grpColumns.Text = LanguageManager.GetString("ReportExport.Group.Columns");
             grpOptions.Text = LanguageManager.GetString("ReportExport.Group.Options");
+            grpExportMode.Text = LanguageManager.GetString("ReportExport.Group.ExportMode");
+
+            // ✅ MODALITÀ EXPORT
+            rbStandardReport.Text = LanguageManager.GetString("ReportExport.ExportMode.Standard");
+            rbAdvSpots.Text = LanguageManager.GetString("ReportExport.ExportMode.AdvSpots");
+            rbAdvHourly.Text = LanguageManager.GetString("ReportExport.ExportMode.AdvHourly");
 
             // ✅ CHECKBOXES COLONNE
             chkDate.Text = "📅 " + LanguageManager.GetString("ReportExport.Column.Date");
@@ -80,13 +95,13 @@ namespace AirManager.Forms
             lblDelimiter.Text = LanguageManager.GetString("ReportExport.Delimiter");
             chkIncludeHeader.Text = LanguageManager.GetString("ReportExport.IncludeHeader");
 
-            // ✅ DROPDOWN SEPARATORI (mantieni selezione)
+            // ✅ DROPDOWN SEPARATORI (mantieni selezione, default ; )
             int currentIndex = cmbDelimiter.SelectedIndex;
             cmbDelimiter.Items.Clear();
             cmbDelimiter.Items.Add(LanguageManager.GetString("ReportExport.Delimiter.Comma"));
             cmbDelimiter.Items.Add(LanguageManager.GetString("ReportExport.Delimiter.Semicolon"));
             cmbDelimiter.Items.Add(LanguageManager.GetString("ReportExport.Delimiter.Tab"));
-            cmbDelimiter.SelectedIndex = currentIndex >= 0 ? currentIndex : 0;
+            cmbDelimiter.SelectedIndex = currentIndex >= 0 ? currentIndex : 1; // default: semicolon
 
             // ✅ BOTTONI AZIONE
             btnExport.Text = "💾 " + LanguageManager.GetString("ReportExport.Export");
@@ -98,7 +113,7 @@ namespace AirManager.Forms
         private void InitializeCustomUI()
         {
             this.Text = "💾 Esporta Report CSV";
-            this.Size = new Size(600, 550);
+            this.Size = new Size(600, 620);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -186,13 +201,59 @@ namespace AirManager.Forms
 
             this.Controls.Add(grpColumns);
 
+            // ✅ MODALITÀ EXPORT ADV
+            grpExportMode = new GroupBox
+            {
+                Text = "Modalità Export",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(20, 310),
+                Size = new Size(540, 95)
+            };
+
+            rbStandardReport = new RadioButton
+            {
+                Text = "📋 Report Standard",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                ForeColor = Color.White,
+                Location = new Point(20, 22),
+                Size = new Size(240, 22),
+                Checked = true
+            };
+            rbStandardReport.CheckedChanged += (s, e) => UpdateControlsForMode();
+            grpExportMode.Controls.Add(rbStandardReport);
+
+            rbAdvSpots = new RadioButton
+            {
+                Text = "📢 Durate Singoli Spot ADV",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                ForeColor = Color.White,
+                Location = new Point(20, 46),
+                Size = new Size(240, 22)
+            };
+            rbAdvSpots.CheckedChanged += (s, e) => UpdateControlsForMode();
+            grpExportMode.Controls.Add(rbAdvSpots);
+
+            rbAdvHourly = new RadioButton
+            {
+                Text = "🕐 Per Fasce Orarie ADV",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                ForeColor = Color.White,
+                Location = new Point(20, 68),
+                Size = new Size(240, 22)
+            };
+            rbAdvHourly.CheckedChanged += (s, e) => UpdateControlsForMode();
+            grpExportMode.Controls.Add(rbAdvHourly);
+
+            this.Controls.Add(grpExportMode);
+
             // ✅ OPZIONI ESPORTAZIONE
             grpOptions = new GroupBox
             {
                 Text = "Opzioni Esportazione",
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = Color.White,
-                Location = new Point(20, 320),
+                Location = new Point(20, 415),
                 Size = new Size(540, 110)
             };
 
@@ -218,7 +279,7 @@ namespace AirManager.Forms
             cmbDelimiter.Items.Add("Virgola (,)");
             cmbDelimiter.Items.Add("Punto e virgola (;)");
             cmbDelimiter.Items.Add("Tabulazione (Tab)");
-            cmbDelimiter.SelectedIndex = 0;
+            cmbDelimiter.SelectedIndex = 1; // default: semicolon
             grpOptions.Controls.Add(cmbDelimiter);
 
             chkIncludeHeader = new CheckBox
@@ -238,7 +299,7 @@ namespace AirManager.Forms
             btnCancel = new Button
             {
                 Text = "✖ Annulla",
-                Location = new Point(330, 455),
+                Location = new Point(330, 540),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(220, 53, 69),
                 ForeColor = Color.White,
@@ -253,7 +314,7 @@ namespace AirManager.Forms
             btnExport = new Button
             {
                 Text = "💾 Esporta",
-                Location = new Point(450, 455),
+                Location = new Point(450, 540),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(40, 167, 69),
                 ForeColor = Color.White,
@@ -266,6 +327,15 @@ namespace AirManager.Forms
             this.Controls.Add(btnExport);
 
             this.CancelButton = btnCancel;
+        }
+
+        /// <summary>
+        /// Updates the enabled state of column checkboxes based on the selected export mode.
+        /// </summary>
+        private void UpdateControlsForMode()
+        {
+            bool columnsEnabled = !rbAdvHourly.Checked;
+            grpColumns.Enabled = columnsEnabled;
         }
 
         private CheckBox CreateCheckBox(string text, int x, int y, bool isChecked)
@@ -295,29 +365,45 @@ namespace AirManager.Forms
 
         private void BtnExport_Click(object sender, EventArgs e)
         {
-            if (!chkDate.Checked && !chkStartTime.Checked && !chkEndTime.Checked &&
-                !chkArtist.Checked && !chkTitle.Checked && !chkType.Checked &&
-                !chkPlayDuration.Checked && !chkFileDuration.Checked)
+            // For standard and ADV spots modes, validate that at least one column is selected
+            if (!rbAdvHourly.Checked)
             {
-                MessageBox.Show(
-                    LanguageManager.GetString("ReportExport.Validation.SelectColumn"),
-                    LanguageManager.GetString("ReportExport.Title.NoColumn"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
+                if (!chkDate.Checked && !chkStartTime.Checked && !chkEndTime.Checked &&
+                    !chkArtist.Checked && !chkTitle.Checked && !chkType.Checked &&
+                    !chkPlayDuration.Checked && !chkFileDuration.Checked)
+                {
+                    MessageBox.Show(
+                        LanguageManager.GetString("ReportExport.Validation.SelectColumn"),
+                        LanguageManager.GetString("ReportExport.Title.NoColumn"),
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    return;
+                }
             }
 
             using (SaveFileDialog sfd = new SaveFileDialog())
             {
                 sfd.Filter = "File CSV (*.csv)|*.csv";
-                sfd.FileName = $"Report_{DateTime.Now:yyyy-MM-dd_HH-mm}.csv";
+
+                if (rbAdvSpots.Checked)
+                    sfd.FileName = $"ADV_Spots_{DateTime.Now:yyyy-MM-dd_HH-mm}.csv";
+                else if (rbAdvHourly.Checked)
+                    sfd.FileName = $"ADV_Hourly_{DateTime.Now:yyyy-MM-dd_HH-mm}.csv";
+                else
+                    sfd.FileName = $"Report_{DateTime.Now:yyyy-MM-dd_HH-mm}.csv";
+
                 sfd.Title = LanguageManager.GetString("ReportExport.Dialog.SaveTitle");
 
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
-                        ExportToCSV(sfd.FileName);
+                        if (rbAdvSpots.Checked)
+                            ExportAdvSpotsToCSV(sfd.FileName);
+                        else if (rbAdvHourly.Checked)
+                            ExportAdvHourlyToCSV(sfd.FileName);
+                        else
+                            ExportToCSV(sfd.FileName);
 
                         MessageBox.Show(
                             string.Format(LanguageManager.GetString("ReportExport.Message.ExportSuccess"), _data.Count, sfd.FileName),
@@ -378,6 +464,184 @@ namespace AirManager.Forms
                     if (chkFileDuration.Checked) values.Add(EscapeCsv(entry.FileDuration, delimiter));
 
                     writer.WriteLine(string.Join(delimiter, values));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the entry is an ADV spot that should be included
+        /// (Type == "ADV", title does not start with OPENER, INFRASPOT, or CLOSER).
+        /// </summary>
+        private static bool IsAdvSpotEntry(ReportEntry entry)
+        {
+            if (!string.Equals(entry.Type, "ADV", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            string title = entry.Title ?? "";
+            foreach (string prefix in _advExcludedPrefixes)
+            {
+                if (title.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses a duration string "HH:MM:SS" (with possible surrounding spaces) to TimeSpan.
+        /// Returns TimeSpan.Zero on failure.
+        /// </summary>
+        private static TimeSpan ParseDuration(string duration)
+        {
+            if (string.IsNullOrWhiteSpace(duration))
+                return TimeSpan.Zero;
+
+            var parts = duration.Split(':');
+            if (parts.Length == 3 &&
+                int.TryParse(parts[0].Trim(), out int h) &&
+                int.TryParse(parts[1].Trim(), out int m) &&
+                int.TryParse(parts[2].Trim(), out int s))
+            {
+                return new TimeSpan(h, m, s);
+            }
+
+            return TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// Extracts the hour (0-23) from a StartTime string "HH:mm:ss" (may have spaces).
+        /// </summary>
+        private static int GetHourFromStartTime(string startTime)
+        {
+            if (string.IsNullOrWhiteSpace(startTime))
+                return 0;
+
+            var parts = startTime.Split(':');
+            if (parts.Length >= 1 && int.TryParse(parts[0].Trim(), out int hour))
+                return Math.Max(0, Math.Min(23, hour));
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Exports ADV spots (excluding OPENER/INFRASPOT/CLOSER) with user-selected columns.
+        /// </summary>
+        private void ExportAdvSpotsToCSV(string filePath)
+        {
+            string delimiter = GetDelimiter();
+            var advEntries = _data
+                .Where(IsAdvSpotEntry)
+                .OrderBy(e => e.Date)
+                .ThenBy(e => e.StartTime)
+                .ToList();
+
+            if (advEntries.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("ReportExport.ADV.NoData"),
+                    LanguageManager.GetString("ReportExport.ADV.NoDataTitle"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+            {
+                if (chkIncludeHeader.Checked)
+                {
+                    List<string> headers = new List<string>();
+
+                    if (chkDate.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.Date"));
+                    if (chkStartTime.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.StartTime"));
+                    if (chkEndTime.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.EndTime"));
+                    if (chkArtist.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.Artist"));
+                    if (chkTitle.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.Title"));
+                    if (chkType.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.Type"));
+                    if (chkPlayDuration.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.PlayDuration"));
+                    if (chkFileDuration.Checked) headers.Add(LanguageManager.GetString("ReportExport.CSV.FileDuration"));
+
+                    writer.WriteLine(string.Join(delimiter, headers));
+                }
+
+                foreach (var entry in advEntries)
+                {
+                    List<string> values = new List<string>();
+
+                    if (chkDate.Checked) values.Add(EscapeCsv(entry.Date.ToString("dd/MM/yyyy"), delimiter));
+                    if (chkStartTime.Checked) values.Add(EscapeCsv(entry.StartTime, delimiter));
+                    if (chkEndTime.Checked) values.Add(EscapeCsv(entry.EndTime, delimiter));
+                    if (chkArtist.Checked) values.Add(EscapeCsv(entry.Artist, delimiter));
+                    if (chkTitle.Checked) values.Add(EscapeCsv(entry.Title, delimiter));
+                    if (chkType.Checked) values.Add(EscapeCsv(entry.Type, delimiter));
+                    if (chkPlayDuration.Checked) values.Add(EscapeCsv(entry.PlayDuration, delimiter));
+                    if (chkFileDuration.Checked) values.Add(EscapeCsv(entry.FileDuration, delimiter));
+
+                    writer.WriteLine(string.Join(delimiter, values));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Exports ADV hourly slot totals in vertical CSV format:
+        /// Data;Fascia Oraria;Durata Totale
+        /// </summary>
+        private void ExportAdvHourlyToCSV(string filePath)
+        {
+            string delimiter = GetDelimiter();
+            var advEntries = _data
+                .Where(IsAdvSpotEntry)
+                .ToList();
+
+            if (advEntries.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("ReportExport.ADV.NoData"),
+                    LanguageManager.GetString("ReportExport.ADV.NoDataTitle"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            // Group entries by date and hour
+            var grouped = advEntries
+                .GroupBy(e => e.Date.Date)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
+            {
+                // Fixed header
+                if (chkIncludeHeader.Checked)
+                {
+                    writer.WriteLine(string.Join(delimiter,
+                        LanguageManager.GetString("ReportExport.CSV.Date"),
+                        LanguageManager.GetString("ReportExport.CSV.HourSlot"),
+                        LanguageManager.GetString("ReportExport.CSV.TotalDuration")));
+                }
+
+                foreach (var dayGroup in grouped)
+                {
+                    string dateStr = dayGroup.Key.ToString("dd/MM/yyyy");
+
+                    // Build hourly totals (0-23)
+                    var hourlyTotals = new TimeSpan[24];
+                    foreach (var entry in dayGroup)
+                    {
+                        int hour = GetHourFromStartTime(entry.StartTime);
+                        hourlyTotals[hour] += ParseDuration(entry.PlayDuration);
+                    }
+
+                    for (int h = 0; h < 24; h++)
+                    {
+                        TimeSpan total = hourlyTotals[h];
+                        string totalStr = string.Format("{0:D2}:{1:D2}:{2:D2}",
+                            (int)total.TotalHours, total.Minutes, total.Seconds);
+
+                        writer.WriteLine(string.Join(delimiter,
+                            EscapeCsv(dateStr, delimiter),
+                            EscapeCsv(h.ToString("D2"), delimiter),
+                            EscapeCsv(totalStr, delimiter)));
+                    }
                 }
             }
         }
