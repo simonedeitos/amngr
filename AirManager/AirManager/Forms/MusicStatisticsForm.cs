@@ -1,31 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using AirManager.Services;
 using AirManager.Services.Database;
 using AirManager.Themes;
-using ScottPlot;
-using ScottPlot.WinForms;
 
 namespace AirManager.Forms
 {
     public partial class MusicStatisticsForm : Form
     {
-        private DateTimePicker dtpFrom;
-        private DateTimePicker dtpTo;
-        private Button btnUpdate;
-        private TabControl tabControl;
+        private DateTimePicker dtpFrom = null!;
+        private DateTimePicker dtpTo = null!;
+        private Button btnUpdate = null!;
+        private TabControl tabControl = null!;
 
-        private FormsPlot chartTopTracks;
-        private FormsPlot chartTopArtists;
-        private FormsPlot chartDailyTrend;
-        private FormsPlot chartHourlyDist;
-        private FormsPlot chartWeekdayDist;
-        private FormsPlot chartAvgDuration;
-        private Panel pnlRotation;
-        private Panel pnlSummary;
+        private ChartPanel chartTopTracks = null!;
+        private ChartPanel chartTopArtists = null!;
+        private ChartPanel chartDailyTrend = null!;
+        private ChartPanel chartHourlyDist = null!;
+        private ChartPanel chartWeekdayDist = null!;
+        private ChartPanel chartAvgDuration = null!;
+        private Panel pnlRotation = null!;
+        private Panel pnlSummary = null!;
 
         private List<ReportEntry> _data = new List<ReportEntry>();
 
@@ -35,9 +34,10 @@ namespace AirManager.Forms
             InitializeCustomUI();
             ApplyLanguage();
             LanguageManager.LanguageChanged += OnLanguageChanged;
+            this.FormClosed += (s, e) => LanguageManager.LanguageChanged -= OnLanguageChanged;
         }
 
-        private void OnLanguageChanged(object sender, EventArgs e) => ApplyLanguage();
+        private void OnLanguageChanged(object? sender, EventArgs e) => ApplyLanguage();
 
         private void ApplyLanguage()
         {
@@ -140,27 +140,27 @@ namespace AirManager.Forms
                 Dock = DockStyle.Fill,
                 Font = new Font("Segoe UI", 9),
                 BackColor = AppTheme.BgDark,
-                Padding = new Padding(8, 4, 8, 4)
+                Padding = new Point(8, 4)
             };
 
-            chartTopTracks  = CreateFormsPlot();
-            chartTopArtists = CreateFormsPlot();
-            chartDailyTrend = CreateFormsPlot();
-            chartHourlyDist = CreateFormsPlot();
-            chartWeekdayDist = CreateFormsPlot();
-            chartAvgDuration = CreateFormsPlot();
+            chartTopTracks   = new ChartPanel();
+            chartTopArtists  = new ChartPanel();
+            chartDailyTrend  = new ChartPanel();
+            chartHourlyDist  = new ChartPanel();
+            chartWeekdayDist = new ChartPanel();
+            chartAvgDuration = new ChartPanel();
 
             pnlRotation = CreateDarkPanel();
             pnlSummary  = CreateDarkPanel();
 
-            tabControl.TabPages.Add(CreateChartTab("📊 Top Tracks",           chartTopTracks));
-            tabControl.TabPages.Add(CreateChartTab("🎤 Top Artists",          chartTopArtists));
-            tabControl.TabPages.Add(CreateChartTab("📈 Daily Trend",          chartDailyTrend));
-            tabControl.TabPages.Add(CreateChartTab("🕐 Hourly Distribution",  chartHourlyDist));
-            tabControl.TabPages.Add(CreateChartTab("📅 Weekday Distribution", chartWeekdayDist));
-            tabControl.TabPages.Add(CreateChartTab("⏱️ Avg Duration/Hour",    chartAvgDuration));
-            tabControl.TabPages.Add(CreatePanelTab("🔄 Rotation Index",       pnlRotation));
-            tabControl.TabPages.Add(CreatePanelTab("📋 Summary",              pnlSummary));
+            tabControl.TabPages.Add(CreateTab("📊 Top Tracks",           chartTopTracks));
+            tabControl.TabPages.Add(CreateTab("🎤 Top Artists",          chartTopArtists));
+            tabControl.TabPages.Add(CreateTab("📈 Daily Trend",          chartDailyTrend));
+            tabControl.TabPages.Add(CreateTab("🕐 Hourly Distribution",  chartHourlyDist));
+            tabControl.TabPages.Add(CreateTab("📅 Weekday Distribution", chartWeekdayDist));
+            tabControl.TabPages.Add(CreateTab("⏱️ Avg Duration/Hour",    chartAvgDuration));
+            tabControl.TabPages.Add(CreateTab("🔄 Rotation Index",       pnlRotation));
+            tabControl.TabPages.Add(CreateTab("📋 Summary",              pnlSummary));
 
             // correct dock order: header (Top) added after tabControl (Fill)
             this.Controls.Add(tabControl);
@@ -169,38 +169,19 @@ namespace AirManager.Forms
 
         // ── Helpers ─────────────────────────────────────────────────────────
 
-        private static FormsPlot CreateFormsPlot()
-        {
-            return new FormsPlot { Dock = DockStyle.Fill };
-        }
+        private static Panel CreateDarkPanel() =>
+            new Panel { Dock = DockStyle.Fill, BackColor = AppTheme.BgDark, AutoScroll = true };
 
-        private static Panel CreateDarkPanel()
-        {
-            return new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = AppTheme.BgDark,
-                AutoScroll = true
-            };
-        }
-
-        private static TabPage CreateChartTab(string title, FormsPlot chart)
+        private static TabPage CreateTab(string title, Control control)
         {
             var page = new TabPage(title) { BackColor = AppTheme.BgDark };
-            page.Controls.Add(chart);
-            return page;
-        }
-
-        private static TabPage CreatePanelTab(string title, Panel panel)
-        {
-            var page = new TabPage(title) { BackColor = AppTheme.BgDark };
-            page.Controls.Add(panel);
+            page.Controls.Add(control);
             return page;
         }
 
         // ── Data loading & chart building ────────────────────────────────────
 
-        private void BtnUpdate_Click(object sender, EventArgs e)
+        private void BtnUpdate_Click(object? sender, EventArgs e)
         {
             LoadAndRefresh();
         }
@@ -237,8 +218,7 @@ namespace AirManager.Forms
         // 1. Top N Tracks ────────────────────────────────────────────────────
         private void BuildTopTracksChart()
         {
-            chartTopTracks.Plot.Clear();
-            if (_data.Count == 0) { chartTopTracks.Refresh(); return; }
+            if (_data.Count == 0) { chartTopTracks.ClearData(); return; }
 
             var top = _data
                 .GroupBy(r => $"{r.Artist} – {r.Title}")
@@ -250,24 +230,17 @@ namespace AirManager.Forms
             double[] values = top.Select(g => (double)g.Count()).ToArray();
             string[] labels = top.Select(g => g.Key.Length > 40 ? g.Key.Substring(0, 40) + "…" : g.Key).ToArray();
 
-            var bar = chartTopTracks.Plot.Add.Bars(values);
-            bar.Horizontal = true;
-            chartTopTracks.Plot.Axes.Left.SetTicks(
-                Enumerable.Range(0, labels.Length).Select(i => (double)i).ToArray(),
-                labels);
-
-            ApplyPlotTheme(chartTopTracks.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.TopTracks", "Top 20 Most Played Tracks"),
-                LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"),
-                "");
-            chartTopTracks.Refresh();
+            chartTopTracks.SetBarData(
+                values, labels, horizontal: true,
+                title: LanguageManager.GetString("MusicStatistics.Chart.TopTracks", "Top 20 Most Played Tracks"),
+                xLabel: LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"),
+                yLabel: "");
         }
 
         // 2. Top N Artists ───────────────────────────────────────────────────
         private void BuildTopArtistsChart()
         {
-            chartTopArtists.Plot.Clear();
-            if (_data.Count == 0) { chartTopArtists.Refresh(); return; }
+            if (_data.Count == 0) { chartTopArtists.ClearData(); return; }
 
             var top = _data
                 .Where(r => !string.IsNullOrWhiteSpace(r.Artist))
@@ -280,24 +253,17 @@ namespace AirManager.Forms
             double[] values = top.Select(g => (double)g.Count()).ToArray();
             string[] labels = top.Select(g => g.Key.Length > 30 ? g.Key.Substring(0, 30) + "…" : g.Key).ToArray();
 
-            var bar = chartTopArtists.Plot.Add.Bars(values);
-            bar.Horizontal = true;
-            chartTopArtists.Plot.Axes.Left.SetTicks(
-                Enumerable.Range(0, labels.Length).Select(i => (double)i).ToArray(),
-                labels);
-
-            ApplyPlotTheme(chartTopArtists.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.TopArtists", "Top 20 Most Played Artists"),
-                LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"),
-                "");
-            chartTopArtists.Refresh();
+            chartTopArtists.SetBarData(
+                values, labels, horizontal: true,
+                title: LanguageManager.GetString("MusicStatistics.Chart.TopArtists", "Top 20 Most Played Artists"),
+                xLabel: LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"),
+                yLabel: "");
         }
 
         // 3. Daily Trend ─────────────────────────────────────────────────────
         private void BuildDailyTrendChart()
         {
-            chartDailyTrend.Plot.Clear();
-            if (_data.Count == 0) { chartDailyTrend.Refresh(); return; }
+            if (_data.Count == 0) { chartDailyTrend.ClearData(); return; }
 
             var byDay = _data
                 .GroupBy(r => r.Date.Date)
@@ -306,23 +272,19 @@ namespace AirManager.Forms
 
             double[] xs = byDay.Select(g => g.Key.ToOADate()).ToArray();
             double[] ys = byDay.Select(g => (double)g.Count()).ToArray();
+            string[] xLabels = byDay.Select(g => g.Key.ToString("dd/MM")).ToArray();
 
-            var scatter = chartDailyTrend.Plot.Add.Scatter(xs, ys);
-            scatter.LineWidth = 2;
-            chartDailyTrend.Plot.Axes.DateTimeTicksBottom();
-
-            ApplyPlotTheme(chartDailyTrend.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.DailyTrend", "Daily Plays Trend"),
-                "",
-                LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
-            chartDailyTrend.Refresh();
+            chartDailyTrend.SetScatterData(
+                xs, ys, xLabels,
+                title: LanguageManager.GetString("MusicStatistics.Chart.DailyTrend", "Daily Plays Trend"),
+                xLabel: "",
+                yLabel: LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
         }
 
         // 4. Hourly Distribution ─────────────────────────────────────────────
         private void BuildHourlyDistChart()
         {
-            chartHourlyDist.Plot.Clear();
-            if (_data.Count == 0) { chartHourlyDist.Refresh(); return; }
+            if (_data.Count == 0) { chartHourlyDist.ClearData(); return; }
 
             var byHour = new double[24];
             foreach (var r in _data)
@@ -331,24 +293,19 @@ namespace AirManager.Forms
                     byHour[ts.Hours]++;
             }
 
-            double[] xs = Enumerable.Range(0, 24).Select(i => (double)i).ToArray();
-            chartHourlyDist.Plot.Add.Bars(xs, byHour);
-
             string[] hourLabels = Enumerable.Range(0, 24).Select(i => $"{i:D2}:00").ToArray();
-            chartHourlyDist.Plot.Axes.Bottom.SetTicks(xs, hourLabels);
 
-            ApplyPlotTheme(chartHourlyDist.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.HourlyDist", "Plays by Hour of Day"),
-                LanguageManager.GetString("MusicStatistics.Chart.Hour", "Hour"),
-                LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
-            chartHourlyDist.Refresh();
+            chartHourlyDist.SetBarData(
+                byHour, hourLabels, horizontal: false,
+                title: LanguageManager.GetString("MusicStatistics.Chart.HourlyDist", "Plays by Hour of Day"),
+                xLabel: LanguageManager.GetString("MusicStatistics.Chart.Hour", "Hour"),
+                yLabel: LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
         }
 
         // 5. Weekday Distribution ────────────────────────────────────────────
         private void BuildWeekdayDistChart()
         {
-            chartWeekdayDist.Plot.Clear();
-            if (_data.Count == 0) { chartWeekdayDist.Refresh(); return; }
+            if (_data.Count == 0) { chartWeekdayDist.ClearData(); return; }
 
             var byDay = new double[7];
             foreach (var r in _data)
@@ -356,9 +313,6 @@ namespace AirManager.Forms
                 int idx = ((int)r.Date.DayOfWeek + 6) % 7; // Mon=0..Sun=6
                 byDay[idx]++;
             }
-
-            double[] xs = Enumerable.Range(0, 7).Select(i => (double)i).ToArray();
-            chartWeekdayDist.Plot.Add.Bars(xs, byDay);
 
             string[] dayLabels = {
                 LanguageManager.GetString("MusicStatistics.Day.Mon", "Mon"),
@@ -369,20 +323,18 @@ namespace AirManager.Forms
                 LanguageManager.GetString("MusicStatistics.Day.Sat", "Sat"),
                 LanguageManager.GetString("MusicStatistics.Day.Sun", "Sun")
             };
-            chartWeekdayDist.Plot.Axes.Bottom.SetTicks(xs, dayLabels);
 
-            ApplyPlotTheme(chartWeekdayDist.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.WeekdayDist", "Plays by Day of Week"),
-                "",
-                LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
-            chartWeekdayDist.Refresh();
+            chartWeekdayDist.SetBarData(
+                byDay, dayLabels, horizontal: false,
+                title: LanguageManager.GetString("MusicStatistics.Chart.WeekdayDist", "Plays by Day of Week"),
+                xLabel: "",
+                yLabel: LanguageManager.GetString("MusicStatistics.Chart.Plays", "Plays"));
         }
 
         // 6. Avg Duration per Hour ───────────────────────────────────────────
         private void BuildAvgDurationChart()
         {
-            chartAvgDuration.Plot.Clear();
-            if (_data.Count == 0) { chartAvgDuration.Refresh(); return; }
+            if (_data.Count == 0) { chartAvgDuration.ClearData(); return; }
 
             var totalSec = new double[24];
             var counts   = new int[24];
@@ -396,20 +348,17 @@ namespace AirManager.Forms
                 }
             }
 
-            double[] xs = Enumerable.Range(0, 24).Select(i => (double)i).ToArray();
             double[] ys = Enumerable.Range(0, 24)
                 .Select(i => counts[i] > 0 ? totalSec[i] / counts[i] : 0)
                 .ToArray();
 
-            chartAvgDuration.Plot.Add.Bars(xs, ys);
             string[] hourLabels = Enumerable.Range(0, 24).Select(i => $"{i:D2}:00").ToArray();
-            chartAvgDuration.Plot.Axes.Bottom.SetTicks(xs, hourLabels);
 
-            ApplyPlotTheme(chartAvgDuration.Plot,
-                LanguageManager.GetString("MusicStatistics.Chart.AvgDuration", "Average Play Duration by Hour (seconds)"),
-                LanguageManager.GetString("MusicStatistics.Chart.Hour", "Hour"),
-                LanguageManager.GetString("MusicStatistics.Chart.AvgSec", "Avg seconds"));
-            chartAvgDuration.Refresh();
+            chartAvgDuration.SetBarData(
+                ys, hourLabels, horizontal: false,
+                title: LanguageManager.GetString("MusicStatistics.Chart.AvgDuration", "Average Play Duration by Hour (seconds)"),
+                xLabel: LanguageManager.GetString("MusicStatistics.Chart.Hour", "Hour"),
+                yLabel: LanguageManager.GetString("MusicStatistics.Chart.AvgSec", "Avg seconds"));
         }
 
         // 7. Rotation Index ──────────────────────────────────────────────────
@@ -559,26 +508,312 @@ namespace AirManager.Forms
         private static string FormatTs(TimeSpan ts)
             => $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
 
-        private static void ApplyPlotTheme(Plot plot, string title, string xLabel, string yLabel)
-        {
-            plot.Title(title);
-            if (!string.IsNullOrEmpty(xLabel)) plot.XLabel(xLabel);
-            if (!string.IsNullOrEmpty(yLabel)) plot.YLabel(yLabel);
-            plot.Style.Background(
-                figure: System.Drawing.Color.FromArgb(30, 30, 30),
-                data:   System.Drawing.Color.FromArgb(40, 40, 40));
-            plot.Style.ColorAxes(System.Drawing.Color.FromArgb(180, 180, 180));
-            plot.Style.ColorGrids(System.Drawing.Color.FromArgb(60, 60, 60));
-        }
+        // ── Inner GDI+ Chart Panel ────────────────────────────────────────────
 
-        protected override void Dispose(bool disposing)
+        private sealed class ChartPanel : Panel
         {
-            if (disposing)
+            private enum ChartKind { None, VerticalBars, HorizontalBars, LinePlot }
+
+            private ChartKind _kind   = ChartKind.None;
+            private double[]  _values = Array.Empty<double>();
+            private double[]  _xs     = Array.Empty<double>();
+            private string[]  _labels = Array.Empty<string>();
+            private string    _title  = "";
+            private string    _xLabel = "";
+            private string    _yLabel = "";
+
+            private static readonly Color BgColor = Color.FromArgb(30, 30, 30);
+            private static readonly Color DataBg  = Color.FromArgb(40, 40, 40);
+            private static readonly Color GridClr = Color.FromArgb(60, 60, 60);
+            private static readonly Color BarClr  = Color.FromArgb(0, 150, 136);
+            private static readonly Color TextClr = Color.FromArgb(200, 200, 200);
+            private static readonly Color AxisClr = Color.FromArgb(140, 140, 140);
+
+            public ChartPanel()
             {
-                LanguageManager.LanguageChanged -= OnLanguageChanged;
-                components?.Dispose();
+                DoubleBuffered = true;
+                BackColor = BgColor;
+                Dock = DockStyle.Fill;
             }
-            base.Dispose(disposing);
+
+            public void SetBarData(double[] values, string[] labels, bool horizontal,
+                                   string title, string xLabel, string yLabel)
+            {
+                _kind   = horizontal ? ChartKind.HorizontalBars : ChartKind.VerticalBars;
+                _values = values;
+                _xs     = Enumerable.Range(0, values.Length).Select(i => (double)i).ToArray();
+                _labels = labels;
+                _title  = title;
+                _xLabel = xLabel;
+                _yLabel = yLabel;
+                Invalidate();
+            }
+
+            public void SetScatterData(double[] xs, double[] ys, string[] xLabels,
+                                       string title, string xLabel, string yLabel)
+            {
+                _kind   = ChartKind.LinePlot;
+                _values = ys;
+                _xs     = xs;
+                _labels = xLabels;
+                _title  = title;
+                _xLabel = xLabel;
+                _yLabel = yLabel;
+                Invalidate();
+            }
+
+            public void ClearData()
+            {
+                _kind = ChartKind.None;
+                Invalidate();
+            }
+
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                base.OnPaint(e);
+                var g = e.Graphics;
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                g.Clear(BgColor);
+
+                int w = ClientSize.Width;
+                int h = ClientSize.Height;
+                if (w < 50 || h < 50) return;
+
+                // Draw title
+                using (var tf = new Font("Segoe UI", 11, FontStyle.Bold))
+                {
+                    var sz = g.MeasureString(_title, tf);
+                    g.DrawString(_title, tf, new SolidBrush(Color.White), (w - sz.Width) / 2f, 6f);
+                }
+
+                if (_kind == ChartKind.None || _values.Length == 0)
+                {
+                    DrawNoData(g, w, h);
+                    return;
+                }
+
+                switch (_kind)
+                {
+                    case ChartKind.VerticalBars:   DrawVerticalBars(g, w, h);   break;
+                    case ChartKind.HorizontalBars: DrawHorizontalBars(g, w, h); break;
+                    case ChartKind.LinePlot:       DrawLinePlot(g, w, h);       break;
+                }
+            }
+
+            private void DrawNoData(Graphics g, int w, int h)
+            {
+                const string msg = "No data";
+                using var f = new Font("Segoe UI", 11);
+                var sz = g.MeasureString(msg, f);
+                g.DrawString(msg, f, new SolidBrush(TextClr), (w - sz.Width) / 2f, (h - sz.Height) / 2f);
+            }
+
+            // ── Vertical Bars ────────────────────────────────────────────────
+            private void DrawVerticalBars(Graphics g, int w, int h)
+            {
+                const int mTop = 40, mBottom = 70, mLeft = 65, mRight = 20;
+                int pw = w - mLeft - mRight;
+                int ph = h - mTop - mBottom;
+                if (pw < 10 || ph < 10) return;
+
+                g.FillRectangle(new SolidBrush(DataBg), mLeft, mTop, pw, ph);
+
+                double maxV = _values.Length > 0 ? _values.Max() : 1;
+                if (maxV <= 0) maxV = 1;
+
+                using var gridPen = new Pen(GridClr);
+                using var lf = new Font("Segoe UI", 7);
+                for (int i = 0; i <= 5; i++)
+                {
+                    int y = mTop + ph - ph * i / 5;
+                    g.DrawLine(gridPen, mLeft, y, mLeft + pw, y);
+                    string lbl = SmartFormat(maxV * i / 5);
+                    var ls = g.MeasureString(lbl, lf);
+                    g.DrawString(lbl, lf, new SolidBrush(TextClr), mLeft - ls.Width - 3, y - ls.Height / 2f);
+                }
+
+                int n = _values.Length;
+                if (n == 0) return;
+                float barW = (float)pw / (n * 1.4f + 0.4f);
+                float gap  = barW * 0.4f;
+
+                using var barBrush = new SolidBrush(BarClr);
+                for (int i = 0; i < n; i++)
+                {
+                    float bx = mLeft + i * (barW + gap) + gap;
+                    float bh = (float)(ph * _values[i] / maxV);
+                    float by = mTop + ph - bh;
+                    g.FillRectangle(barBrush, bx, by, barW, bh);
+
+                    if (i < _labels.Length)
+                    {
+                        string lbl = _labels[i].Length > 8 ? _labels[i].Substring(0, 7) + "…" : _labels[i];
+                        var state = g.Save();
+                        g.TranslateTransform(bx + barW / 2f, mTop + ph + 4f);
+                        g.RotateTransform(-40);
+                        g.DrawString(lbl, lf, new SolidBrush(TextClr), 0, 0);
+                        g.Restore(state);
+                    }
+                }
+
+                DrawAxes(g, mLeft, mTop, pw, ph, _xLabel, _yLabel, w, h);
+            }
+
+            // ── Horizontal Bars ──────────────────────────────────────────────
+            private void DrawHorizontalBars(Graphics g, int w, int h)
+            {
+                const int mTop = 40, mBottom = 30, mRight = 55;
+                int mLeft = Math.Min(220, w / 3);
+                int pw = w - mLeft - mRight;
+                int ph = h - mTop - mBottom;
+                if (pw < 10 || ph < 10) return;
+
+                g.FillRectangle(new SolidBrush(DataBg), mLeft, mTop, pw, ph);
+
+                double maxV = _values.Length > 0 ? _values.Max() : 1;
+                if (maxV <= 0) maxV = 1;
+
+                using var gridPen = new Pen(GridClr);
+                using var lf = new Font("Segoe UI", 7);
+                for (int i = 0; i <= 5; i++)
+                {
+                    int x = mLeft + pw * i / 5;
+                    g.DrawLine(gridPen, x, mTop, x, mTop + ph);
+                    string lbl = ((int)(maxV * i / 5)).ToString();
+                    var ls = g.MeasureString(lbl, lf);
+                    g.DrawString(lbl, lf, new SolidBrush(TextClr), x - ls.Width / 2f, mTop + ph + 2f);
+                }
+
+                int n = _values.Length;
+                if (n == 0) return;
+                float barH  = (float)ph / (n + 1);
+                float barPad = barH * 0.15f;
+
+                using var barBrush = new SolidBrush(BarClr);
+                using var catFont  = new Font("Segoe UI", 8);
+                using var valFont  = new Font("Segoe UI", 7);
+
+                for (int i = 0; i < n; i++)
+                {
+                    float by = mTop + i * barH + barPad;
+                    float bh = barH - barPad * 2f;
+                    float bw = (float)(pw * _values[i] / maxV);
+                    g.FillRectangle(barBrush, mLeft, by, bw, bh);
+
+                    if (i < _labels.Length)
+                    {
+                        string lbl = _labels[i];
+                        var ls = g.MeasureString(lbl, catFont);
+                        while (ls.Width > mLeft - 8 && lbl.Length > 4)
+                        {
+                            lbl = lbl.Substring(0, lbl.Length - 4) + "…";
+                            ls  = g.MeasureString(lbl, catFont);
+                        }
+                        g.DrawString(lbl, catFont, new SolidBrush(TextClr),
+                            mLeft - ls.Width - 4f, by + (bh - ls.Height) / 2f);
+                    }
+
+                    string vs = ((int)_values[i]).ToString();
+                    var vs2 = g.MeasureString(vs, valFont);
+                    g.DrawString(vs, valFont, new SolidBrush(TextClr),
+                        mLeft + bw + 3f, by + (bh - vs2.Height) / 2f);
+                }
+
+                using var axisPen = new Pen(AxisClr);
+                g.DrawLine(axisPen, mLeft, mTop, mLeft, mTop + ph);
+                g.DrawLine(axisPen, mLeft, mTop + ph, mLeft + pw, mTop + ph);
+            }
+
+            // ── Line Plot ────────────────────────────────────────────────────
+            private void DrawLinePlot(Graphics g, int w, int h)
+            {
+                const int mTop = 40, mBottom = 65, mLeft = 60, mRight = 20;
+                int pw = w - mLeft - mRight;
+                int ph = h - mTop - mBottom;
+                if (pw < 10 || ph < 10) return;
+
+                g.FillRectangle(new SolidBrush(DataBg), mLeft, mTop, pw, ph);
+
+                double minX = _xs.Length > 0 ? _xs.Min() : 0;
+                double maxX = _xs.Length > 0 ? _xs.Max() : 1;
+                double maxY = _values.Length > 0 ? _values.Max() : 1;
+                if (maxX == minX) maxX = minX + 1;
+                if (maxY <= 0) maxY = 1;
+
+                using var gridPen = new Pen(GridClr);
+                using var lf = new Font("Segoe UI", 7);
+                for (int i = 0; i <= 5; i++)
+                {
+                    int y = mTop + ph - ph * i / 5;
+                    g.DrawLine(gridPen, mLeft, y, mLeft + pw, y);
+                    string lbl = SmartFormat(maxY * i / 5);
+                    var ls = g.MeasureString(lbl, lf);
+                    g.DrawString(lbl, lf, new SolidBrush(TextClr), mLeft - ls.Width - 3, y - ls.Height / 2f);
+                }
+
+                if (_xs.Length >= 2)
+                {
+                    var pts = new PointF[_xs.Length];
+                    for (int i = 0; i < _xs.Length; i++)
+                    {
+                        float px = mLeft + (float)((_xs[i] - minX) / (maxX - minX) * pw);
+                        float py = mTop  + ph - (float)(_values[i] / maxY * ph);
+                        pts[i] = new PointF(px, py);
+                    }
+                    using var lp = new Pen(BarClr, 2);
+                    g.DrawLines(lp, pts);
+                    using var dotBrush = new SolidBrush(BarClr);
+                    foreach (var pt in pts)
+                        g.FillEllipse(dotBrush, pt.X - 3, pt.Y - 3, 6, 6);
+                }
+
+                int step = Math.Max(1, _labels.Length / 12);
+                for (int i = 0; i < _labels.Length; i += step)
+                {
+                    if (i >= _xs.Length) break;
+                    float px = mLeft + (float)((_xs[i] - minX) / (maxX - minX) * pw);
+                    var state = g.Save();
+                    g.TranslateTransform(px, mTop + ph + 4f);
+                    g.RotateTransform(-45);
+                    g.DrawString(_labels[i], lf, new SolidBrush(TextClr), 0, 0);
+                    g.Restore(state);
+                }
+
+                DrawAxes(g, mLeft, mTop, pw, ph, _xLabel, _yLabel, w, h);
+            }
+
+            // ── Shared helpers ───────────────────────────────────────────────
+            private static void DrawAxes(Graphics g, int mLeft, int mTop, int pw, int ph,
+                                         string xLabel, string yLabel, int w, int h)
+            {
+                using var ap = new Pen(AxisClr);
+                g.DrawLine(ap, mLeft, mTop, mLeft, mTop + ph);
+                g.DrawLine(ap, mLeft, mTop + ph, mLeft + pw, mTop + ph);
+
+                using var af = new Font("Segoe UI", 9);
+                if (!string.IsNullOrEmpty(xLabel))
+                {
+                    var sz = g.MeasureString(xLabel, af);
+                    g.DrawString(xLabel, af, new SolidBrush(TextClr),
+                        mLeft + (pw - sz.Width) / 2f, h - af.Height - 2f);
+                }
+                if (!string.IsNullOrEmpty(yLabel))
+                {
+                    var state = g.Save();
+                    g.TranslateTransform(12f, mTop + ph / 2f);
+                    g.RotateTransform(-90);
+                    var sz = g.MeasureString(yLabel, af);
+                    g.DrawString(yLabel, af, new SolidBrush(TextClr), -sz.Width / 2f, -af.Height / 2f);
+                    g.Restore(state);
+                }
+            }
+
+            private static string SmartFormat(double v)
+            {
+                if (v >= 3600) return $"{v / 3600:F1}h";
+                if (v >= 60)   return $"{v / 60:F0}m";
+                return $"{(int)v}";
+            }
         }
     }
 }
