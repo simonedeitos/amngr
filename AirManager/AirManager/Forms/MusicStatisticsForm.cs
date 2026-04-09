@@ -25,6 +25,11 @@ namespace AirManager.Forms
         private ChartPanel chartAvgDuration = null!;
         private Panel pnlRotation = null!;
         private Panel pnlSummary = null!;
+        private Panel pnlSingleTrack = null!;
+        private Panel pnlSingleArtist = null!;
+
+        private ComboBox cmbSingleTrack = null!;
+        private ComboBox cmbSingleArtist = null!;
 
         private List<ReportEntry> _data = new List<ReportEntry>();
 
@@ -44,7 +49,7 @@ namespace AirManager.Forms
             this.Text = "📊 " + LanguageManager.GetString("MusicStatistics.Title", "Music Statistics");
             btnUpdate.Text = "🔄 " + LanguageManager.GetString("MusicStatistics.Update", "Update");
 
-            if (tabControl.TabPages.Count >= 8)
+            if (tabControl.TabPages.Count >= 10)
             {
                 tabControl.TabPages[0].Text = LanguageManager.GetString("MusicStatistics.Tab.TopTracks", "Top Tracks");
                 tabControl.TabPages[1].Text = LanguageManager.GetString("MusicStatistics.Tab.TopArtists", "Top Artists");
@@ -54,6 +59,8 @@ namespace AirManager.Forms
                 tabControl.TabPages[5].Text = LanguageManager.GetString("MusicStatistics.Tab.AvgDuration", "Avg Duration/Hour");
                 tabControl.TabPages[6].Text = LanguageManager.GetString("MusicStatistics.Tab.Rotation", "Rotation Index");
                 tabControl.TabPages[7].Text = LanguageManager.GetString("MusicStatistics.Tab.Summary", "Summary");
+                tabControl.TabPages[8].Text = LanguageManager.GetString("MusicStatistics.Tab.SingleTrack", "Single Track");
+                tabControl.TabPages[9].Text = LanguageManager.GetString("MusicStatistics.Tab.SingleArtist", "Single Artist");
             }
         }
 
@@ -152,6 +159,38 @@ namespace AirManager.Forms
 
             pnlRotation = CreateDarkPanel();
             pnlSummary  = CreateDarkPanel();
+            pnlSingleTrack  = CreateDarkPanel();
+            pnlSingleArtist = CreateDarkPanel();
+
+            // Build Single Track tab container (ComboBox on top + detail panel below)
+            var tabSingleTrack = new TabPage("🎵 Single Track") { BackColor = AppTheme.BgDark };
+            cmbSingleTrack = new ComboBox
+            {
+                Dock = DockStyle.Top,
+                Height = 28,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 9),
+                BackColor = AppTheme.BgInput,
+                ForeColor = AppTheme.TextPrimary
+            };
+            cmbSingleTrack.SelectedIndexChanged += (s, e) => BuildSingleTrackPanel();
+            tabSingleTrack.Controls.Add(pnlSingleTrack);
+            tabSingleTrack.Controls.Add(cmbSingleTrack);
+
+            // Build Single Artist tab container (ComboBox on top + detail panel below)
+            var tabSingleArtist = new TabPage("🎤 Single Artist") { BackColor = AppTheme.BgDark };
+            cmbSingleArtist = new ComboBox
+            {
+                Dock = DockStyle.Top,
+                Height = 28,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 9),
+                BackColor = AppTheme.BgInput,
+                ForeColor = AppTheme.TextPrimary
+            };
+            cmbSingleArtist.SelectedIndexChanged += (s, e) => BuildSingleArtistPanel();
+            tabSingleArtist.Controls.Add(pnlSingleArtist);
+            tabSingleArtist.Controls.Add(cmbSingleArtist);
 
             tabControl.TabPages.Add(CreateTab("📊 Top Tracks",           chartTopTracks));
             tabControl.TabPages.Add(CreateTab("🎤 Top Artists",          chartTopArtists));
@@ -161,6 +200,8 @@ namespace AirManager.Forms
             tabControl.TabPages.Add(CreateTab("⏱️ Avg Duration/Hour",    chartAvgDuration));
             tabControl.TabPages.Add(CreateTab("🔄 Rotation Index",       pnlRotation));
             tabControl.TabPages.Add(CreateTab("📋 Summary",              pnlSummary));
+            tabControl.TabPages.Add(tabSingleTrack);
+            tabControl.TabPages.Add(tabSingleArtist);
 
             // correct dock order: header (Top) added after tabControl (Fill)
             this.Controls.Add(tabControl);
@@ -213,6 +254,8 @@ namespace AirManager.Forms
             BuildAvgDurationChart();
             BuildRotationPanel();
             BuildSummaryPanel();
+            PopulateSingleTrackCombo();
+            PopulateSingleArtistCombo();
         }
 
         // 1. Top N Tracks ────────────────────────────────────────────────────
@@ -507,6 +550,264 @@ namespace AirManager.Forms
 
         private static string FormatTs(TimeSpan ts)
             => $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+
+        // ── Single Track / Single Artist helpers ──────────────────────────────
+
+        private void PopulateSingleTrackCombo()
+        {
+            cmbSingleTrack.Items.Clear();
+            var tracks = _data
+                .Select(r => $"{r.Artist} – {r.Title}")
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+            foreach (var t in tracks)
+                cmbSingleTrack.Items.Add(t);
+            if (cmbSingleTrack.Items.Count > 0)
+                cmbSingleTrack.SelectedIndex = 0;
+            else
+                BuildSingleTrackPanel();
+        }
+
+        private void PopulateSingleArtistCombo()
+        {
+            cmbSingleArtist.Items.Clear();
+            var artists = _data
+                .Where(r => !string.IsNullOrWhiteSpace(r.Artist))
+                .Select(r => r.Artist)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToList();
+            foreach (var a in artists)
+                cmbSingleArtist.Items.Add(a);
+            if (cmbSingleArtist.Items.Count > 0)
+                cmbSingleArtist.SelectedIndex = 0;
+            else
+                BuildSingleArtistPanel();
+        }
+
+        // 9. Single Track ────────────────────────────────────────────────────
+        private void BuildSingleTrackPanel()
+        {
+            pnlSingleTrack.Controls.Clear();
+            if (_data.Count == 0 || cmbSingleTrack.SelectedItem == null)
+            {
+                AddNoDataLabel(pnlSingleTrack);
+                return;
+            }
+
+            string selected = cmbSingleTrack.SelectedItem.ToString()!;
+            var trackData = _data
+                .Where(r => $"{r.Artist} – {r.Title}" == selected)
+                .ToList();
+
+            if (trackData.Count == 0) { AddNoDataLabel(pnlSingleTrack); return; }
+
+            int total = trackData.Count;
+            DateTime firstPlay = trackData.Min(r => r.Date);
+            DateTime lastPlay  = trackData.Max(r => r.Date);
+            int daySpan = Math.Max(1, (lastPlay - firstPlay).Days + 1);
+            double avgPerDay = Math.Round((double)total / daySpan, 2);
+
+            TimeSpan totalDur = TimeSpan.Zero;
+            int durCount = 0;
+            foreach (var r in trackData)
+            {
+                if (TimeSpan.TryParse(r.PlayDuration, out var d))
+                { totalDur += d; durCount++; }
+            }
+            TimeSpan avgDur = durCount > 0 ? TimeSpan.FromSeconds(totalDur.TotalSeconds / durCount) : TimeSpan.Zero;
+
+            var byHour   = new double[24];
+            var byWeekday = new double[7];
+            foreach (var r in trackData)
+            {
+                if (TimeSpan.TryParse(r.StartTime, out var ts)) byHour[ts.Hours]++;
+                int idx = ((int)r.Date.DayOfWeek + 6) % 7;
+                byWeekday[idx]++;
+            }
+
+            var lv = BuildStatsListView();
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Metric", "Metric"), 350);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Value", "Value"), 280);
+
+            void AddRow(string metric, string value)
+                => lv.Items.Add(new ListViewItem(new[] { metric, value }));
+
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.TotalPlays",   "Total plays"),          total.ToString());
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.FirstPlay",    "First play"),           firstPlay.ToString("dd/MM/yyyy"));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.LastPlay",     "Last play"),            lastPlay.ToString("dd/MM/yyyy"));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.AvgPerDay",    "Avg plays/day"),        avgPerDay.ToString());
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.TotalDuration","Total play duration"),  FormatTs(totalDur));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleTrack.AvgDuration",  "Avg play duration"),    FormatTs(avgDur));
+
+            lv.Items.Add(new ListViewItem(""));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.SingleTrack.HourlyDist", "Hourly distribution"), ""
+            }));
+            string[] hourLabels = Enumerable.Range(0, 24).Select(i => $"{i:D2}:00").ToArray();
+            for (int i = 0; i < 24; i++)
+            {
+                if (byHour[i] > 0)
+                    lv.Items.Add(new ListViewItem(new[] { $"  {hourLabels[i]}", ((int)byHour[i]).ToString() }));
+            }
+
+            lv.Items.Add(new ListViewItem(""));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.SingleTrack.WeekdayDist", "Day-of-week distribution"), ""
+            }));
+            string[] dayNames = {
+                LanguageManager.GetString("MusicStatistics.Day.Mon", "Mon"),
+                LanguageManager.GetString("MusicStatistics.Day.Tue", "Tue"),
+                LanguageManager.GetString("MusicStatistics.Day.Wed", "Wed"),
+                LanguageManager.GetString("MusicStatistics.Day.Thu", "Thu"),
+                LanguageManager.GetString("MusicStatistics.Day.Fri", "Fri"),
+                LanguageManager.GetString("MusicStatistics.Day.Sat", "Sat"),
+                LanguageManager.GetString("MusicStatistics.Day.Sun", "Sun")
+            };
+            for (int i = 0; i < 7; i++)
+            {
+                if (byWeekday[i] > 0)
+                    lv.Items.Add(new ListViewItem(new[] { $"  {dayNames[i]}", ((int)byWeekday[i]).ToString() }));
+            }
+
+            pnlSingleTrack.Controls.Add(lv);
+        }
+
+        // 10. Single Artist ──────────────────────────────────────────────────
+        private void BuildSingleArtistPanel()
+        {
+            pnlSingleArtist.Controls.Clear();
+            if (_data.Count == 0 || cmbSingleArtist.SelectedItem == null)
+            {
+                AddNoDataLabel(pnlSingleArtist);
+                return;
+            }
+
+            string selected = cmbSingleArtist.SelectedItem.ToString()!;
+            var artistData = _data
+                .Where(r => string.Equals(r.Artist, selected, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (artistData.Count == 0) { AddNoDataLabel(pnlSingleArtist); return; }
+
+            int total = artistData.Count;
+            int uniqueTracks = artistData.Select(r => r.Title).Distinct().Count();
+            DateTime firstPlay = artistData.Min(r => r.Date);
+            DateTime lastPlay  = artistData.Max(r => r.Date);
+            int daySpan = Math.Max(1, (lastPlay - firstPlay).Days + 1);
+            double avgPerDay = Math.Round((double)total / daySpan, 2);
+
+            TimeSpan totalDur = TimeSpan.Zero;
+            int durCount = 0;
+            foreach (var r in artistData)
+            {
+                if (TimeSpan.TryParse(r.PlayDuration, out var d))
+                { totalDur += d; durCount++; }
+            }
+
+            var topTrack = artistData
+                .GroupBy(r => r.Title)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault();
+
+            var byHour    = new double[24];
+            var byWeekday = new double[7];
+            foreach (var r in artistData)
+            {
+                if (TimeSpan.TryParse(r.StartTime, out var ts)) byHour[ts.Hours]++;
+                int idx = ((int)r.Date.DayOfWeek + 6) % 7;
+                byWeekday[idx]++;
+            }
+
+            var lv = BuildStatsListView();
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Metric", "Metric"), 350);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Value", "Value"), 280);
+
+            void AddRow(string metric, string value)
+                => lv.Items.Add(new ListViewItem(new[] { metric, value }));
+
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.TotalPlays",    "Total plays"),         total.ToString());
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.UniqueTracks",  "Unique tracks"),       uniqueTracks.ToString());
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.FirstPlay",     "First play"),          firstPlay.ToString("dd/MM/yyyy"));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.LastPlay",      "Last play"),           lastPlay.ToString("dd/MM/yyyy"));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.AvgPerDay",     "Avg plays/day"),       avgPerDay.ToString());
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.TotalDuration", "Total play duration"), FormatTs(totalDur));
+            AddRow(LanguageManager.GetString("MusicStatistics.SingleArtist.TopTrack",      "Most played track"),
+                topTrack != null ? $"{topTrack.Key} ({topTrack.Count()}x)" : "—");
+
+            lv.Items.Add(new ListViewItem(""));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.SingleArtist.TrackList", "Tracks played"), ""
+            }));
+            var trackList = artistData
+                .GroupBy(r => r.Title)
+                .OrderByDescending(g => g.Count())
+                .ToList();
+            foreach (var g in trackList)
+                lv.Items.Add(new ListViewItem(new[] { $"  {g.Key}", $"{g.Count()}x" }));
+
+            lv.Items.Add(new ListViewItem(""));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.SingleArtist.HourlyDist", "Hourly distribution"), ""
+            }));
+            string[] hourLabels = Enumerable.Range(0, 24).Select(i => $"{i:D2}:00").ToArray();
+            for (int i = 0; i < 24; i++)
+            {
+                if (byHour[i] > 0)
+                    lv.Items.Add(new ListViewItem(new[] { $"  {hourLabels[i]}", ((int)byHour[i]).ToString() }));
+            }
+
+            lv.Items.Add(new ListViewItem(""));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.SingleArtist.WeekdayDist", "Day-of-week distribution"), ""
+            }));
+            string[] dayNames = {
+                LanguageManager.GetString("MusicStatistics.Day.Mon", "Mon"),
+                LanguageManager.GetString("MusicStatistics.Day.Tue", "Tue"),
+                LanguageManager.GetString("MusicStatistics.Day.Wed", "Wed"),
+                LanguageManager.GetString("MusicStatistics.Day.Thu", "Thu"),
+                LanguageManager.GetString("MusicStatistics.Day.Fri", "Fri"),
+                LanguageManager.GetString("MusicStatistics.Day.Sat", "Sat"),
+                LanguageManager.GetString("MusicStatistics.Day.Sun", "Sun")
+            };
+            for (int i = 0; i < 7; i++)
+            {
+                if (byWeekday[i] > 0)
+                    lv.Items.Add(new ListViewItem(new[] { $"  {dayNames[i]}", ((int)byWeekday[i]).ToString() }));
+            }
+
+            pnlSingleArtist.Controls.Add(lv);
+        }
+
+        private static ListView BuildStatsListView() => new ListView
+        {
+            Dock = DockStyle.Fill,
+            View = View.Details,
+            FullRowSelect = true,
+            GridLines = true,
+            BackColor = AppTheme.BgPanel,
+            ForeColor = AppTheme.TextPrimary,
+            Font = new Font("Segoe UI", 10),
+            BorderStyle = BorderStyle.None
+        };
+
+        private void AddNoDataLabel(Panel target)
+        {
+            target.Controls.Add(new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.NoData", "No data available for the selected period."),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 11),
+                AutoSize = true,
+                Location = new Point(20, 20)
+            });
+        }
 
         // ── Inner GDI+ Chart Panel ────────────────────────────────────────────
 

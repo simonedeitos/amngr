@@ -314,10 +314,6 @@ namespace AirManager.Forms
                 btnStatistics.Location = new Point(pnlStats.ClientSize.Width - btnStatistics.Width - 15, 10);
             };
 
-            // ✅ CORRECT DOCK ORDER: Bottom first, then Top, then Fill
-            this.Controls.Add(pnlStats);
-            this.Controls.Add(pnlFilters);
-
             // ✅ DATAGRIDVIEW (fills remaining space)
             dgvHistory = new DataGridView
             {
@@ -413,7 +409,10 @@ namespace AirManager.Forms
 
             dgvHistory.CellFormatting += DgvHistory_CellFormatting;
 
+            // ✅ CORRECT DOCK ORDER: Fill first, then Top, then Bottom
             this.Controls.Add(dgvHistory);
+            this.Controls.Add(pnlFilters);
+            this.Controls.Add(pnlStats);
         }
 
         private void LoadData()
