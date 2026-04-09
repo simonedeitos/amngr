@@ -17,31 +17,31 @@ namespace AirManager.Forms
         private List<ReportEntry> _filteredData = new List<ReportEntry>();
 
         // Header
-        private Label lblTitle;
+        private Label lblTitle = null!;
 
         // Filter controls
-        private Panel pnlFilters;
-        private Label lblDateFrom;
-        private Label lblDateTo;
-        private Label lblSearch;
-        private Label lblType;
-        private DateTimePicker dtpFrom;
-        private DateTimePicker dtpTo;
-        private TextBox txtSearch;
-        private ComboBox cmbType;
-        private Button btnRefresh;
-        private Button btnExport;
+        private Panel pnlFilters = null!;
+        private Label lblDateFrom = null!;
+        private Label lblDateTo = null!;
+        private Label lblSearch = null!;
+        private Label lblType = null!;
+        private DateTimePicker dtpFrom = null!;
+        private DateTimePicker dtpTo = null!;
+        private TextBox txtSearch = null!;
+        private ComboBox cmbType = null!;
+        private Button btnRefresh = null!;
+        private Button btnExport = null!;
 
         // DataGridView
-        private DataGridView dgvHistory;
+        private DataGridView dgvHistory = null!;
 
         // Statistics panel
-        private Panel pnlStats;
-        private Label lblStatTotal;
-        private Label lblStatDuration;
-        private Label lblStatTopArtist;
-        private Label lblStatTopTrack;
-        private Button btnStatistics;
+        private Panel pnlStats = null!;
+        private Label lblStatTotal = null!;
+        private Label lblStatDuration = null!;
+        private Label lblStatTopArtist = null!;
+        private Label lblStatTopTrack = null!;
+        private Button btnStatistics = null!;
 
         public BroadcastHistoryForm()
         {
@@ -53,7 +53,7 @@ namespace AirManager.Forms
             LanguageManager.LanguageChanged += OnLanguageChanged;
         }
 
-        private void OnLanguageChanged(object sender, EventArgs e)
+        private void OnLanguageChanged(object? sender, EventArgs e)
         {
             ApplyLanguage();
         }
@@ -524,21 +524,21 @@ namespace AirManager.Forms
                 : $"🎶 {topTrackLabel} —";
         }
 
-        private void DgvHistory_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        private void DgvHistory_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
             if (e.ColumnIndex == dgvHistory.Columns["colType"].Index && e.Value != null)
             {
-                string type = e.Value.ToString();
+                string type = e.Value?.ToString() ?? "";
                 e.CellStyle.ForeColor = AppTheme.GetArchiveColor(type);
             }
         }
 
-        private void BtnRefresh_Click(object sender, EventArgs e)
+        private void BtnRefresh_Click(object? sender, EventArgs e)
         {
             LoadData();
         }
 
-        private void BtnStatistics_Click(object sender, EventArgs e)
+        private void BtnStatistics_Click(object? sender, EventArgs e)
         {
             using (var form = new MusicStatisticsForm())
             {
@@ -546,7 +546,7 @@ namespace AirManager.Forms
             }
         }
 
-        private void BtnExport_Click(object sender, EventArgs e)
+        private void BtnExport_Click(object? sender, EventArgs e)
         {
             if (_filteredData.Count == 0)
             {
