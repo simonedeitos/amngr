@@ -639,7 +639,7 @@ namespace AirManager.Forms
 
                         writer.WriteLine(string.Join(delimiter,
                             EscapeCsv(dateStr, delimiter),
-                            EscapeCsv(h.ToString("D2"), delimiter),
+                            h.ToString("D2"),
                             EscapeCsv(totalStr, delimiter)));
                     }
                 }
