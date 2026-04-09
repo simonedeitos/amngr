@@ -52,6 +52,7 @@ namespace AirManager
         private ToolStripMenuItem menuItemViewReport;
         private ToolStripMenuItem menuItemExportReport;
         private ToolStripMenuItem menuItemBroadcastHistory;
+        private ToolStripMenuItem menuItemMusicStatistics;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU HELP
         private ToolStripMenuItem menuItemAbout;
@@ -157,6 +158,10 @@ namespace AirManager
 
             menuItemViewReport = new ToolStripMenuItem("📈 Visualizza Report", null, MenuViewReport_Click);
             menuReport.DropDownItems.Add(menuItemViewReport);
+            menuReport.DropDownItems.Add(new ToolStripSeparator());
+
+            menuItemMusicStatistics = new ToolStripMenuItem("📊 Statistiche Musica", null, MenuMusicStatistics_Click);
+            menuReport.DropDownItems.Add(menuItemMusicStatistics);
             menuReport.DropDownItems.Add(new ToolStripSeparator());
 
             menuItemBroadcastHistory = new ToolStripMenuItem("📜 Broadcast History", null, MenuBroadcastHistory_Click);
@@ -278,6 +283,7 @@ namespace AirManager
 
             // ✅ MENU REPORT
             menuItemViewReport.Text = "📈 " + LanguageManager.GetString("MainForm.Menu.Report.View");
+            menuItemMusicStatistics.Text = "📊 " + LanguageManager.GetString("MainForm.Menu.Report.MusicStatistics");
             menuItemExportReport.Text = "💾 " + LanguageManager.GetString("MainForm.Menu.Report.Export");
             menuItemBroadcastHistory.Text = "📜 " + LanguageManager.GetString("MainForm.Menu.Report.BroadcastHistory");
 
@@ -728,6 +734,24 @@ namespace AirManager
             using (var form = new BroadcastHistoryForm())
             {
                 form.ShowDialog();
+            }
+        }
+
+        private void MenuMusicStatistics_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new MusicStatisticsForm())
+            {
+                form.ShowDialog(this);
             }
         }
 
