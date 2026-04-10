@@ -2411,13 +2411,13 @@ namespace AirManager.Forms
                                 };
 
                                 process.Start();
-                                string stderr = process.StandardError.ReadToEnd();
                                 bool exited = process.WaitForExit(60000);
                                 if (!exited)
                                 {
-                                    process.Kill();
+                                    try { process.Kill(); } catch { /* already exited */ }
                                     Console.WriteLine($"[MusicEditor] ⚠️ ffmpeg timeout – processo terminato");
                                 }
+                                string stderr = process.StandardError.ReadToEnd();
 
                                 Console.WriteLine($"[MusicEditor] ffmpeg output: {stderr}");
 
