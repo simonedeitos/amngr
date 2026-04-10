@@ -2852,17 +2852,18 @@ namespace AirManager.Controls
 
                 if (!string.IsNullOrEmpty(_sortColumnName))
                 {
-                    filteredList = _sortColumnName switch
+                    IEnumerable<MusicEntry> sorted = _sortColumnName switch
                     {
-                        "Artist" => _sortAscending ? filteredList.OrderBy(m => m.Artist ?? "").ToList() : filteredList.OrderByDescending(m => m.Artist ?? "").ToList(),
-                        "Title" => _sortAscending ? filteredList.OrderBy(m => m.Title ?? "").ToList() : filteredList.OrderByDescending(m => m.Title ?? "").ToList(),
-                        "Genre" => _sortAscending ? filteredList.OrderBy(m => m.Genre ?? "").ToList() : filteredList.OrderByDescending(m => m.Genre ?? "").ToList(),
-                        "Year" => _sortAscending ? filteredList.OrderBy(m => m.Year).ToList() : filteredList.OrderByDescending(m => m.Year).ToList(),
-                        "Duration" => _sortAscending ? filteredList.OrderBy(m => m.Duration).ToList() : filteredList.OrderByDescending(m => m.Duration).ToList(),
-                        "Category" => _sortAscending ? filteredList.OrderBy(m => m.Categories ?? "").ToList() : filteredList.OrderByDescending(m => m.Categories ?? "").ToList(),
-                        "AddedDate" => _sortAscending ? filteredList.OrderBy(m => m.AddedDate ?? "").ToList() : filteredList.OrderByDescending(m => m.AddedDate ?? "").ToList(),
+                        "Artist"    => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Artist ?? "")    : filteredList.OrderByDescending(m => m.Artist ?? ""),
+                        "Title"     => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Title ?? "")     : filteredList.OrderByDescending(m => m.Title ?? ""),
+                        "Genre"     => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Genre ?? "")     : filteredList.OrderByDescending(m => m.Genre ?? ""),
+                        "Year"      => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Year)            : filteredList.OrderByDescending(m => m.Year),
+                        "Duration"  => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Duration)        : filteredList.OrderByDescending(m => m.Duration),
+                        "Category"  => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Categories ?? "") : filteredList.OrderByDescending(m => m.Categories ?? ""),
+                        "AddedDate" => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.AddedDate ?? "") : filteredList.OrderByDescending(m => m.AddedDate ?? ""),
                         _ => filteredList
                     };
+                    filteredList = sorted.ToList();
                 }
 
                 foreach (var entry in filteredList)
@@ -2908,15 +2909,16 @@ namespace AirManager.Controls
 
                 if (!string.IsNullOrEmpty(_sortColumnName))
                 {
-                    filteredList = _sortColumnName switch
+                    IEnumerable<ClipEntry> sorted = _sortColumnName switch
                     {
-                        "Title" => _sortAscending ? filteredList.OrderBy(c => c.Title ?? "").ToList() : filteredList.OrderByDescending(c => c.Title ?? "").ToList(),
-                        "Genre" => _sortAscending ? filteredList.OrderBy(c => c.Genre ?? "").ToList() : filteredList.OrderByDescending(c => c.Genre ?? "").ToList(),
-                        "Duration" => _sortAscending ? filteredList.OrderBy(c => c.Duration).ToList() : filteredList.OrderByDescending(c => c.Duration).ToList(),
-                        "Category" => _sortAscending ? filteredList.OrderBy(c => c.Categories ?? "").ToList() : filteredList.OrderByDescending(c => c.Categories ?? "").ToList(),
-                        "AddedDate" => _sortAscending ? filteredList.OrderBy(c => c.AddedDate ?? "").ToList() : filteredList.OrderByDescending(c => c.AddedDate ?? "").ToList(),
+                        "Title"     => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Title ?? "")     : filteredList.OrderByDescending(c => c.Title ?? ""),
+                        "Genre"     => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Genre ?? "")     : filteredList.OrderByDescending(c => c.Genre ?? ""),
+                        "Duration"  => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Duration)        : filteredList.OrderByDescending(c => c.Duration),
+                        "Category"  => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Categories ?? "") : filteredList.OrderByDescending(c => c.Categories ?? ""),
+                        "AddedDate" => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.AddedDate ?? "") : filteredList.OrderByDescending(c => c.AddedDate ?? ""),
                         _ => filteredList
                     };
+                    filteredList = sorted.ToList();
                 }
 
                 foreach (var entry in filteredList)
