@@ -88,6 +88,7 @@ namespace AirManager.Forms
                 Dock = DockStyle.Top,
                 Height = 28,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
                 Padding = new Padding(0, 0, 0, 6)
             };
 
@@ -110,6 +111,7 @@ namespace AirManager.Forms
                 Text = "Modifica Genere:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9),
+                ForeColor = Color.White,
                 Margin = new Padding(0, 6, 8, 6),
                 Anchor = AnchorStyles.Left
             };
@@ -123,6 +125,8 @@ namespace AirManager.Forms
                 DropDownStyle = ComboBoxStyle.DropDown,
                 AutoCompleteMode = AutoCompleteMode.SuggestAppend,
                 AutoCompleteSource = AutoCompleteSource.ListItems,
+                BackColor = AppTheme.BgInput,
+                ForeColor = Color.White,
                 Margin = new Padding(0, 6, 0, 6)
             };
 
@@ -136,6 +140,7 @@ namespace AirManager.Forms
                 Text = "Modifica Categoria:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9),
+                ForeColor = Color.White,
                 Margin = new Padding(0, 6, 8, 6),
                 Anchor = AnchorStyles.Left
             };
@@ -152,6 +157,8 @@ namespace AirManager.Forms
                 Enabled = false,
                 ReadOnly = true,
                 Cursor = Cursors.Hand,
+                BackColor = AppTheme.BgInput,
+                ForeColor = Color.White,
                 Margin = new Padding(0, 6, 0, 6)
             };
             txtCategoriesDisplay.Click += (s, e) => { if (txtCategoriesDisplay.Enabled) ShowCategoryPopup(); };
@@ -177,6 +184,7 @@ namespace AirManager.Forms
                 Text = "Anno:",
                 AutoSize = true,
                 Font = new Font("Segoe UI", 9),
+                ForeColor = Color.White,
                 Margin = new Padding(0, 6, 8, 6),
                 Anchor = AnchorStyles.Left
             };
@@ -186,6 +194,8 @@ namespace AirManager.Forms
             {
                 Font = new Font("Segoe UI", 9),
                 Enabled = false,
+                BackColor = AppTheme.BgInput,
+                ForeColor = Color.White,
                 Minimum = 1900,
                 Maximum = 2100,
                 Value = DateTime.Now.Year,
