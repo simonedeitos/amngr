@@ -51,6 +51,9 @@ namespace AirManager.Controls
 
         private Point _dragStartPoint;
 
+        private string _sortColumnName = null;
+        private bool _sortAscending = true;
+
         // Batch progress overlay
         private Panel _batchProgressPanel;
         private Label _lblBatchProgress;
@@ -517,6 +520,10 @@ namespace AirManager.Controls
                 });
             }
 
+            // Enable programmatic sort mode for all columns
+            foreach (DataGridViewColumn col in dgvArchive.Columns)
+                col.SortMode = DataGridViewColumnSortMode.Programmatic;
+
             ContextMenuStrip contextMenu = new ContextMenuStrip();
             var miCtxPreview = new ToolStripMenuItem("🎧 " + LanguageManager.GetString("Archive.Preview", "Preascolto"), null, MenuPreview_Click) { Tag = "ctx_preview" };
             contextMenu.Items.Add(miCtxPreview);
@@ -554,6 +561,7 @@ namespace AirManager.Controls
 
             dgvArchive.CellDoubleClick += DgvArchive_CellDoubleClick;
             dgvArchive.KeyDown += DgvArchive_KeyDown;
+            dgvArchive.ColumnHeaderMouseClick += DgvArchive_ColumnHeaderMouseClick;
 
             this.Controls.Add(dgvArchive);
         }
@@ -2650,6 +2658,23 @@ namespace AirManager.Controls
         }
 
         // ═══════════════════════════════════════════════════════════
+        // SORTING
+        // ═══════════════════════════════════════════════════════════
+
+        private void DgvArchive_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            string colName = dgvArchive.Columns[e.ColumnIndex].Name;
+            if (_sortColumnName == colName)
+                _sortAscending = !_sortAscending;
+            else
+            {
+                _sortColumnName = colName;
+                _sortAscending = true;
+            }
+            ApplyFilters();
+        }
+
+        // ═══════════════════════════════════════════════════════════
         // REFRESH & FILTERS
         // ═══════════════════════════════════════════════════════════
 
@@ -2802,6 +2827,12 @@ namespace AirManager.Controls
             string allGenresText = LanguageManager.GetString("Archive.AllGenres", "Tutti i Generi");
             string allCategoriesText = LanguageManager.GetString("Archive.AllCategories", "Tutte le Categorie");
 
+            // Update sort glyph on column headers
+            foreach (DataGridViewColumn col in dgvArchive.Columns)
+                col.HeaderCell.SortGlyphDirection = SortOrder.None;
+            if (!string.IsNullOrEmpty(_sortColumnName) && dgvArchive.Columns.Contains(_sortColumnName))
+                dgvArchive.Columns[_sortColumnName].HeaderCell.SortGlyphDirection = _sortAscending ? SortOrder.Ascending : SortOrder.Descending;
+
             if (_archiveType == "Music")
             {
                 var filtered = _allMusicData.AsEnumerable();
@@ -2817,7 +2848,25 @@ namespace AirManager.Controls
                         (m.Categories ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                         .Any(c => c.Trim().Equals(selectedCategory, StringComparison.OrdinalIgnoreCase)));
 
-                foreach (var entry in filtered)
+                var filteredList = filtered.ToList();
+
+                if (!string.IsNullOrEmpty(_sortColumnName))
+                {
+                    IEnumerable<MusicEntry> sorted = _sortColumnName switch
+                    {
+                        "Artist"    => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Artist ?? "")    : filteredList.OrderByDescending(m => m.Artist ?? ""),
+                        "Title"     => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Title ?? "")     : filteredList.OrderByDescending(m => m.Title ?? ""),
+                        "Genre"     => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Genre ?? "")     : filteredList.OrderByDescending(m => m.Genre ?? ""),
+                        "Year"      => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Year)            : filteredList.OrderByDescending(m => m.Year),
+                        "Duration"  => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Duration)        : filteredList.OrderByDescending(m => m.Duration),
+                        "Category"  => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.Categories ?? "") : filteredList.OrderByDescending(m => m.Categories ?? ""),
+                        "AddedDate" => _sortAscending ? (IEnumerable<MusicEntry>)filteredList.OrderBy(m => m.AddedDate ?? "") : filteredList.OrderByDescending(m => m.AddedDate ?? ""),
+                        _ => filteredList
+                    };
+                    filteredList = sorted.ToList();
+                }
+
+                foreach (var entry in filteredList)
                 {
                     int displayDurationMs = entry.MarkerMIX > entry.MarkerIN
                         ? entry.MarkerMIX - entry.MarkerIN
@@ -2838,8 +2887,8 @@ namespace AirManager.Controls
                     dgvArchive.Rows[rowIndex].Tag = entry;
                 }
 
-                UpdateHeaderCount(filtered.Count());
-                StatusChanged?.Invoke(this, $"Music: {filtered.Count()} / {_allMusicData.Count} {LanguageManager.GetString("Archive.Elements", "elementi")}");
+                UpdateHeaderCount(filteredList.Count);
+                StatusChanged?.Invoke(this, $"Music: {filteredList.Count} / {_allMusicData.Count} {LanguageManager.GetString("Archive.Elements", "elementi")}");
             }
             else
             {
@@ -2856,7 +2905,23 @@ namespace AirManager.Controls
                         (c.Categories ?? "").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
                         .Any(cat => cat.Trim().Equals(selectedCategory, StringComparison.OrdinalIgnoreCase)));
 
-                foreach (var entry in filtered)
+                var filteredList = filtered.ToList();
+
+                if (!string.IsNullOrEmpty(_sortColumnName))
+                {
+                    IEnumerable<ClipEntry> sorted = _sortColumnName switch
+                    {
+                        "Title"     => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Title ?? "")     : filteredList.OrderByDescending(c => c.Title ?? ""),
+                        "Genre"     => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Genre ?? "")     : filteredList.OrderByDescending(c => c.Genre ?? ""),
+                        "Duration"  => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Duration)        : filteredList.OrderByDescending(c => c.Duration),
+                        "Category"  => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.Categories ?? "") : filteredList.OrderByDescending(c => c.Categories ?? ""),
+                        "AddedDate" => _sortAscending ? (IEnumerable<ClipEntry>)filteredList.OrderBy(c => c.AddedDate ?? "") : filteredList.OrderByDescending(c => c.AddedDate ?? ""),
+                        _ => filteredList
+                    };
+                    filteredList = sorted.ToList();
+                }
+
+                foreach (var entry in filteredList)
                 {
                     int displayDurationMs = entry.MarkerMIX > entry.MarkerIN
                         ? entry.MarkerMIX - entry.MarkerIN
@@ -2875,8 +2940,8 @@ namespace AirManager.Controls
                     dgvArchive.Rows[rowIndex].Tag = entry;
                 }
 
-                UpdateHeaderCount(filtered.Count());
-                StatusChanged?.Invoke(this, $"Clips: {filtered.Count()} / {_allClipsData.Count} {LanguageManager.GetString("Archive.Elements", "elementi")}");
+                UpdateHeaderCount(filteredList.Count);
+                StatusChanged?.Invoke(this, $"Clips: {filteredList.Count} / {_allClipsData.Count} {LanguageManager.GetString("Archive.Elements", "elementi")}");
             }
         }
 
