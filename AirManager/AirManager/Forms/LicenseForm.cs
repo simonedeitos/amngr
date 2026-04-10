@@ -77,7 +77,7 @@ namespace AirManager.Forms
             Panel cardPanel = new Panel
             {
                 Location = new Point(margin, cardTop),
-                Size = new Size(580, 220),
+                Size = new Size(580, 240),
                 BackColor = AppTheme.LicSurface,
                 Padding = new Padding(24)
             };
@@ -107,7 +107,8 @@ namespace AirManager.Forms
                 Location = new Point(24, 40),
                 Size = new Size(532, 34),
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = AppTheme.LicBgLight
+                BackColor = Color.FromArgb(30, 30, 30),
+                ForeColor = Color.White
             };
             cardPanel.Controls.Add(txtOwner);
 
@@ -131,7 +132,8 @@ namespace AirManager.Forms
                 MaxLength = 18,
                 CharacterCasing = CharacterCasing.Upper,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = AppTheme.LicBgLight
+                BackColor = Color.FromArgb(30, 30, 30),
+                ForeColor = Color.White
             };
             cardPanel.Controls.Add(txtSerial);
 
@@ -144,6 +146,23 @@ namespace AirManager.Forms
                 AutoSize = true
             };
             cardPanel.Controls.Add(lblFormat);
+
+            LinkLabel lnkSite = new LinkLabel
+            {
+                Text = "www.airdirector.app",
+                Font = new Font("Segoe UI", 9, FontStyle.Regular),
+                LinkColor = AppTheme.Primary,
+                ActiveLinkColor = AppTheme.Primary,
+                VisitedLinkColor = AppTheme.Primary,
+                Location = new Point(24, 182),
+                AutoSize = true
+            };
+            lnkSite.LinkClicked += (s, e) =>
+            {
+                try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.airdirector.app") { UseShellExecute = true }); }
+                catch { }
+            };
+            cardPanel.Controls.Add(lnkSite);
 
             // ===== ACTIVATE BUTTON =====
             int btnActivateTop = cardTop + cardPanel.Height + margin;
