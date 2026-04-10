@@ -288,7 +288,7 @@ namespace AirManager.Forms
             {
                 BackColor = Color.FromArgb(0, 150, 136),
                 Location = new Point(152, 9),
-                Size = new Size(900, 34),
+                Size = new Size(20, 34),
                 Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
             };
             cmbSingleTrack = new ComboBox
@@ -327,7 +327,7 @@ namespace AirManager.Forms
             {
                 BackColor = Color.FromArgb(0, 150, 136),
                 Location = new Point(152, 9),
-                Size = new Size(900, 34),
+                Size = new Size(20, 34),
                 Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
             };
             cmbSingleArtist = new ComboBox
