@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using AirManager.Services;
 using AirManager.Services.Database;
@@ -15,6 +17,11 @@ namespace AirManager.Forms
         private DateTimePicker dtpFrom = null!;
         private DateTimePicker dtpTo = null!;
         private Button btnUpdate = null!;
+        private Button btn7Days = null!;
+        private Button btn15Days = null!;
+        private Button btn30Days = null!;
+        private Button btnLastMonth = null!;
+        private Button btnExportCsv = null!;
         private TabControl tabControl = null!;
 
         private ChartPanel chartTopTracks = null!;
@@ -40,6 +47,7 @@ namespace AirManager.Forms
             ApplyLanguage();
             LanguageManager.LanguageChanged += OnLanguageChanged;
             this.FormClosed += (s, e) => LanguageManager.LanguageChanged -= OnLanguageChanged;
+            LoadAndRefresh();
         }
 
         private void OnLanguageChanged(object? sender, EventArgs e) => ApplyLanguage();
@@ -48,6 +56,11 @@ namespace AirManager.Forms
         {
             this.Text = "📊 " + LanguageManager.GetString("MusicStatistics.Title", "Music Statistics");
             btnUpdate.Text = "🔄 " + LanguageManager.GetString("MusicStatistics.Update", "Update");
+            btn7Days.Text = LanguageManager.GetString("MusicStatistics.QuickRange.Days7", "7 gg");
+            btn15Days.Text = LanguageManager.GetString("MusicStatistics.QuickRange.Days15", "15 gg");
+            btn30Days.Text = LanguageManager.GetString("MusicStatistics.QuickRange.Days30", "30 gg");
+            btnLastMonth.Text = LanguageManager.GetString("MusicStatistics.QuickRange.LastMonth", "Mese scorso");
+            btnExportCsv.Text = LanguageManager.GetString("MusicStatistics.Export.Button", "📥 Esporta CSV");
 
             if (tabControl.TabPages.Count >= 10)
             {
@@ -126,6 +139,83 @@ namespace AirManager.Forms
             pnlHeader.Controls.Add(dtpTo);
             x += 120;
 
+            // ── Quick range buttons ───────────────────────────────────────────
+            x += 8; // gap
+
+            btn7Days = new Button
+            {
+                Text = "7 gg",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(55, 55, 58),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                Location = new Point(x, 12),
+                Size = new Size(58, 26)
+            };
+            btn7Days.FlatAppearance.BorderSize = 0;
+            btn7Days.Click += (s, e) => SetDateRange(7);
+            pnlHeader.Controls.Add(btn7Days);
+            x += 63;
+
+            btn15Days = new Button
+            {
+                Text = "15 gg",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(55, 55, 58),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                Location = new Point(x, 12),
+                Size = new Size(62, 26)
+            };
+            btn15Days.FlatAppearance.BorderSize = 0;
+            btn15Days.Click += (s, e) => SetDateRange(15);
+            pnlHeader.Controls.Add(btn15Days);
+            x += 67;
+
+            btn30Days = new Button
+            {
+                Text = "30 gg",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(55, 55, 58),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                Location = new Point(x, 12),
+                Size = new Size(62, 26)
+            };
+            btn30Days.FlatAppearance.BorderSize = 0;
+            btn30Days.Click += (s, e) => SetDateRange(30);
+            pnlHeader.Controls.Add(btn30Days);
+            x += 67;
+
+            btnLastMonth = new Button
+            {
+                Text = "Mese scorso",
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(55, 55, 58),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand,
+                Location = new Point(x, 12),
+                Size = new Size(95, 26)
+            };
+            btnLastMonth.FlatAppearance.BorderSize = 0;
+            btnLastMonth.Click += (s, e) =>
+            {
+                var today = DateTime.Today;
+                var firstDayLastMonth = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+                var lastDayLastMonth = new DateTime(today.Year, today.Month, 1).AddDays(-1);
+                dtpFrom.Value = firstDayLastMonth;
+                dtpTo.Value = lastDayLastMonth;
+                LoadAndRefresh();
+            };
+            pnlHeader.Controls.Add(btnLastMonth);
+            x += 100;
+
+            x += 8; // gap before Update button
+
             btnUpdate = new Button
             {
                 Text = "🔄 Update",
@@ -140,6 +230,22 @@ namespace AirManager.Forms
             btnUpdate.FlatAppearance.BorderSize = 0;
             btnUpdate.Click += BtnUpdate_Click;
             pnlHeader.Controls.Add(btnUpdate);
+            x += 115;
+
+            btnExportCsv = new Button
+            {
+                Text = "📥 Esporta CSV",
+                Font = new Font("Segoe UI", 9),
+                Location = new Point(x, 10),
+                Size = new Size(130, 30),
+                BackColor = Color.FromArgb(55, 55, 58),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnExportCsv.FlatAppearance.BorderSize = 0;
+            btnExportCsv.Click += BtnExportCsv_Click;
+            pnlHeader.Controls.Add(btnExportCsv);
 
             // ── TabControl ───────────────────────────────────────────────────
             tabControl = new TabControl
@@ -162,35 +268,83 @@ namespace AirManager.Forms
             pnlSingleTrack  = CreateDarkPanel();
             pnlSingleArtist = CreateDarkPanel();
 
-            // Build Single Track tab container (ComboBox on top + detail panel below)
+            // Build Single Track tab container (Label + ComboBox on top + detail panel below)
             var tabSingleTrack = new TabPage("🎵 Single Track") { BackColor = AppTheme.BgDark };
+            var pnlTrackSelector = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 52,
+                BackColor = AppTheme.BgPanel
+            };
+            var lblTrackSelect = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.SingleTrack.SelectLabel", "Seleziona brano:"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9),
+                AutoSize = true,
+                Location = new Point(12, 17)
+            };
+            var pnlTrackCmbBorder = new Panel
+            {
+                BackColor = Color.FromArgb(0, 150, 136),
+                Location = new Point(152, 9),
+                Size = new Size(900, 34),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+            };
             cmbSingleTrack = new ComboBox
             {
-                Dock = DockStyle.Top,
-                Height = 28,
+                Dock = DockStyle.Fill,
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Font = new Font("Segoe UI", 9),
-                BackColor = AppTheme.BgInput,
-                ForeColor = AppTheme.TextPrimary
+                Font = new Font("Segoe UI", 10),
+                BackColor = Color.FromArgb(55, 55, 58),
+                ForeColor = Color.White,
+                Margin = new Padding(2)
             };
             cmbSingleTrack.SelectedIndexChanged += (s, e) => BuildSingleTrackPanel();
+            pnlTrackCmbBorder.Controls.Add(cmbSingleTrack);
+            pnlTrackSelector.Controls.Add(pnlTrackCmbBorder);
+            pnlTrackSelector.Controls.Add(lblTrackSelect);
             tabSingleTrack.Controls.Add(pnlSingleTrack);
-            tabSingleTrack.Controls.Add(cmbSingleTrack);
+            tabSingleTrack.Controls.Add(pnlTrackSelector);
 
-            // Build Single Artist tab container (ComboBox on top + detail panel below)
+            // Build Single Artist tab container (Label + ComboBox on top + detail panel below)
             var tabSingleArtist = new TabPage("🎤 Single Artist") { BackColor = AppTheme.BgDark };
-            cmbSingleArtist = new ComboBox
+            var pnlArtistSelector = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 28,
-                DropDownStyle = ComboBoxStyle.DropDownList,
+                Height = 52,
+                BackColor = AppTheme.BgPanel
+            };
+            var lblArtistSelect = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.SingleArtist.SelectLabel", "Seleziona artista:"),
+                ForeColor = AppTheme.TextSecondary,
                 Font = new Font("Segoe UI", 9),
-                BackColor = AppTheme.BgInput,
-                ForeColor = AppTheme.TextPrimary
+                AutoSize = true,
+                Location = new Point(12, 17)
+            };
+            var pnlArtistCmbBorder = new Panel
+            {
+                BackColor = Color.FromArgb(0, 150, 136),
+                Location = new Point(152, 9),
+                Size = new Size(900, 34),
+                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+            };
+            cmbSingleArtist = new ComboBox
+            {
+                Dock = DockStyle.Fill,
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Font = new Font("Segoe UI", 10),
+                BackColor = Color.FromArgb(55, 55, 58),
+                ForeColor = Color.White,
+                Margin = new Padding(2)
             };
             cmbSingleArtist.SelectedIndexChanged += (s, e) => BuildSingleArtistPanel();
+            pnlArtistCmbBorder.Controls.Add(cmbSingleArtist);
+            pnlArtistSelector.Controls.Add(pnlArtistCmbBorder);
+            pnlArtistSelector.Controls.Add(lblArtistSelect);
             tabSingleArtist.Controls.Add(pnlSingleArtist);
-            tabSingleArtist.Controls.Add(cmbSingleArtist);
+            tabSingleArtist.Controls.Add(pnlArtistSelector);
 
             tabControl.TabPages.Add(CreateTab("📊 Top Tracks",           chartTopTracks));
             tabControl.TabPages.Add(CreateTab("🎤 Top Artists",          chartTopArtists));
@@ -225,6 +379,229 @@ namespace AirManager.Forms
         private void BtnUpdate_Click(object? sender, EventArgs e)
         {
             LoadAndRefresh();
+        }
+
+        private void SetDateRange(int days)
+        {
+            dtpFrom.Value = DateTime.Today.AddDays(-days);
+            dtpTo.Value = DateTime.Today;
+            LoadAndRefresh();
+        }
+
+        private void BtnExportCsv_Click(object? sender, EventArgs e)
+        {
+            if (_data.Count == 0)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MusicStatistics.NoData", "No data available for the selected period."),
+                    LanguageManager.GetString("MusicStatistics.Title", "Music Statistics"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            using var dlg = new SaveFileDialog
+            {
+                Title = LanguageManager.GetString("MusicStatistics.Export.DialogTitle", "Esporta CSV"),
+                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+                DefaultExt = "csv",
+                FileName = $"MusicStatistics_{DateTime.Today:yyyyMMdd}.csv"
+            };
+
+            if (dlg.ShowDialog() != DialogResult.OK) return;
+
+            try
+            {
+                string csv = BuildCsvForTab(tabControl.SelectedIndex);
+                File.WriteAllText(dlg.FileName, csv, Encoding.UTF8);
+                MessageBox.Show(
+                    string.Format(LanguageManager.GetString("MusicStatistics.Export.Success", "Dati esportati in {0}"), dlg.FileName),
+                    LanguageManager.GetString("MusicStatistics.Title", "Music Statistics"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    string.Format(LanguageManager.GetString("MusicStatistics.Export.Error", "Errore durante l'esportazione: {0}"), ex.Message),
+                    LanguageManager.GetString("MusicStatistics.Title", "Music Statistics"),
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private string BuildCsvForTab(int tabIndex)
+        {
+            var sb = new StringBuilder();
+            const string sep = ";";
+
+            switch (tabIndex)
+            {
+                case 0: // Top Tracks
+                    sb.AppendLine($"Posizione{sep}Artista – Titolo{sep}Riproduzioni");
+                    var topTracks = _data
+                        .GroupBy(r => $"{r.Artist} – {r.Title}")
+                        .OrderByDescending(g => g.Count())
+                        .Take(20)
+                        .ToList();
+                    for (int i = 0; i < topTracks.Count; i++)
+                        sb.AppendLine($"{i + 1}{sep}{EscCsv(topTracks[i].Key)}{sep}{topTracks[i].Count()}");
+                    break;
+
+                case 1: // Top Artists
+                    sb.AppendLine($"Posizione{sep}Artista{sep}Riproduzioni");
+                    var topArtists = _data
+                        .Where(r => !string.IsNullOrWhiteSpace(r.Artist))
+                        .GroupBy(r => r.Artist)
+                        .OrderByDescending(g => g.Count())
+                        .Take(20)
+                        .ToList();
+                    for (int i = 0; i < topArtists.Count; i++)
+                        sb.AppendLine($"{i + 1}{sep}{EscCsv(topArtists[i].Key)}{sep}{topArtists[i].Count()}");
+                    break;
+
+                case 2: // Daily Trend
+                    sb.AppendLine($"Data{sep}Riproduzioni");
+                    foreach (var g in _data.GroupBy(r => r.Date.Date).OrderBy(g => g.Key))
+                        sb.AppendLine($"{g.Key:dd/MM/yyyy}{sep}{g.Count()}");
+                    break;
+
+                case 3: // Hourly Distribution
+                    sb.AppendLine($"Ora{sep}Riproduzioni");
+                    var hourlyPlayCounts = new int[24];
+                    foreach (var r in _data)
+                        if (TimeSpan.TryParse(r.StartTime, out var startTime3)) hourlyPlayCounts[startTime3.Hours]++;
+                    for (int i = 0; i < 24; i++)
+                        sb.AppendLine($"{i:D2}:00{sep}{hourlyPlayCounts[i]}");
+                    break;
+
+                case 4: // Weekday Distribution
+                    sb.AppendLine($"Giorno{sep}Riproduzioni");
+                    var weekdayPlayCounts = new int[7];
+                    foreach (var r in _data)
+                        weekdayPlayCounts[((int)r.Date.DayOfWeek + 6) % 7]++;
+                    string[] weekdayNames = {
+                        LanguageManager.GetString("MusicStatistics.Day.Mon", "Lun"),
+                        LanguageManager.GetString("MusicStatistics.Day.Tue", "Mar"),
+                        LanguageManager.GetString("MusicStatistics.Day.Wed", "Mer"),
+                        LanguageManager.GetString("MusicStatistics.Day.Thu", "Gio"),
+                        LanguageManager.GetString("MusicStatistics.Day.Fri", "Ven"),
+                        LanguageManager.GetString("MusicStatistics.Day.Sat", "Sab"),
+                        LanguageManager.GetString("MusicStatistics.Day.Sun", "Dom")
+                    };
+                    for (int i = 0; i < 7; i++)
+                        sb.AppendLine($"{weekdayNames[i]}{sep}{weekdayPlayCounts[i]}");
+                    break;
+
+                case 5: // Avg Duration/Hour
+                    sb.AppendLine($"Ora{sep}Durata media (secondi)");
+                    var totalSecByHour = new double[24];
+                    var playCountsByHour = new int[24];
+                    foreach (var r in _data)
+                        if (TimeSpan.TryParse(r.StartTime, out var startTime5) && TimeSpan.TryParse(r.PlayDuration, out var playDuration5))
+                        { totalSecByHour[startTime5.Hours] += playDuration5.TotalSeconds; playCountsByHour[startTime5.Hours]++; }
+                    for (int i = 0; i < 24; i++)
+                        sb.AppendLine($"{i:D2}:00{sep}{(playCountsByHour[i] > 0 ? Math.Round(totalSecByHour[i] / playCountsByHour[i], 1).ToString() : "0")}");
+                    break;
+
+                case 6: // Rotation Index
+                    sb.AppendLine($"Metrica{sep}Valore");
+                    int total6 = _data.Count;
+                    int unique6 = _data.Select(r => $"{r.Artist}|{r.Title}").Distinct().Count();
+                    int repeats6 = total6 - unique6;
+                    double rotIdx6 = total6 > 0 ? Math.Round((double)unique6 / total6 * 100, 1) : 0;
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Rotation.TotalPlays", "Total plays")}{sep}{total6}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Rotation.UniqueTracks", "Unique tracks")}{sep}{unique6}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Rotation.Repeats", "Repeated plays")}{sep}{repeats6}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Rotation.RotationIndex", "Rotation index (% unique)")}{sep}{rotIdx6}%");
+                    foreach (var g in _data.GroupBy(r => $"{r.Artist} – {r.Title}").Where(g => g.Count() > 1).OrderByDescending(g => g.Count()).Take(10))
+                        sb.AppendLine($"{EscCsv(g.Key)}{sep}{g.Count()}x");
+                    break;
+
+                case 7: // Summary
+                    sb.AppendLine($"Metrica{sep}Valore");
+                    int total7 = _data.Count;
+                    int unique7 = _data.Select(r => $"{r.Artist}|{r.Title}").Distinct().Count();
+                    int uniqueArtists7 = _data.Where(r => !string.IsNullOrWhiteSpace(r.Artist)).Select(r => r.Artist).Distinct().Count();
+                    TimeSpan totalDur7 = TimeSpan.Zero, maxDur7 = TimeSpan.Zero, minDur7 = TimeSpan.MaxValue;
+                    int durCount7 = 0;
+                    foreach (var r in _data)
+                        if (TimeSpan.TryParse(r.PlayDuration, out var d))
+                        { totalDur7 += d; if (d > maxDur7) maxDur7 = d; if (d < minDur7) minDur7 = d; durCount7++; }
+                    TimeSpan avgDur7 = durCount7 > 0 ? TimeSpan.FromSeconds(totalDur7.TotalSeconds / durCount7) : TimeSpan.Zero;
+                    if (minDur7 == TimeSpan.MaxValue) minDur7 = TimeSpan.Zero;
+                    var topArtist7 = _data.Where(r => !string.IsNullOrWhiteSpace(r.Artist)).GroupBy(r => r.Artist).OrderByDescending(g => g.Count()).FirstOrDefault();
+                    var topTrack7 = _data.GroupBy(r => $"{r.Artist} – {r.Title}").OrderByDescending(g => g.Count()).FirstOrDefault();
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.TotalTracks", "Total tracks played")}{sep}{total7}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.UniqueTracks", "Unique tracks")}{sep}{unique7}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.UniqueArtists", "Unique artists")}{sep}{uniqueArtists7}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.TotalDuration", "Total duration")}{sep}{FormatTs(totalDur7)}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.AvgDuration", "Average duration")}{sep}{FormatTs(avgDur7)}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.MaxDuration", "Longest track")}{sep}{FormatTs(maxDur7)}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.MinDuration", "Shortest track")}{sep}{FormatTs(minDur7)}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.TopArtist", "Most played artist")}{sep}{EscCsv(topArtist7 != null ? $"{topArtist7.Key} ({topArtist7.Count()}x)" : "—")}");
+                    sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.Summary.TopTrack", "Most played track")}{sep}{EscCsv(topTrack7 != null ? $"{topTrack7.Key} ({topTrack7.Count()}x)" : "—")}");
+                    break;
+
+                case 8: // Single Track
+                    sb.AppendLine($"Metrica{sep}Valore");
+                    if (cmbSingleTrack.SelectedItem != null)
+                    {
+                        string sel8 = cmbSingleTrack.SelectedItem.ToString()!;
+                        var td8 = _data.Where(r => $"{r.Artist} – {r.Title}" == sel8).ToList();
+                        if (td8.Count > 0)
+                        {
+                            int tot8 = td8.Count;
+                            DateTime first8 = td8.Min(r => r.Date), last8 = td8.Max(r => r.Date);
+                            double avgPD8 = Math.Round((double)tot8 / Math.Max(1, (last8 - first8).Days + 1), 2);
+                            TimeSpan tDur8 = TimeSpan.Zero; int dc8 = 0;
+                            foreach (var r in td8) if (TimeSpan.TryParse(r.PlayDuration, out var d)) { tDur8 += d; dc8++; }
+                            TimeSpan aDur8 = dc8 > 0 ? TimeSpan.FromSeconds(tDur8.TotalSeconds / dc8) : TimeSpan.Zero;
+                            sb.AppendLine($"Brano{sep}{EscCsv(sel8)}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.TotalPlays", "Total plays")}{sep}{tot8}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.FirstPlay", "First play")}{sep}{first8:dd/MM/yyyy}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.LastPlay", "Last play")}{sep}{last8:dd/MM/yyyy}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.AvgPerDay", "Avg plays/day")}{sep}{avgPD8}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.TotalDuration", "Total play duration")}{sep}{FormatTs(tDur8)}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleTrack.AvgDuration", "Avg play duration")}{sep}{FormatTs(aDur8)}");
+                        }
+                    }
+                    break;
+
+                case 9: // Single Artist
+                    sb.AppendLine($"Metrica{sep}Valore");
+                    if (cmbSingleArtist.SelectedItem != null)
+                    {
+                        string sel9 = cmbSingleArtist.SelectedItem.ToString()!;
+                        var ad9 = _data.Where(r => string.Equals(r.Artist, sel9, StringComparison.OrdinalIgnoreCase)).ToList();
+                        if (ad9.Count > 0)
+                        {
+                            int tot9 = ad9.Count;
+                            int uniq9 = ad9.Select(r => r.Title).Distinct().Count();
+                            DateTime first9 = ad9.Min(r => r.Date), last9 = ad9.Max(r => r.Date);
+                            double avgPD9 = Math.Round((double)tot9 / Math.Max(1, (last9 - first9).Days + 1), 2);
+                            TimeSpan tDur9 = TimeSpan.Zero; int dc9 = 0;
+                            foreach (var r in ad9) if (TimeSpan.TryParse(r.PlayDuration, out var d)) { tDur9 += d; dc9++; }
+                            var topT9 = ad9.GroupBy(r => r.Title).OrderByDescending(g => g.Count()).FirstOrDefault();
+                            sb.AppendLine($"Artista{sep}{EscCsv(sel9)}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.TotalPlays", "Total plays")}{sep}{tot9}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.UniqueTracks", "Unique tracks")}{sep}{uniq9}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.FirstPlay", "First play")}{sep}{first9:dd/MM/yyyy}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.LastPlay", "Last play")}{sep}{last9:dd/MM/yyyy}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.AvgPerDay", "Avg plays/day")}{sep}{avgPD9}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.TotalDuration", "Total play duration")}{sep}{FormatTs(tDur9)}");
+                            sb.AppendLine($"{LanguageManager.GetString("MusicStatistics.SingleArtist.TopTrack", "Most played track")}{sep}{EscCsv(topT9 != null ? $"{topT9.Key} ({topT9.Count()}x)" : "—")}");
+                        }
+                    }
+                    break;
+            }
+
+            return sb.ToString();
+        }
+
+        private static string EscCsv(string? s)
+        {
+            if (string.IsNullOrEmpty(s)) return "";
+            if (s.Contains(';') || s.Contains('"') || s.Contains('\n'))
+                return $"\"{s.Replace("\"", "\"\"")}\"";
+            return s;
         }
 
         private void LoadAndRefresh()
