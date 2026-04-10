@@ -53,7 +53,7 @@ namespace AirManager.Forms
                 ForeColor = AppTheme.TextInverse,
                 AutoSize = false,
                 Size = new Size(460, 42),
-                Location = new Point(82, 18),
+                Location = new Point(90, 18),
                 TextAlign = ContentAlignment.MiddleLeft
             };
             headerPanel.Controls.Add(lblTitle);
@@ -65,7 +65,7 @@ namespace AirManager.Forms
                 ForeColor = Color.FromArgb(200, 230, 255),
                 AutoSize = false,
                 Size = new Size(520, 22),
-                Location = new Point(82, 66),
+                Location = new Point(95, 66),
                 TextAlign = ContentAlignment.MiddleLeft
             };
             headerPanel.Controls.Add(lblSubtitle);
