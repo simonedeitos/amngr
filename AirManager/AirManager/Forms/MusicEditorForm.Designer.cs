@@ -93,231 +93,250 @@ namespace AirManager.Forms
 
         private void InitializeComponent()
         {
-            toolbarPanel = new System.Windows.Forms.Panel();
-            btnPlay = new System.Windows.Forms.Button();
-            btnStop = new System.Windows.Forms.Button();
-            btnLoop = new System.Windows.Forms.Button();
-
-            // ✅ ZOOM controls nella toolbar
-            zoomPanel = new System.Windows.Forms.Panel();
-            lblZoom = new System.Windows.Forms.Label();
-            trkZoom = new System.Windows.Forms.TrackBar();
-            lblZoomPercent = new System.Windows.Forms.Label();
-
-            // ✅ VOLUME controls nella toolbar
-            grpVolume = new System.Windows.Forms.GroupBox();
-            trkVolume = new System.Windows.Forms.TrackBar();
-            lblVolumeDb = new System.Windows.Forms.Label();
-            btnApplyVolume = new System.Windows.Forms.Button();
-            chkColoredPeaks = new System.Windows.Forms.CheckBox();
-
-            leftPanel = new System.Windows.Forms.Panel();
-            lblCurrentPosition = new System.Windows.Forms.Label();
-            lblCurrentPositionMs = new System.Windows.Forms.Label();
-            lblTotalDuration = new System.Windows.Forms.Label();
-            lblMarkerInLabel = new System.Windows.Forms.Label();
-            txtMarkerIn = new System.Windows.Forms.TextBox();
-            btnSetMarkerIn = new System.Windows.Forms.Button();
-            btnMarkerInUp = new System.Windows.Forms.Button();
-            btnMarkerInDown = new System.Windows.Forms.Button();
-            btnPlayFromIn = new System.Windows.Forms.Button();
-            lblMarkerIntroLabel = new System.Windows.Forms.Label();
-            txtMarkerIntro = new System.Windows.Forms.TextBox();
-            btnSetMarkerIntro = new System.Windows.Forms.Button();
-            btnMarkerIntroUp = new System.Windows.Forms.Button();
-            btnMarkerIntroDown = new System.Windows.Forms.Button();
-            btnPlayFromIntro = new System.Windows.Forms.Button();
-            lblMarkerMixLabel = new System.Windows.Forms.Label();
-            txtMarkerMix = new System.Windows.Forms.TextBox();
-            btnSetMarkerMix = new System.Windows.Forms.Button();
-            btnMarkerMixUp = new System.Windows.Forms.Button();
-            btnMarkerMixDown = new System.Windows.Forms.Button();
-            btnPlayFromMix = new System.Windows.Forms.Button();
-            lblMarkerOutLabel = new System.Windows.Forms.Label();
-            txtMarkerOut = new System.Windows.Forms.TextBox();
-            btnSetMarkerOut = new System.Windows.Forms.Button();
-            btnMarkerOutUp = new System.Windows.Forms.Button();
-            btnMarkerOutDown = new System.Windows.Forms.Button();
-            btnPlayFromOut = new System.Windows.Forms.Button();
-
-            // ✅ VU METER
-            vuMeterPanel = new System.Windows.Forms.Panel();
-
-            picWaveform = new System.Windows.Forms.PictureBox();
-            hScrollWaveform = new System.Windows.Forms.HScrollBar();
-
-            bottomPanel = new System.Windows.Forms.Panel();
-            lblTitle = new System.Windows.Forms.Label();
-            txtTitle = new System.Windows.Forms.TextBox();
-            lblArtist = new System.Windows.Forms.Label();
-            txtArtist = new System.Windows.Forms.TextBox();
-            lblAlbum = new System.Windows.Forms.Label();
-            txtAlbum = new System.Windows.Forms.TextBox();
-            lblYear = new System.Windows.Forms.Label();
-            numYear = new System.Windows.Forms.NumericUpDown();
-            lblGenre = new System.Windows.Forms.Label();
-            cmbGenre = new System.Windows.Forms.ComboBox();
-            lblCategories = new System.Windows.Forms.Label();
-            txtCategoriesDisplay = new System.Windows.Forms.TextBox();
-            btnCategoriesDropdown = new System.Windows.Forms.Button();
-            lblFilePath = new System.Windows.Forms.Label();
-            txtFilePath = new System.Windows.Forms.TextBox();
-            grpPeriod = new System.Windows.Forms.GroupBox();
-            chkEnableValidFrom = new System.Windows.Forms.CheckBox();
-            dtpValidFrom = new System.Windows.Forms.DateTimePicker();
-            chkEnableValidTo = new System.Windows.Forms.CheckBox();
-            dtpValidTo = new System.Windows.Forms.DateTimePicker();
-            grpMonths = new System.Windows.Forms.GroupBox();
-            grpDays = new System.Windows.Forms.GroupBox();
-            grpHours = new System.Windows.Forms.GroupBox();
-            btnSave = new System.Windows.Forms.Button();
-            btnCancel = new System.Windows.Forms.Button();
-
+            toolbarPanel = new Panel();
+            btnPlay = new Button();
+            btnStop = new Button();
+            btnLoop = new Button();
+            zoomPanel = new Panel();
+            lblZoom = new Label();
+            trkZoom = new TrackBar();
+            lblZoomPercent = new Label();
+            grpVolume = new GroupBox();
+            trkVolume = new TrackBar();
+            lblVolumeDb = new Label();
+            btnApplyVolume = new Button();
+            chkColoredPeaks = new CheckBox();
+            leftPanel = new Panel();
+            lblCurrentPosition = new Label();
+            lblCurrentPositionMs = new Label();
+            lblTotalDuration = new Label();
+            lblMarkerInLabel = new Label();
+            txtMarkerIn = new TextBox();
+            btnSetMarkerIn = new Button();
+            btnMarkerInUp = new Button();
+            btnMarkerInDown = new Button();
+            btnPlayFromIn = new Button();
+            lblMarkerIntroLabel = new Label();
+            txtMarkerIntro = new TextBox();
+            btnSetMarkerIntro = new Button();
+            btnMarkerIntroUp = new Button();
+            btnMarkerIntroDown = new Button();
+            btnPlayFromIntro = new Button();
+            lblMarkerMixLabel = new Label();
+            txtMarkerMix = new TextBox();
+            btnSetMarkerMix = new Button();
+            btnMarkerMixUp = new Button();
+            btnMarkerMixDown = new Button();
+            btnPlayFromMix = new Button();
+            lblMarkerOutLabel = new Label();
+            txtMarkerOut = new TextBox();
+            btnSetMarkerOut = new Button();
+            btnMarkerOutUp = new Button();
+            btnMarkerOutDown = new Button();
+            btnPlayFromOut = new Button();
+            vuMeterPanel = new Panel();
+            picWaveform = new PictureBox();
+            hScrollWaveform = new HScrollBar();
+            bottomPanel = new Panel();
+            lblTitle = new Label();
+            txtTitle = new TextBox();
+            lblArtist = new Label();
+            txtArtist = new TextBox();
+            lblAlbum = new Label();
+            txtAlbum = new TextBox();
+            lblYear = new Label();
+            numYear = new NumericUpDown();
+            lblGenre = new Label();
+            cmbGenre = new ComboBox();
+            lblCategories = new Label();
+            txtCategoriesDisplay = new TextBox();
+            btnCategoriesDropdown = new Button();
+            lblFilePath = new Label();
+            txtFilePath = new TextBox();
+            grpPeriod = new GroupBox();
+            chkEnableValidFrom = new CheckBox();
+            dtpValidFrom = new DateTimePicker();
+            chkEnableValidTo = new CheckBox();
+            dtpValidTo = new DateTimePicker();
+            grpMonths = new GroupBox();
+            grpDays = new GroupBox();
+            grpHours = new GroupBox();
+            btnSave = new Button();
+            btnCancel = new Button();
             toolbarPanel.SuspendLayout();
+            zoomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trkZoom).BeginInit();
+            grpVolume.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trkVolume).BeginInit();
             leftPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)picWaveform).BeginInit();
             bottomPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numYear).BeginInit();
             grpPeriod.SuspendLayout();
-            grpVolume.SuspendLayout();
             SuspendLayout();
-
-            // ========== toolbarPanel ==========
+            // 
+            // toolbarPanel
+            // 
             toolbarPanel.Controls.Add(btnPlay);
             toolbarPanel.Controls.Add(btnStop);
             toolbarPanel.Controls.Add(btnLoop);
             toolbarPanel.Controls.Add(zoomPanel);
             toolbarPanel.Controls.Add(grpVolume);
-            toolbarPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            toolbarPanel.Location = new System.Drawing.Point(0, 0);
+            toolbarPanel.Dock = DockStyle.Top;
+            toolbarPanel.Location = new Point(0, 0);
             toolbarPanel.Name = "toolbarPanel";
-            toolbarPanel.Size = new System.Drawing.Size(1263, 55);
+            toolbarPanel.Size = new Size(1263, 55);
             toolbarPanel.TabIndex = 0;
-
+            // 
             // btnPlay
-            btnPlay.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlay.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            btnPlay.Location = new System.Drawing.Point(15, 8);
+            // 
+            btnPlay.FlatStyle = FlatStyle.Flat;
+            btnPlay.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnPlay.Location = new Point(15, 8);
             btnPlay.Name = "btnPlay";
-            btnPlay.Size = new System.Drawing.Size(90, 38);
+            btnPlay.Size = new Size(90, 38);
             btnPlay.TabIndex = 0;
             btnPlay.Text = "▶ PLAY";
             btnPlay.UseVisualStyleBackColor = true;
             btnPlay.Click += btnPlay_Click;
-
+            // 
             // btnStop
-            btnStop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnStop.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            btnStop.Location = new System.Drawing.Point(115, 8);
+            // 
+            btnStop.FlatStyle = FlatStyle.Flat;
+            btnStop.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnStop.Location = new Point(115, 8);
             btnStop.Name = "btnStop";
-            btnStop.Size = new System.Drawing.Size(90, 38);
+            btnStop.Size = new Size(90, 38);
             btnStop.TabIndex = 1;
             btnStop.Text = "⏹ STOP";
             btnStop.UseVisualStyleBackColor = true;
             btnStop.Click += btnStop_Click;
-
+            // 
             // btnLoop
-            btnLoop.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnLoop.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            btnLoop.Location = new System.Drawing.Point(1161, 8);
+            // 
+            btnLoop.FlatStyle = FlatStyle.Flat;
+            btnLoop.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            btnLoop.Location = new Point(1161, 8);
             btnLoop.Name = "btnLoop";
-            btnLoop.Size = new System.Drawing.Size(90, 38);
+            btnLoop.Size = new Size(90, 38);
             btnLoop.TabIndex = 2;
             btnLoop.Text = "🔁 LOOP";
             btnLoop.UseVisualStyleBackColor = true;
             btnLoop.Visible = false;
-
-            // ========== ZOOM PANEL (in toolbar) ==========
-            zoomPanel.Location = new System.Drawing.Point(220, 3);
-            zoomPanel.Name = "zoomPanel";
-            zoomPanel.Size = new System.Drawing.Size(300, 50);
-            zoomPanel.TabIndex = 3;
+            // 
+            // zoomPanel
+            // 
             zoomPanel.Controls.Add(lblZoom);
             zoomPanel.Controls.Add(trkZoom);
             zoomPanel.Controls.Add(lblZoomPercent);
-
+            zoomPanel.Location = new Point(220, 3);
+            zoomPanel.Name = "zoomPanel";
+            zoomPanel.Size = new Size(300, 50);
+            zoomPanel.TabIndex = 3;
+            // 
+            // lblZoom
+            // 
+            lblZoom.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblZoom.ForeColor = Color.White;
+            lblZoom.Location = new Point(0, 15);
+            lblZoom.Name = "lblZoom";
+            lblZoom.Size = new Size(60, 20);
+            lblZoom.TabIndex = 0;
             lblZoom.Text = "🔍 Zoom:";
-            lblZoom.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblZoom.ForeColor = System.Drawing.Color.White;
-            lblZoom.Location = new System.Drawing.Point(0, 15);
-            lblZoom.Size = new System.Drawing.Size(60, 20);
-            lblZoom.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-
-            trkZoom.Location = new System.Drawing.Point(62, 5);
-            trkZoom.Name = "trkZoom";
-            trkZoom.Size = new System.Drawing.Size(180, 45);
-            trkZoom.Minimum = 100;
-            trkZoom.Maximum = 2000;
-            trkZoom.Value = 100;
-            trkZoom.TickFrequency = 100;
-            trkZoom.SmallChange = 10;
+            lblZoom.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // trkZoom
+            // 
             trkZoom.LargeChange = 100;
+            trkZoom.Location = new Point(62, 5);
+            trkZoom.Maximum = 2000;
+            trkZoom.Minimum = 100;
+            trkZoom.Name = "trkZoom";
+            trkZoom.Size = new Size(180, 45);
+            trkZoom.SmallChange = 10;
             trkZoom.TabIndex = 0;
-
+            trkZoom.TickFrequency = 100;
+            trkZoom.Value = 100;
+            // 
+            // lblZoomPercent
+            // 
+            lblZoomPercent.Font = new Font("Consolas", 10F, FontStyle.Bold);
+            lblZoomPercent.ForeColor = Color.Cyan;
+            lblZoomPercent.Location = new Point(245, 15);
+            lblZoomPercent.Name = "lblZoomPercent";
+            lblZoomPercent.Size = new Size(55, 20);
+            lblZoomPercent.TabIndex = 1;
             lblZoomPercent.Text = "100%";
-            lblZoomPercent.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Bold);
-            lblZoomPercent.ForeColor = System.Drawing.Color.Cyan;
-            lblZoomPercent.Location = new System.Drawing.Point(245, 15);
-            lblZoomPercent.Size = new System.Drawing.Size(55, 20);
-            lblZoomPercent.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-
-            // ========== VOLUME GROUP (to the right of zoom, same row) ==========
-            grpVolume.Text = "🔊 Volume Boost";
-            grpVolume.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            grpVolume.ForeColor = System.Drawing.Color.White;
-            grpVolume.Location = new System.Drawing.Point(530, 0);
-            grpVolume.Size = new System.Drawing.Size(560, 50);
-            grpVolume.TabIndex = 4;
+            lblZoomPercent.TextAlign = ContentAlignment.MiddleLeft;
+            // 
+            // grpVolume
+            // 
             grpVolume.Controls.Add(trkVolume);
             grpVolume.Controls.Add(lblVolumeDb);
             grpVolume.Controls.Add(btnApplyVolume);
             grpVolume.Controls.Add(chkColoredPeaks);
-
-            trkVolume.Location = new System.Drawing.Point(10, 18);
-            trkVolume.Name = "trkVolume";
-            trkVolume.Size = new System.Drawing.Size(240, 30);
-            trkVolume.Minimum = -20;
-            trkVolume.Maximum = 20;
-            trkVolume.Value = 0;
-            trkVolume.TickFrequency = 2;
-            trkVolume.SmallChange = 1;
+            grpVolume.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpVolume.ForeColor = Color.White;
+            grpVolume.Location = new Point(530, 0);
+            grpVolume.Name = "grpVolume";
+            grpVolume.Size = new Size(560, 50);
+            grpVolume.TabIndex = 4;
+            grpVolume.TabStop = false;
+            grpVolume.Text = "🔊 Volume Boost";
+            // 
+            // trkVolume
+            // 
             trkVolume.LargeChange = 3;
+            trkVolume.Location = new Point(10, 18);
+            trkVolume.Maximum = 20;
+            trkVolume.Minimum = -20;
+            trkVolume.Name = "trkVolume";
+            trkVolume.Size = new Size(240, 45);
             trkVolume.TabIndex = 0;
-
+            trkVolume.TickFrequency = 2;
+            // 
+            // lblVolumeDb
+            // 
+            lblVolumeDb.Font = new Font("Consolas", 11F, FontStyle.Bold);
+            lblVolumeDb.ForeColor = Color.Lime;
+            lblVolumeDb.Location = new Point(255, 20);
+            lblVolumeDb.Name = "lblVolumeDb";
+            lblVolumeDb.Size = new Size(65, 25);
+            lblVolumeDb.TabIndex = 1;
             lblVolumeDb.Text = "0 dB";
-            lblVolumeDb.Font = new System.Drawing.Font("Consolas", 11F, System.Drawing.FontStyle.Bold);
-            lblVolumeDb.ForeColor = System.Drawing.Color.Lime;
-            lblVolumeDb.Location = new System.Drawing.Point(255, 20);
-            lblVolumeDb.Size = new System.Drawing.Size(65, 25);
-            lblVolumeDb.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
-            btnApplyVolume.Text = "APPLY";
-            btnApplyVolume.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            btnApplyVolume.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnApplyVolume.BackColor = System.Drawing.Color.FromArgb(200, 120, 0);
-            btnApplyVolume.ForeColor = System.Drawing.Color.White;
-            btnApplyVolume.Location = new System.Drawing.Point(325, 17);
-            btnApplyVolume.Size = new System.Drawing.Size(85, 30);
-            btnApplyVolume.TabIndex = 1;
+            lblVolumeDb.TextAlign = ContentAlignment.MiddleCenter;
+            // 
+            // btnApplyVolume
+            // 
+            btnApplyVolume.BackColor = Color.FromArgb(200, 120, 0);
+            btnApplyVolume.Cursor = Cursors.Hand;
             btnApplyVolume.FlatAppearance.BorderSize = 0;
-            btnApplyVolume.Cursor = System.Windows.Forms.Cursors.Hand;
-
-            chkColoredPeaks.Text = "🎨 " + AirManager.Services.LanguageManager.GetString("MusicEditor.ColoredPeaks", "Colored peaks");
+            btnApplyVolume.FlatStyle = FlatStyle.Flat;
+            btnApplyVolume.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            btnApplyVolume.ForeColor = Color.White;
+            btnApplyVolume.Location = new Point(325, 17);
+            btnApplyVolume.Name = "btnApplyVolume";
+            btnApplyVolume.Size = new Size(85, 30);
+            btnApplyVolume.TabIndex = 1;
+            btnApplyVolume.Text = "APPLY";
+            btnApplyVolume.UseVisualStyleBackColor = false;
+            // 
+            // chkColoredPeaks
+            // 
+            chkColoredPeaks.BackColor = Color.Transparent;
+            chkColoredPeaks.Cursor = Cursors.Hand;
+            chkColoredPeaks.Font = new Font("Segoe UI", 8F);
+            chkColoredPeaks.ForeColor = Color.White;
+            chkColoredPeaks.Location = new Point(420, 19);
             chkColoredPeaks.Name = "chkColoredPeaks";
-            chkColoredPeaks.Font = new System.Drawing.Font("Segoe UI", 8F);
-            chkColoredPeaks.ForeColor = System.Drawing.Color.White;
-            chkColoredPeaks.Location = new System.Drawing.Point(420, 19);
-            chkColoredPeaks.Size = new System.Drawing.Size(130, 22);
+            chkColoredPeaks.Size = new Size(130, 22);
             chkColoredPeaks.TabIndex = 2;
-            chkColoredPeaks.Checked = false;
+            chkColoredPeaks.Text = "🎨 Colored peaks";
             chkColoredPeaks.UseVisualStyleBackColor = false;
-            chkColoredPeaks.BackColor = System.Drawing.Color.Transparent;
-            chkColoredPeaks.Cursor = System.Windows.Forms.Cursors.Hand;
-            chkColoredPeaks.CheckedChanged += new System.EventHandler(this.ChkColoredPeaks_CheckedChanged);
-
-            // ========== leftPanel ==========
+            chkColoredPeaks.CheckedChanged += ChkColoredPeaks_CheckedChanged;
+            // 
+            // leftPanel
+            // 
             leftPanel.Controls.Add(lblCurrentPosition);
             leftPanel.Controls.Add(lblCurrentPositionMs);
             leftPanel.Controls.Add(lblTotalDuration);
@@ -345,348 +364,375 @@ namespace AirManager.Forms
             leftPanel.Controls.Add(btnMarkerOutUp);
             leftPanel.Controls.Add(btnMarkerOutDown);
             leftPanel.Controls.Add(btnPlayFromOut);
-            leftPanel.Dock = System.Windows.Forms.DockStyle.Left;
-            leftPanel.Location = new System.Drawing.Point(0, 55);
+            leftPanel.Dock = DockStyle.Left;
+            leftPanel.Location = new Point(0, 55);
             leftPanel.Name = "leftPanel";
-            leftPanel.Size = new System.Drawing.Size(380, 355);
+            leftPanel.Size = new Size(380, 355);
             leftPanel.TabIndex = 1;
-
+            // 
             // lblCurrentPosition
-            lblCurrentPosition.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            lblCurrentPosition.Font = new System.Drawing.Font("Consolas", 16F, System.Drawing.FontStyle.Bold);
-            lblCurrentPosition.Location = new System.Drawing.Point(16, 182);
+            // 
+            lblCurrentPosition.BorderStyle = BorderStyle.FixedSingle;
+            lblCurrentPosition.Font = new Font("Consolas", 16F, FontStyle.Bold);
+            lblCurrentPosition.Location = new Point(16, 182);
             lblCurrentPosition.Name = "lblCurrentPosition";
-            lblCurrentPosition.Size = new System.Drawing.Size(220, 40);
+            lblCurrentPosition.Size = new Size(220, 40);
             lblCurrentPosition.TabIndex = 0;
             lblCurrentPosition.Text = "00:00:00.000";
-            lblCurrentPosition.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
+            lblCurrentPosition.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // lblCurrentPositionMs
-            lblCurrentPositionMs.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            lblCurrentPositionMs.Font = new System.Drawing.Font("Consolas", 10F, System.Drawing.FontStyle.Bold);
-            lblCurrentPositionMs.Location = new System.Drawing.Point(246, 182);
+            // 
+            lblCurrentPositionMs.BorderStyle = BorderStyle.FixedSingle;
+            lblCurrentPositionMs.Font = new Font("Consolas", 10F, FontStyle.Bold);
+            lblCurrentPositionMs.Location = new Point(246, 182);
             lblCurrentPositionMs.Name = "lblCurrentPositionMs";
-            lblCurrentPositionMs.Size = new System.Drawing.Size(120, 40);
+            lblCurrentPositionMs.Size = new Size(120, 40);
             lblCurrentPositionMs.TabIndex = 1;
             lblCurrentPositionMs.Text = "0 ms";
-            lblCurrentPositionMs.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
+            lblCurrentPositionMs.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // lblTotalDuration
-            lblTotalDuration.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            lblTotalDuration.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Bold);
-            lblTotalDuration.Location = new System.Drawing.Point(15, 234);
+            // 
+            lblTotalDuration.BorderStyle = BorderStyle.FixedSingle;
+            lblTotalDuration.Font = new Font("Consolas", 12F, FontStyle.Bold);
+            lblTotalDuration.Location = new Point(15, 234);
             lblTotalDuration.Name = "lblTotalDuration";
-            lblTotalDuration.Size = new System.Drawing.Size(350, 35);
+            lblTotalDuration.Size = new Size(350, 35);
             lblTotalDuration.TabIndex = 2;
             lblTotalDuration.Text = "00:00:00.000";
-            lblTotalDuration.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-
+            lblTotalDuration.TextAlign = ContentAlignment.MiddleCenter;
+            // 
             // lblMarkerInLabel
-            lblMarkerInLabel.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            lblMarkerInLabel.ForeColor = System.Drawing.Color.Red;
-            lblMarkerInLabel.Location = new System.Drawing.Point(9, 15);
+            // 
+            lblMarkerInLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblMarkerInLabel.ForeColor = Color.Red;
+            lblMarkerInLabel.Location = new Point(9, 15);
             lblMarkerInLabel.Name = "lblMarkerInLabel";
-            lblMarkerInLabel.Size = new System.Drawing.Size(50, 28);
+            lblMarkerInLabel.Size = new Size(50, 28);
             lblMarkerInLabel.TabIndex = 3;
             lblMarkerInLabel.Text = "IN";
-            lblMarkerInLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
+            lblMarkerInLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
             // txtMarkerIn
-            txtMarkerIn.Font = new System.Drawing.Font("Consolas", 12F);
-            txtMarkerIn.Location = new System.Drawing.Point(64, 15);
+            // 
+            txtMarkerIn.Font = new Font("Consolas", 12F);
+            txtMarkerIn.Location = new Point(64, 15);
             txtMarkerIn.Name = "txtMarkerIn";
             txtMarkerIn.ReadOnly = true;
-            txtMarkerIn.Size = new System.Drawing.Size(141, 26);
+            txtMarkerIn.Size = new Size(141, 26);
             txtMarkerIn.TabIndex = 4;
             txtMarkerIn.Text = "00:00:00.000";
-            txtMarkerIn.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-
+            txtMarkerIn.TextAlign = HorizontalAlignment.Center;
+            // 
             // btnSetMarkerIn
-            btnSetMarkerIn.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnSetMarkerIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSetMarkerIn.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnSetMarkerIn.Location = new System.Drawing.Point(213, 15);
+            // 
+            btnSetMarkerIn.BackColor = SystemColors.ControlLightLight;
+            btnSetMarkerIn.FlatStyle = FlatStyle.Flat;
+            btnSetMarkerIn.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSetMarkerIn.Location = new Point(213, 15);
             btnSetMarkerIn.Name = "btnSetMarkerIn";
-            btnSetMarkerIn.Size = new System.Drawing.Size(30, 28);
+            btnSetMarkerIn.Size = new Size(30, 28);
             btnSetMarkerIn.TabIndex = 5;
             btnSetMarkerIn.Text = "⬇";
             btnSetMarkerIn.UseVisualStyleBackColor = false;
             btnSetMarkerIn.Click += btnSetMarkerIn_Click;
-
+            // 
             // btnMarkerInUp
-            btnMarkerInUp.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerInUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerInUp.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerInUp.Location = new System.Drawing.Point(274, 10);
+            // 
+            btnMarkerInUp.BackColor = SystemColors.ControlLightLight;
+            btnMarkerInUp.FlatStyle = FlatStyle.Flat;
+            btnMarkerInUp.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerInUp.Location = new Point(274, 10);
             btnMarkerInUp.Name = "btnMarkerInUp";
-            btnMarkerInUp.Size = new System.Drawing.Size(22, 26);
+            btnMarkerInUp.Size = new Size(22, 26);
             btnMarkerInUp.TabIndex = 6;
             btnMarkerInUp.Text = "▲";
             btnMarkerInUp.UseVisualStyleBackColor = false;
             btnMarkerInUp.Click += btnMarkerInUp_Click;
-
+            // 
             // btnMarkerInDown
-            btnMarkerInDown.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerInDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerInDown.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerInDown.Location = new System.Drawing.Point(249, 20);
+            // 
+            btnMarkerInDown.BackColor = SystemColors.ControlLightLight;
+            btnMarkerInDown.FlatStyle = FlatStyle.Flat;
+            btnMarkerInDown.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerInDown.Location = new Point(249, 20);
             btnMarkerInDown.Name = "btnMarkerInDown";
-            btnMarkerInDown.Size = new System.Drawing.Size(22, 26);
+            btnMarkerInDown.Size = new Size(22, 26);
             btnMarkerInDown.TabIndex = 7;
             btnMarkerInDown.Text = "▼";
             btnMarkerInDown.UseVisualStyleBackColor = false;
             btnMarkerInDown.Click += btnMarkerInDown_Click;
-
+            // 
             // btnPlayFromIn
-            btnPlayFromIn.BackColor = System.Drawing.Color.LawnGreen;
-            btnPlayFromIn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlayFromIn.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnPlayFromIn.Location = new System.Drawing.Point(301, 15);
+            // 
+            btnPlayFromIn.BackColor = Color.LawnGreen;
+            btnPlayFromIn.FlatStyle = FlatStyle.Flat;
+            btnPlayFromIn.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnPlayFromIn.Location = new Point(301, 15);
             btnPlayFromIn.Name = "btnPlayFromIn";
-            btnPlayFromIn.Size = new System.Drawing.Size(30, 28);
+            btnPlayFromIn.Size = new Size(30, 28);
             btnPlayFromIn.TabIndex = 8;
             btnPlayFromIn.Text = "▶";
             btnPlayFromIn.UseVisualStyleBackColor = false;
             btnPlayFromIn.Click += btnPlayFromIn_Click;
-
+            // 
             // lblMarkerIntroLabel
-            lblMarkerIntroLabel.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            lblMarkerIntroLabel.ForeColor = System.Drawing.Color.Magenta;
-            lblMarkerIntroLabel.Location = new System.Drawing.Point(-4, 55);
+            // 
+            lblMarkerIntroLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblMarkerIntroLabel.ForeColor = Color.Magenta;
+            lblMarkerIntroLabel.Location = new Point(-4, 55);
             lblMarkerIntroLabel.Name = "lblMarkerIntroLabel";
-            lblMarkerIntroLabel.Size = new System.Drawing.Size(63, 28);
+            lblMarkerIntroLabel.Size = new Size(63, 28);
             lblMarkerIntroLabel.TabIndex = 9;
             lblMarkerIntroLabel.Text = "INTRO";
-            lblMarkerIntroLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
+            lblMarkerIntroLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
             // txtMarkerIntro
-            txtMarkerIntro.Font = new System.Drawing.Font("Consolas", 12F);
-            txtMarkerIntro.Location = new System.Drawing.Point(64, 55);
+            // 
+            txtMarkerIntro.Font = new Font("Consolas", 12F);
+            txtMarkerIntro.Location = new Point(64, 55);
             txtMarkerIntro.Name = "txtMarkerIntro";
             txtMarkerIntro.ReadOnly = true;
-            txtMarkerIntro.Size = new System.Drawing.Size(141, 26);
+            txtMarkerIntro.Size = new Size(141, 26);
             txtMarkerIntro.TabIndex = 10;
             txtMarkerIntro.Text = "00:00:00.000";
-            txtMarkerIntro.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-
+            txtMarkerIntro.TextAlign = HorizontalAlignment.Center;
+            // 
             // btnSetMarkerIntro
-            btnSetMarkerIntro.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnSetMarkerIntro.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSetMarkerIntro.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnSetMarkerIntro.Location = new System.Drawing.Point(213, 55);
+            // 
+            btnSetMarkerIntro.BackColor = SystemColors.ControlLightLight;
+            btnSetMarkerIntro.FlatStyle = FlatStyle.Flat;
+            btnSetMarkerIntro.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSetMarkerIntro.Location = new Point(213, 55);
             btnSetMarkerIntro.Name = "btnSetMarkerIntro";
-            btnSetMarkerIntro.Size = new System.Drawing.Size(30, 28);
+            btnSetMarkerIntro.Size = new Size(30, 28);
             btnSetMarkerIntro.TabIndex = 11;
             btnSetMarkerIntro.Text = "⬇";
             btnSetMarkerIntro.UseVisualStyleBackColor = false;
             btnSetMarkerIntro.Click += btnSetMarkerIntro_Click;
-
+            // 
             // btnMarkerIntroUp
-            btnMarkerIntroUp.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerIntroUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerIntroUp.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerIntroUp.Location = new System.Drawing.Point(274, 50);
+            // 
+            btnMarkerIntroUp.BackColor = SystemColors.ControlLightLight;
+            btnMarkerIntroUp.FlatStyle = FlatStyle.Flat;
+            btnMarkerIntroUp.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerIntroUp.Location = new Point(274, 50);
             btnMarkerIntroUp.Name = "btnMarkerIntroUp";
-            btnMarkerIntroUp.Size = new System.Drawing.Size(21, 26);
+            btnMarkerIntroUp.Size = new Size(21, 26);
             btnMarkerIntroUp.TabIndex = 12;
             btnMarkerIntroUp.Text = "▲";
             btnMarkerIntroUp.UseVisualStyleBackColor = false;
             btnMarkerIntroUp.Click += btnMarkerIntroUp_Click;
-
+            // 
             // btnMarkerIntroDown
-            btnMarkerIntroDown.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerIntroDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerIntroDown.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerIntroDown.Location = new System.Drawing.Point(249, 60);
+            // 
+            btnMarkerIntroDown.BackColor = SystemColors.ControlLightLight;
+            btnMarkerIntroDown.FlatStyle = FlatStyle.Flat;
+            btnMarkerIntroDown.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerIntroDown.Location = new Point(249, 60);
             btnMarkerIntroDown.Name = "btnMarkerIntroDown";
-            btnMarkerIntroDown.Size = new System.Drawing.Size(22, 26);
+            btnMarkerIntroDown.Size = new Size(22, 26);
             btnMarkerIntroDown.TabIndex = 13;
             btnMarkerIntroDown.Text = "▼";
             btnMarkerIntroDown.UseVisualStyleBackColor = false;
             btnMarkerIntroDown.Click += btnMarkerIntroDown_Click;
-
+            // 
             // btnPlayFromIntro
-            btnPlayFromIntro.BackColor = System.Drawing.Color.LawnGreen;
-            btnPlayFromIntro.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlayFromIntro.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnPlayFromIntro.Location = new System.Drawing.Point(301, 55);
+            // 
+            btnPlayFromIntro.BackColor = Color.LawnGreen;
+            btnPlayFromIntro.FlatStyle = FlatStyle.Flat;
+            btnPlayFromIntro.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnPlayFromIntro.Location = new Point(301, 55);
             btnPlayFromIntro.Name = "btnPlayFromIntro";
-            btnPlayFromIntro.Size = new System.Drawing.Size(30, 28);
+            btnPlayFromIntro.Size = new Size(30, 28);
             btnPlayFromIntro.TabIndex = 14;
             btnPlayFromIntro.Text = "▶";
             btnPlayFromIntro.UseVisualStyleBackColor = false;
             btnPlayFromIntro.Click += btnPlayFromIntro_Click;
-
+            // 
             // lblMarkerMixLabel
-            lblMarkerMixLabel.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            lblMarkerMixLabel.ForeColor = System.Drawing.Color.Yellow;
-            lblMarkerMixLabel.Location = new System.Drawing.Point(9, 95);
+            // 
+            lblMarkerMixLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblMarkerMixLabel.ForeColor = Color.Yellow;
+            lblMarkerMixLabel.Location = new Point(9, 95);
             lblMarkerMixLabel.Name = "lblMarkerMixLabel";
-            lblMarkerMixLabel.Size = new System.Drawing.Size(50, 28);
+            lblMarkerMixLabel.Size = new Size(50, 28);
             lblMarkerMixLabel.TabIndex = 15;
             lblMarkerMixLabel.Text = "MIX";
-            lblMarkerMixLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
+            lblMarkerMixLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
             // txtMarkerMix
-            txtMarkerMix.Font = new System.Drawing.Font("Consolas", 12F);
-            txtMarkerMix.Location = new System.Drawing.Point(64, 95);
+            // 
+            txtMarkerMix.Font = new Font("Consolas", 12F);
+            txtMarkerMix.Location = new Point(64, 95);
             txtMarkerMix.Name = "txtMarkerMix";
             txtMarkerMix.ReadOnly = true;
-            txtMarkerMix.Size = new System.Drawing.Size(141, 26);
+            txtMarkerMix.Size = new Size(141, 26);
             txtMarkerMix.TabIndex = 16;
             txtMarkerMix.Text = "00:00:00.000";
-            txtMarkerMix.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-
+            txtMarkerMix.TextAlign = HorizontalAlignment.Center;
+            // 
             // btnSetMarkerMix
-            btnSetMarkerMix.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnSetMarkerMix.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSetMarkerMix.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnSetMarkerMix.Location = new System.Drawing.Point(213, 95);
+            // 
+            btnSetMarkerMix.BackColor = SystemColors.ControlLightLight;
+            btnSetMarkerMix.FlatStyle = FlatStyle.Flat;
+            btnSetMarkerMix.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSetMarkerMix.Location = new Point(213, 95);
             btnSetMarkerMix.Name = "btnSetMarkerMix";
-            btnSetMarkerMix.Size = new System.Drawing.Size(30, 28);
+            btnSetMarkerMix.Size = new Size(30, 28);
             btnSetMarkerMix.TabIndex = 17;
             btnSetMarkerMix.Text = "⬇";
             btnSetMarkerMix.UseVisualStyleBackColor = false;
             btnSetMarkerMix.Click += btnSetMarkerMix_Click;
-
+            // 
             // btnMarkerMixUp
-            btnMarkerMixUp.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerMixUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerMixUp.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerMixUp.Location = new System.Drawing.Point(274, 90);
+            // 
+            btnMarkerMixUp.BackColor = SystemColors.ControlLightLight;
+            btnMarkerMixUp.FlatStyle = FlatStyle.Flat;
+            btnMarkerMixUp.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerMixUp.Location = new Point(274, 90);
             btnMarkerMixUp.Name = "btnMarkerMixUp";
-            btnMarkerMixUp.Size = new System.Drawing.Size(22, 26);
+            btnMarkerMixUp.Size = new Size(22, 26);
             btnMarkerMixUp.TabIndex = 18;
             btnMarkerMixUp.Text = "▲";
             btnMarkerMixUp.UseVisualStyleBackColor = false;
             btnMarkerMixUp.Click += btnMarkerMixUp_Click;
-
+            // 
             // btnMarkerMixDown
-            btnMarkerMixDown.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerMixDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerMixDown.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerMixDown.Location = new System.Drawing.Point(249, 100);
+            // 
+            btnMarkerMixDown.BackColor = SystemColors.ControlLightLight;
+            btnMarkerMixDown.FlatStyle = FlatStyle.Flat;
+            btnMarkerMixDown.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerMixDown.Location = new Point(249, 100);
             btnMarkerMixDown.Name = "btnMarkerMixDown";
-            btnMarkerMixDown.Size = new System.Drawing.Size(22, 26);
+            btnMarkerMixDown.Size = new Size(22, 26);
             btnMarkerMixDown.TabIndex = 19;
             btnMarkerMixDown.Text = "▼";
             btnMarkerMixDown.UseVisualStyleBackColor = false;
             btnMarkerMixDown.Click += btnMarkerMixDown_Click;
-
+            // 
             // btnPlayFromMix
-            btnPlayFromMix.BackColor = System.Drawing.Color.LawnGreen;
-            btnPlayFromMix.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlayFromMix.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnPlayFromMix.Location = new System.Drawing.Point(301, 95);
+            // 
+            btnPlayFromMix.BackColor = Color.LawnGreen;
+            btnPlayFromMix.FlatStyle = FlatStyle.Flat;
+            btnPlayFromMix.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnPlayFromMix.Location = new Point(301, 95);
             btnPlayFromMix.Name = "btnPlayFromMix";
-            btnPlayFromMix.Size = new System.Drawing.Size(30, 28);
+            btnPlayFromMix.Size = new Size(30, 28);
             btnPlayFromMix.TabIndex = 20;
             btnPlayFromMix.Text = "▶";
             btnPlayFromMix.UseVisualStyleBackColor = false;
             btnPlayFromMix.Click += btnPlayFromMix_Click;
-
+            // 
             // lblMarkerOutLabel
-            lblMarkerOutLabel.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            lblMarkerOutLabel.ForeColor = System.Drawing.Color.FromArgb(255, 140, 0);
-            lblMarkerOutLabel.Location = new System.Drawing.Point(9, 135);
+            // 
+            lblMarkerOutLabel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            lblMarkerOutLabel.ForeColor = Color.FromArgb(255, 140, 0);
+            lblMarkerOutLabel.Location = new Point(9, 135);
             lblMarkerOutLabel.Name = "lblMarkerOutLabel";
-            lblMarkerOutLabel.Size = new System.Drawing.Size(50, 28);
+            lblMarkerOutLabel.Size = new Size(50, 28);
             lblMarkerOutLabel.TabIndex = 21;
             lblMarkerOutLabel.Text = "OUT";
-            lblMarkerOutLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-
+            lblMarkerOutLabel.TextAlign = ContentAlignment.MiddleRight;
+            // 
             // txtMarkerOut
-            txtMarkerOut.Font = new System.Drawing.Font("Consolas", 12F);
-            txtMarkerOut.Location = new System.Drawing.Point(64, 135);
+            // 
+            txtMarkerOut.Font = new Font("Consolas", 12F);
+            txtMarkerOut.Location = new Point(64, 135);
             txtMarkerOut.Name = "txtMarkerOut";
             txtMarkerOut.ReadOnly = true;
-            txtMarkerOut.Size = new System.Drawing.Size(141, 26);
+            txtMarkerOut.Size = new Size(141, 26);
             txtMarkerOut.TabIndex = 22;
             txtMarkerOut.Text = "00:00:00.000";
-            txtMarkerOut.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
-
+            txtMarkerOut.TextAlign = HorizontalAlignment.Center;
+            // 
             // btnSetMarkerOut
-            btnSetMarkerOut.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnSetMarkerOut.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSetMarkerOut.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnSetMarkerOut.Location = new System.Drawing.Point(213, 135);
+            // 
+            btnSetMarkerOut.BackColor = SystemColors.ControlLightLight;
+            btnSetMarkerOut.FlatStyle = FlatStyle.Flat;
+            btnSetMarkerOut.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnSetMarkerOut.Location = new Point(213, 135);
             btnSetMarkerOut.Name = "btnSetMarkerOut";
-            btnSetMarkerOut.Size = new System.Drawing.Size(30, 28);
+            btnSetMarkerOut.Size = new Size(30, 28);
             btnSetMarkerOut.TabIndex = 23;
             btnSetMarkerOut.Text = "⬇";
             btnSetMarkerOut.UseVisualStyleBackColor = false;
             btnSetMarkerOut.Click += btnSetMarkerOut_Click;
-
+            // 
             // btnMarkerOutUp
-            btnMarkerOutUp.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerOutUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerOutUp.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerOutUp.Location = new System.Drawing.Point(274, 131);
+            // 
+            btnMarkerOutUp.BackColor = SystemColors.ControlLightLight;
+            btnMarkerOutUp.FlatStyle = FlatStyle.Flat;
+            btnMarkerOutUp.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerOutUp.Location = new Point(274, 131);
             btnMarkerOutUp.Name = "btnMarkerOutUp";
-            btnMarkerOutUp.Size = new System.Drawing.Size(22, 26);
+            btnMarkerOutUp.Size = new Size(22, 26);
             btnMarkerOutUp.TabIndex = 24;
             btnMarkerOutUp.Text = "▲";
             btnMarkerOutUp.UseVisualStyleBackColor = false;
             btnMarkerOutUp.Click += btnMarkerOutUp_Click;
-
+            // 
             // btnMarkerOutDown
-            btnMarkerOutDown.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            btnMarkerOutDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnMarkerOutDown.Font = new System.Drawing.Font("Arial", 7F, System.Drawing.FontStyle.Bold);
-            btnMarkerOutDown.Location = new System.Drawing.Point(249, 140);
+            // 
+            btnMarkerOutDown.BackColor = SystemColors.ControlLightLight;
+            btnMarkerOutDown.FlatStyle = FlatStyle.Flat;
+            btnMarkerOutDown.Font = new Font("Arial", 7F, FontStyle.Bold);
+            btnMarkerOutDown.Location = new Point(249, 140);
             btnMarkerOutDown.Name = "btnMarkerOutDown";
-            btnMarkerOutDown.Size = new System.Drawing.Size(22, 26);
+            btnMarkerOutDown.Size = new Size(22, 26);
             btnMarkerOutDown.TabIndex = 25;
             btnMarkerOutDown.Text = "▼";
             btnMarkerOutDown.UseVisualStyleBackColor = false;
             btnMarkerOutDown.Click += btnMarkerOutDown_Click;
-
+            // 
             // btnPlayFromOut
-            btnPlayFromOut.BackColor = System.Drawing.Color.LawnGreen;
-            btnPlayFromOut.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnPlayFromOut.Font = new System.Drawing.Font("Arial", 10F, System.Drawing.FontStyle.Bold);
-            btnPlayFromOut.Location = new System.Drawing.Point(301, 135);
+            // 
+            btnPlayFromOut.BackColor = Color.LawnGreen;
+            btnPlayFromOut.FlatStyle = FlatStyle.Flat;
+            btnPlayFromOut.Font = new Font("Arial", 10F, FontStyle.Bold);
+            btnPlayFromOut.Location = new Point(301, 135);
             btnPlayFromOut.Name = "btnPlayFromOut";
-            btnPlayFromOut.Size = new System.Drawing.Size(30, 28);
+            btnPlayFromOut.Size = new Size(30, 28);
             btnPlayFromOut.TabIndex = 26;
             btnPlayFromOut.Text = "▶";
             btnPlayFromOut.UseVisualStyleBackColor = false;
             btnPlayFromOut.Click += btnPlayFromOut_Click;
-
-            // ========== VU METER PANEL ==========
-            vuMeterPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            vuMeterPanel.Location = new System.Drawing.Point(380, 55);
+            // 
+            // vuMeterPanel
+            // 
+            vuMeterPanel.BackColor = Color.FromArgb(15, 15, 15);
+            vuMeterPanel.Dock = DockStyle.Top;
+            vuMeterPanel.Location = new Point(380, 55);
             vuMeterPanel.Name = "vuMeterPanel";
-            vuMeterPanel.Size = new System.Drawing.Size(883, 24);
-            vuMeterPanel.BackColor = System.Drawing.Color.FromArgb(15, 15, 15);
+            vuMeterPanel.Size = new Size(883, 24);
             vuMeterPanel.TabIndex = 10;
-
-            // ========== picWaveform ==========
-            picWaveform.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            picWaveform.Dock = System.Windows.Forms.DockStyle.Fill;
-            picWaveform.Location = new System.Drawing.Point(380, 79);
+            // 
+            // picWaveform
+            // 
+            picWaveform.BorderStyle = BorderStyle.FixedSingle;
+            picWaveform.Dock = DockStyle.Fill;
+            picWaveform.Location = new Point(380, 79);
             picWaveform.Name = "picWaveform";
-            picWaveform.Size = new System.Drawing.Size(883, 331);
+            picWaveform.Size = new Size(883, 311);
             picWaveform.TabIndex = 2;
             picWaveform.TabStop = false;
             picWaveform.Paint += picWaveform_Paint;
             picWaveform.MouseDown += picWaveform_MouseDown;
             picWaveform.MouseMove += picWaveform_MouseMove;
             picWaveform.MouseUp += picWaveform_MouseUp;
-
-            // ========== hScrollWaveform ==========
-            hScrollWaveform.Dock = System.Windows.Forms.DockStyle.Bottom;
-            hScrollWaveform.Location = new System.Drawing.Point(380, 390);
+            // 
+            // hScrollWaveform
+            // 
+            hScrollWaveform.Dock = DockStyle.Bottom;
+            hScrollWaveform.Location = new Point(380, 390);
             hScrollWaveform.Name = "hScrollWaveform";
-            hScrollWaveform.Size = new System.Drawing.Size(883, 20);
+            hScrollWaveform.Size = new Size(883, 20);
             hScrollWaveform.TabIndex = 11;
             hScrollWaveform.Visible = false;
-            hScrollWaveform.Minimum = 0;
-            hScrollWaveform.Maximum = 100;
-            hScrollWaveform.LargeChange = 10;
-            hScrollWaveform.SmallChange = 1;
-
-            // ========== bottomPanel ==========
+            // 
+            // bottomPanel
+            // 
             bottomPanel.AutoScroll = true;
             bottomPanel.Controls.Add(lblTitle);
             bottomPanel.Controls.Add(txtTitle);
@@ -709,265 +755,291 @@ namespace AirManager.Forms
             bottomPanel.Controls.Add(grpHours);
             bottomPanel.Controls.Add(btnSave);
             bottomPanel.Controls.Add(btnCancel);
-            bottomPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
-            bottomPanel.Location = new System.Drawing.Point(0, 410);
+            bottomPanel.Dock = DockStyle.Bottom;
+            bottomPanel.Location = new Point(0, 410);
             bottomPanel.Name = "bottomPanel";
-            bottomPanel.Size = new System.Drawing.Size(1263, 317);
+            bottomPanel.Size = new Size(1263, 317);
             bottomPanel.TabIndex = 3;
-
+            // 
             // lblTitle
+            // 
             lblTitle.AutoSize = true;
-            lblTitle.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblTitle.Location = new System.Drawing.Point(15, 18);
+            lblTitle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblTitle.Location = new Point(15, 18);
             lblTitle.Name = "lblTitle";
-            lblTitle.Size = new System.Drawing.Size(42, 15);
+            lblTitle.Size = new Size(42, 15);
             lblTitle.TabIndex = 0;
             lblTitle.Text = "Titolo:";
-
+            // 
             // txtTitle
-            txtTitle.Font = new System.Drawing.Font("Segoe UI", 10F);
-            txtTitle.Location = new System.Drawing.Point(100, 15);
+            // 
+            txtTitle.Font = new Font("Segoe UI", 10F);
+            txtTitle.Location = new Point(100, 15);
             txtTitle.Name = "txtTitle";
-            txtTitle.Size = new System.Drawing.Size(420, 25);
+            txtTitle.Size = new Size(420, 25);
             txtTitle.TabIndex = 1;
-
+            // 
             // lblArtist
+            // 
             lblArtist.AutoSize = true;
-            lblArtist.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblArtist.Location = new System.Drawing.Point(15, 53);
+            lblArtist.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblArtist.Location = new Point(15, 53);
             lblArtist.Name = "lblArtist";
-            lblArtist.Size = new System.Drawing.Size(47, 15);
+            lblArtist.Size = new Size(47, 15);
             lblArtist.TabIndex = 2;
             lblArtist.Text = "Artista:";
-
+            // 
             // txtArtist
-            txtArtist.Font = new System.Drawing.Font("Segoe UI", 10F);
-            txtArtist.Location = new System.Drawing.Point(100, 50);
+            // 
+            txtArtist.Font = new Font("Segoe UI", 10F);
+            txtArtist.Location = new Point(100, 50);
             txtArtist.Name = "txtArtist";
-            txtArtist.Size = new System.Drawing.Size(420, 25);
+            txtArtist.Size = new Size(420, 25);
             txtArtist.TabIndex = 3;
-
+            // 
             // lblAlbum
+            // 
             lblAlbum.AutoSize = true;
-            lblAlbum.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblAlbum.Location = new System.Drawing.Point(540, 18);
+            lblAlbum.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblAlbum.Location = new Point(540, 18);
             lblAlbum.Name = "lblAlbum";
-            lblAlbum.Size = new System.Drawing.Size(46, 15);
+            lblAlbum.Size = new Size(46, 15);
             lblAlbum.TabIndex = 4;
             lblAlbum.Text = "Album:";
-
+            // 
             // txtAlbum
-            txtAlbum.Font = new System.Drawing.Font("Segoe UI", 10F);
-            txtAlbum.Location = new System.Drawing.Point(620, 15);
+            // 
+            txtAlbum.Font = new Font("Segoe UI", 10F);
+            txtAlbum.Location = new Point(620, 15);
             txtAlbum.Name = "txtAlbum";
-            txtAlbum.Size = new System.Drawing.Size(280, 25);
+            txtAlbum.Size = new Size(280, 25);
             txtAlbum.TabIndex = 5;
-
+            // 
             // lblYear
+            // 
             lblYear.AutoSize = true;
-            lblYear.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblYear.Location = new System.Drawing.Point(920, 18);
+            lblYear.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblYear.Location = new Point(920, 18);
             lblYear.Name = "lblYear";
-            lblYear.Size = new System.Drawing.Size(39, 15);
+            lblYear.Size = new Size(39, 15);
             lblYear.TabIndex = 6;
             lblYear.Text = "Anno:";
-
+            // 
             // numYear
-            numYear.Font = new System.Drawing.Font("Segoe UI", 10F);
-            numYear.Location = new System.Drawing.Point(980, 15);
+            // 
+            numYear.Font = new Font("Segoe UI", 10F);
+            numYear.Location = new Point(980, 15);
             numYear.Maximum = new decimal(new int[] { 2100, 0, 0, 0 });
             numYear.Minimum = new decimal(new int[] { 1900, 0, 0, 0 });
             numYear.Name = "numYear";
-            numYear.Size = new System.Drawing.Size(100, 25);
+            numYear.Size = new Size(100, 25);
             numYear.TabIndex = 7;
             numYear.Value = new decimal(new int[] { 2024, 0, 0, 0 });
-
+            // 
             // lblGenre
+            // 
             lblGenre.AutoSize = true;
-            lblGenre.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblGenre.Location = new System.Drawing.Point(540, 53);
+            lblGenre.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblGenre.Location = new Point(540, 53);
             lblGenre.Name = "lblGenre";
-            lblGenre.Size = new System.Drawing.Size(52, 15);
+            lblGenre.Size = new Size(52, 15);
             lblGenre.TabIndex = 8;
             lblGenre.Text = "Genere:";
-
+            // 
             // cmbGenre
-            cmbGenre.Font = new System.Drawing.Font("Segoe UI", 10F);
+            // 
+            cmbGenre.Font = new Font("Segoe UI", 10F);
             cmbGenre.FormattingEnabled = true;
-            cmbGenre.Location = new System.Drawing.Point(620, 50);
+            cmbGenre.Location = new Point(620, 50);
             cmbGenre.Name = "cmbGenre";
-            cmbGenre.Size = new System.Drawing.Size(200, 25);
+            cmbGenre.Size = new Size(200, 25);
             cmbGenre.TabIndex = 9;
-
+            // 
             // lblCategories
+            // 
             lblCategories.AutoSize = true;
-            lblCategories.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblCategories.Location = new System.Drawing.Point(840, 53);
+            lblCategories.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblCategories.Location = new Point(840, 53);
             lblCategories.Name = "lblCategories";
-            lblCategories.Size = new System.Drawing.Size(64, 15);
+            lblCategories.Size = new Size(64, 15);
             lblCategories.TabIndex = 10;
             lblCategories.Text = "Categorie:";
-
+            // 
             // txtCategoriesDisplay
-            txtCategoriesDisplay.Font = new System.Drawing.Font("Segoe UI", 10F);
-            txtCategoriesDisplay.Location = new System.Drawing.Point(920, 50);
+            // 
+            txtCategoriesDisplay.Cursor = Cursors.Hand;
+            txtCategoriesDisplay.Font = new Font("Segoe UI", 10F);
+            txtCategoriesDisplay.Location = new Point(920, 50);
             txtCategoriesDisplay.Name = "txtCategoriesDisplay";
-            txtCategoriesDisplay.Size = new System.Drawing.Size(270, 25);
-            txtCategoriesDisplay.TabIndex = 11;
             txtCategoriesDisplay.ReadOnly = true;
-            txtCategoriesDisplay.Cursor = System.Windows.Forms.Cursors.Hand;
-            txtCategoriesDisplay.Click += new System.EventHandler(this.txtCategoriesDisplay_Click);
-
+            txtCategoriesDisplay.Size = new Size(270, 25);
+            txtCategoriesDisplay.TabIndex = 11;
+            txtCategoriesDisplay.Click += txtCategoriesDisplay_Click;
+            // 
             // btnCategoriesDropdown
-            btnCategoriesDropdown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnCategoriesDropdown.Font = new System.Drawing.Font("Segoe UI", 9F);
-            btnCategoriesDropdown.Location = new System.Drawing.Point(1190, 50);
+            // 
+            btnCategoriesDropdown.FlatStyle = FlatStyle.Flat;
+            btnCategoriesDropdown.Font = new Font("Segoe UI", 9F);
+            btnCategoriesDropdown.Location = new Point(1190, 50);
             btnCategoriesDropdown.Name = "btnCategoriesDropdown";
-            btnCategoriesDropdown.Size = new System.Drawing.Size(30, 25);
+            btnCategoriesDropdown.Size = new Size(30, 25);
             btnCategoriesDropdown.TabIndex = 12;
             btnCategoriesDropdown.Text = "▼";
             btnCategoriesDropdown.UseVisualStyleBackColor = true;
-            btnCategoriesDropdown.Click += new System.EventHandler(this.btnCategoriesDropdown_Click);
-
+            btnCategoriesDropdown.Click += btnCategoriesDropdown_Click;
+            // 
             // lblFilePath
+            // 
             lblFilePath.AutoSize = true;
-            lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
-            lblFilePath.Location = new System.Drawing.Point(25, 261);
+            lblFilePath.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblFilePath.Location = new Point(25, 261);
             lblFilePath.Name = "lblFilePath";
-            lblFilePath.Size = new System.Drawing.Size(64, 15);
+            lblFilePath.Size = new Size(64, 15);
             lblFilePath.TabIndex = 13;
             lblFilePath.Text = "File Audio:";
-
+            // 
             // txtFilePath
-            txtFilePath.Font = new System.Drawing.Font("Consolas", 9F);
-            txtFilePath.Location = new System.Drawing.Point(110, 258);
+            // 
+            txtFilePath.Font = new Font("Consolas", 9F);
+            txtFilePath.Location = new Point(110, 258);
             txtFilePath.Name = "txtFilePath";
             txtFilePath.ReadOnly = true;
-            txtFilePath.Size = new System.Drawing.Size(800, 22);
+            txtFilePath.Size = new Size(800, 22);
             txtFilePath.TabIndex = 14;
-
+            // 
             // grpPeriod
+            // 
             grpPeriod.Controls.Add(chkEnableValidFrom);
             grpPeriod.Controls.Add(dtpValidFrom);
             grpPeriod.Controls.Add(chkEnableValidTo);
             grpPeriod.Controls.Add(dtpValidTo);
-            grpPeriod.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            grpPeriod.Location = new System.Drawing.Point(15, 95);
+            grpPeriod.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpPeriod.Location = new Point(15, 95);
             grpPeriod.Name = "grpPeriod";
-            grpPeriod.Size = new System.Drawing.Size(365, 55);
+            grpPeriod.Size = new Size(365, 74);
             grpPeriod.TabIndex = 14;
             grpPeriod.TabStop = false;
             grpPeriod.Text = "📅 Periodo Validità";
-
+            // 
             // chkEnableValidFrom
+            // 
             chkEnableValidFrom.AutoSize = true;
-            chkEnableValidFrom.Font = new System.Drawing.Font("Segoe UI", 8F);
-            chkEnableValidFrom.Location = new System.Drawing.Point(8, 24);
+            chkEnableValidFrom.Font = new Font("Segoe UI", 8F);
+            chkEnableValidFrom.Location = new Point(45, 20);
             chkEnableValidFrom.Name = "chkEnableValidFrom";
-            chkEnableValidFrom.Size = new System.Drawing.Size(40, 17);
+            chkEnableValidFrom.Size = new Size(40, 17);
             chkEnableValidFrom.TabIndex = 0;
             chkEnableValidFrom.Text = "Da";
             chkEnableValidFrom.UseVisualStyleBackColor = true;
-
+            // 
             // dtpValidFrom
+            // 
             dtpValidFrom.Enabled = false;
-            dtpValidFrom.Font = new System.Drawing.Font("Segoe UI", 8F);
-            dtpValidFrom.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            dtpValidFrom.Location = new System.Drawing.Point(60, 22);
+            dtpValidFrom.Font = new Font("Segoe UI", 8F);
+            dtpValidFrom.Format = DateTimePickerFormat.Short;
+            dtpValidFrom.Location = new Point(45, 43);
             dtpValidFrom.Name = "dtpValidFrom";
-            dtpValidFrom.Size = new System.Drawing.Size(120, 22);
+            dtpValidFrom.Size = new Size(120, 22);
             dtpValidFrom.TabIndex = 1;
-
+            // 
             // chkEnableValidTo
+            // 
             chkEnableValidTo.AutoSize = true;
-            chkEnableValidTo.Font = new System.Drawing.Font("Segoe UI", 8F);
-            chkEnableValidTo.Location = new System.Drawing.Point(190, 24);
+            chkEnableValidTo.Font = new Font("Segoe UI", 8F);
+            chkEnableValidTo.Location = new Point(217, 18);
             chkEnableValidTo.Name = "chkEnableValidTo";
-            chkEnableValidTo.Size = new System.Drawing.Size(33, 17);
+            chkEnableValidTo.Size = new Size(33, 17);
             chkEnableValidTo.TabIndex = 2;
             chkEnableValidTo.Text = "A";
             chkEnableValidTo.UseVisualStyleBackColor = true;
-
+            // 
             // dtpValidTo
+            // 
             dtpValidTo.Enabled = false;
-            dtpValidTo.Font = new System.Drawing.Font("Segoe UI", 8F);
-            dtpValidTo.Format = System.Windows.Forms.DateTimePickerFormat.Short;
-            dtpValidTo.Location = new System.Drawing.Point(240, 22);
+            dtpValidTo.Font = new Font("Segoe UI", 8F);
+            dtpValidTo.Format = DateTimePickerFormat.Short;
+            dtpValidTo.Location = new Point(217, 43);
             dtpValidTo.Name = "dtpValidTo";
-            dtpValidTo.Size = new System.Drawing.Size(120, 22);
+            dtpValidTo.Size = new Size(120, 22);
             dtpValidTo.TabIndex = 3;
-
+            // 
             // grpMonths
-            grpMonths.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            grpMonths.Location = new System.Drawing.Point(15, 160);
+            // 
+            grpMonths.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpMonths.Location = new Point(15, 175);
             grpMonths.Name = "grpMonths";
-            grpMonths.Size = new System.Drawing.Size(680, 55);
+            grpMonths.Size = new Size(680, 55);
             grpMonths.TabIndex = 15;
             grpMonths.TabStop = false;
             grpMonths.Text = "📆 Mesi Consentiti";
-
+            // 
             // grpDays
-            grpDays.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            grpDays.Location = new System.Drawing.Point(736, 160);
+            // 
+            grpDays.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpDays.Location = new Point(736, 175);
             grpDays.Name = "grpDays";
-            grpDays.Size = new System.Drawing.Size(500, 55);
+            grpDays.Size = new Size(500, 55);
             grpDays.TabIndex = 16;
             grpDays.TabStop = false;
             grpDays.Text = "📅 Giorni Consentiti";
-
+            // 
             // grpHours
-            grpHours.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
-            grpHours.Location = new System.Drawing.Point(386, 95);
+            // 
+            grpHours.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
+            grpHours.Location = new Point(386, 108);
             grpHours.Name = "grpHours";
-            grpHours.Size = new System.Drawing.Size(850, 55);
+            grpHours.Size = new Size(850, 55);
             grpHours.TabIndex = 17;
             grpHours.TabStop = false;
             grpHours.Text = "🕐 Ore Consentite";
-
+            // 
             // btnSave
-            btnSave.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnSave.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            btnSave.Location = new System.Drawing.Point(1006, 245);
+            // 
+            btnSave.FlatStyle = FlatStyle.Flat;
+            btnSave.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btnSave.Location = new Point(1006, 245);
             btnSave.Name = "btnSave";
-            btnSave.Size = new System.Drawing.Size(110, 45);
+            btnSave.Size = new Size(110, 45);
             btnSave.TabIndex = 18;
             btnSave.Text = "💾 Salva";
             btnSave.UseVisualStyleBackColor = true;
             btnSave.Click += btnSave_Click;
-
+            // 
             // btnCancel
-            btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            btnCancel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            btnCancel.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            btnCancel.Location = new System.Drawing.Point(1126, 245);
+            // 
+            btnCancel.DialogResult = DialogResult.Cancel;
+            btnCancel.FlatStyle = FlatStyle.Flat;
+            btnCancel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
+            btnCancel.Location = new Point(1126, 245);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new System.Drawing.Size(110, 45);
+            btnCancel.Size = new Size(110, 45);
             btnCancel.TabIndex = 19;
             btnCancel.Text = "✖ Annulla";
             btnCancel.UseVisualStyleBackColor = true;
-
-            // ========== MusicEditorForm ==========
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = btnCancel;
-            this.ClientSize = new System.Drawing.Size(1263, 727);
-
-            // Ordine di aggiunta critico per il docking corretto:
-            this.Controls.Add(picWaveform);        // Fill - area centrale
-            this.Controls.Add(hScrollWaveform);     // Bottom dentro area fill
-            this.Controls.Add(vuMeterPanel);        // Top sotto toolbar, sopra waveform
-            this.Controls.Add(leftPanel);           // Left
-            this.Controls.Add(bottomPanel);         // Bottom
-            this.Controls.Add(toolbarPanel);        // Top
-
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
-            this.MaximizeBox = false;
-            this.Name = "MusicEditorForm";
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "🎵 Music Editor Professional";
-
+            // 
+            // MusicEditorForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            CancelButton = btnCancel;
+            ClientSize = new Size(1263, 727);
+            Controls.Add(picWaveform);
+            Controls.Add(hScrollWaveform);
+            Controls.Add(vuMeterPanel);
+            Controls.Add(leftPanel);
+            Controls.Add(bottomPanel);
+            Controls.Add(toolbarPanel);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
+            Name = "MusicEditorForm";
+            StartPosition = FormStartPosition.CenterScreen;
+            Text = "🎵 Music Editor Professional";
             toolbarPanel.ResumeLayout(false);
+            zoomPanel.ResumeLayout(false);
+            zoomPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)trkZoom).EndInit();
+            grpVolume.ResumeLayout(false);
+            grpVolume.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)trkVolume).EndInit();
             leftPanel.ResumeLayout(false);
             leftPanel.PerformLayout();
@@ -977,8 +1049,7 @@ namespace AirManager.Forms
             ((System.ComponentModel.ISupportInitialize)numYear).EndInit();
             grpPeriod.ResumeLayout(false);
             grpPeriod.PerformLayout();
-            grpVolume.ResumeLayout(false);
-            this.ResumeLayout(false);
+            ResumeLayout(false);
         }
     }
 }
