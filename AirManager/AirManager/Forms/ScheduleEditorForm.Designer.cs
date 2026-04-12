@@ -65,6 +65,7 @@ namespace AirManager.Forms
             lblName = new Label();
             txtName = new TextBox();
             grpAction = new GroupBox();
+            txtStreamURL = new TextBox();
             radClock = new RadioButton();
             cmbClock = new ComboBox();
             radAudio = new RadioButton();
@@ -72,13 +73,12 @@ namespace AirManager.Forms
             btnBrowseAudio = new Button();
             radMiniPLS = new RadioButton();
             cmbPlaylist = new ComboBox();
-            numMiniPLSID = new NumericUpDown();
             radTimeSignal = new RadioButton();
             radURLStreaming = new RadioButton();
             lblStreamURL = new Label();
-            txtStreamURL = new TextBox();
             lblStreamDuration = new Label();
             txtStreamDuration = new MaskedTextBox();
+            numMiniPLSID = new NumericUpDown();
             lblVideoBuffer = new Label();
             txtVideoBufferPath = new TextBox();
             btnBrowseVideoBuffer = new Button();
@@ -100,23 +100,30 @@ namespace AirManager.Forms
             btnSave = new Button();
             btnCancel = new Button();
             grpAction.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).BeginInit();
             grpDays.SuspendLayout();
             grpTimes.SuspendLayout();
             SuspendLayout();
-
+            // 
+            // lblName
+            // 
             lblName.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblName.Location = new Point(20, 20);
             lblName.Name = "lblName";
             lblName.Size = new Size(150, 20);
             lblName.TabIndex = 0;
             lblName.Text = "Nome Schedulazione: ";
-
+            // 
+            // txtName
+            // 
             txtName.Font = new Font("Segoe UI", 10F);
             txtName.Location = new Point(180, 18);
             txtName.Name = "txtName";
             txtName.Size = new Size(490, 25);
             txtName.TabIndex = 1;
-
+            // 
+            // grpAction
+            // 
             grpAction.Controls.Add(txtStreamURL);
             grpAction.Controls.Add(radClock);
             grpAction.Controls.Add(cmbClock);
@@ -137,7 +144,18 @@ namespace AirManager.Forms
             grpAction.TabIndex = 2;
             grpAction.TabStop = false;
             grpAction.Text = "Tipo Azione";
-
+            // 
+            // txtStreamURL
+            // 
+            txtStreamURL.Enabled = false;
+            txtStreamURL.Font = new Font("Segoe UI", 9F);
+            txtStreamURL.Location = new Point(170, 145);
+            txtStreamURL.Name = "txtStreamURL";
+            txtStreamURL.Size = new Size(393, 23);
+            txtStreamURL.TabIndex = 10;
+            // 
+            // radClock
+            // 
             radClock.Checked = true;
             radClock.Location = new Point(10, 25);
             radClock.Name = "radClock";
@@ -146,77 +164,85 @@ namespace AirManager.Forms
             radClock.TabStop = true;
             radClock.Text = "▶ Riproduci Clock";
             radClock.CheckedChanged += RadAction_CheckedChanged;
-
+            // 
+            // cmbClock
+            // 
             cmbClock.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbClock.Font = new Font("Segoe UI", 9F);
             cmbClock.Location = new Point(170, 23);
             cmbClock.Name = "cmbClock";
             cmbClock.Size = new Size(450, 23);
             cmbClock.TabIndex = 1;
-
+            // 
+            // radAudio
+            // 
             radAudio.Location = new Point(10, 55);
             radAudio.Name = "radAudio";
             radAudio.Size = new Size(155, 25);
             radAudio.TabIndex = 2;
             radAudio.Text = "🎵 Riproduci Audio";
             radAudio.CheckedChanged += RadAction_CheckedChanged;
-
+            // 
+            // txtAudioFile
+            // 
             txtAudioFile.Enabled = false;
             txtAudioFile.Font = new Font("Segoe UI", 9F);
             txtAudioFile.Location = new Point(170, 53);
             txtAudioFile.Name = "txtAudioFile";
             txtAudioFile.Size = new Size(395, 23);
             txtAudioFile.TabIndex = 3;
-
+            // 
+            // btnBrowseAudio
+            // 
             btnBrowseAudio.Cursor = Cursors.Hand;
             btnBrowseAudio.Enabled = false;
             btnBrowseAudio.FlatStyle = FlatStyle.Flat;
-            btnBrowseAudio.Location = new Point(585, 53);
+            btnBrowseAudio.Location = new Point(575, 53);
             btnBrowseAudio.Name = "btnBrowseAudio";
-            btnBrowseAudio.Size = new Size(45, 27);
+            btnBrowseAudio.Size = new Size(30, 23);
             btnBrowseAudio.TabIndex = 4;
             btnBrowseAudio.Text = "📁";
             btnBrowseAudio.Click += BtnBrowseAudio_Click;
-
+            // 
+            // radMiniPLS
+            // 
             radMiniPLS.Location = new Point(10, 85);
             radMiniPLS.Name = "radMiniPLS";
-            radMiniPLS.Size = new Size(185, 25);
+            radMiniPLS.Size = new Size(239, 25);
             radMiniPLS.TabIndex = 5;
             radMiniPLS.Text = "📋 Riproduci Mini Playlist";
             radMiniPLS.CheckedChanged += RadAction_CheckedChanged;
-
+            // 
+            // cmbPlaylist
+            // 
             cmbPlaylist.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbPlaylist.Enabled = false;
             cmbPlaylist.Font = new Font("Segoe UI", 9F);
-            cmbPlaylist.Location = new Point(201, 85);
+            cmbPlaylist.Location = new Point(255, 85);
             cmbPlaylist.Name = "cmbPlaylist";
-            cmbPlaylist.Size = new Size(419, 23);
+            cmbPlaylist.Size = new Size(308, 23);
             cmbPlaylist.TabIndex = 6;
-
-            numMiniPLSID.Enabled = false;
-            numMiniPLSID.Font = new Font("Segoe UI", 9F);
-            numMiniPLSID.Location = new Point(201, 85);
-            numMiniPLSID.Minimum = 1;
-            numMiniPLSID.Maximum = 9999;
-            numMiniPLSID.Name = "numMiniPLSID";
-            numMiniPLSID.Size = new Size(44, 23);
-            numMiniPLSID.TabIndex = 6;
-            numMiniPLSID.Visible = false;
-
+            // 
+            // radTimeSignal
+            // 
             radTimeSignal.Location = new Point(10, 115);
             radTimeSignal.Name = "radTimeSignal";
             radTimeSignal.Size = new Size(155, 25);
             radTimeSignal.TabIndex = 7;
             radTimeSignal.Text = "⏰ Segnale Orario";
             radTimeSignal.CheckedChanged += RadAction_CheckedChanged;
-
+            // 
+            // radURLStreaming
+            // 
             radURLStreaming.Location = new Point(10, 145);
             radURLStreaming.Name = "radURLStreaming";
             radURLStreaming.Size = new Size(155, 25);
             radURLStreaming.TabIndex = 8;
             radURLStreaming.Text = "🌐 URL Streaming";
             radURLStreaming.CheckedChanged += RadAction_CheckedChanged;
-
+            // 
+            // lblStreamURL
+            // 
             lblStreamURL.Enabled = false;
             lblStreamURL.Font = new Font("Segoe UI", 9F);
             lblStreamURL.Location = new Point(170, 147);
@@ -225,14 +251,9 @@ namespace AirManager.Forms
             lblStreamURL.TabIndex = 9;
             lblStreamURL.Text = "URL:";
             lblStreamURL.Visible = false;
-
-            txtStreamURL.Enabled = false;
-            txtStreamURL.Font = new Font("Segoe UI", 9F);
-            txtStreamURL.Location = new Point(170, 145);
-            txtStreamURL.Name = "txtStreamURL";
-            txtStreamURL.Size = new Size(393, 23);
-            txtStreamURL.TabIndex = 10;
-
+            // 
+            // lblStreamDuration
+            // 
             lblStreamDuration.Enabled = false;
             lblStreamDuration.Font = new Font("Segoe UI", 9F);
             lblStreamDuration.Location = new Point(569, 126);
@@ -240,7 +261,9 @@ namespace AirManager.Forms
             lblStreamDuration.Size = new Size(75, 16);
             lblStreamDuration.TabIndex = 11;
             lblStreamDuration.Text = "Durata:";
-
+            // 
+            // txtStreamDuration
+            // 
             txtStreamDuration.Enabled = false;
             txtStreamDuration.Font = new Font("Consolas", 9F);
             txtStreamDuration.Location = new Point(569, 145);
@@ -249,29 +272,51 @@ namespace AirManager.Forms
             txtStreamDuration.Size = new Size(75, 22);
             txtStreamDuration.TabIndex = 12;
             txtStreamDuration.Text = "010000";
-
+            // 
+            // numMiniPLSID
+            // 
+            numMiniPLSID.Enabled = false;
+            numMiniPLSID.Font = new Font("Segoe UI", 9F);
+            numMiniPLSID.Location = new Point(201, 85);
+            numMiniPLSID.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
+            numMiniPLSID.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
+            numMiniPLSID.Name = "numMiniPLSID";
+            numMiniPLSID.Size = new Size(44, 23);
+            numMiniPLSID.TabIndex = 6;
+            numMiniPLSID.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            numMiniPLSID.Visible = false;
+            // 
+            // lblVideoBuffer
+            // 
             lblVideoBuffer.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblVideoBuffer.Location = new Point(20, 252);
             lblVideoBuffer.Name = "lblVideoBuffer";
             lblVideoBuffer.Size = new Size(150, 20);
             lblVideoBuffer.TabIndex = 20;
             lblVideoBuffer.Text = "🎬 Video Buffer (opt.):";
-
+            // 
+            // txtVideoBufferPath
+            // 
             txtVideoBufferPath.Font = new Font("Segoe UI", 9F);
-            txtVideoBufferPath.Location = new Point(180, 250);
+            txtVideoBufferPath.Location = new Point(190, 250);
             txtVideoBufferPath.Name = "txtVideoBufferPath";
-            txtVideoBufferPath.Size = new Size(415, 23);
+            txtVideoBufferPath.Size = new Size(395, 23);
             txtVideoBufferPath.TabIndex = 21;
-
+            // 
+            // btnBrowseVideoBuffer
+            // 
             btnBrowseVideoBuffer.Cursor = Cursors.Hand;
             btnBrowseVideoBuffer.FlatStyle = FlatStyle.Flat;
-            btnBrowseVideoBuffer.Location = new Point(605, 249);
+            btnBrowseVideoBuffer.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnBrowseVideoBuffer.Location = new Point(595, 250);
             btnBrowseVideoBuffer.Name = "btnBrowseVideoBuffer";
-            btnBrowseVideoBuffer.Size = new Size(45, 27);
+            btnBrowseVideoBuffer.Size = new Size(30, 23);
             btnBrowseVideoBuffer.TabIndex = 22;
             btnBrowseVideoBuffer.Text = "📁";
             btnBrowseVideoBuffer.Click += BtnBrowseVideoBuffer_Click;
-
+            // 
+            // grpDays
+            // 
             grpDays.Controls.Add(chkMonday);
             grpDays.Controls.Add(chkTuesday);
             grpDays.Controls.Add(chkWednesday);
@@ -287,7 +332,9 @@ namespace AirManager.Forms
             grpDays.TabIndex = 3;
             grpDays.TabStop = false;
             grpDays.Text = "Giorni della Settimana";
-
+            // 
+            // chkMonday
+            // 
             chkMonday.Checked = true;
             chkMonday.CheckState = CheckState.Checked;
             chkMonday.Font = new Font("Segoe UI", 9F);
@@ -296,7 +343,9 @@ namespace AirManager.Forms
             chkMonday.Size = new Size(70, 25);
             chkMonday.TabIndex = 0;
             chkMonday.Text = "Lun";
-
+            // 
+            // chkTuesday
+            // 
             chkTuesday.Checked = true;
             chkTuesday.CheckState = CheckState.Checked;
             chkTuesday.Font = new Font("Segoe UI", 9F);
@@ -305,7 +354,9 @@ namespace AirManager.Forms
             chkTuesday.Size = new Size(70, 25);
             chkTuesday.TabIndex = 1;
             chkTuesday.Text = "Mar";
-
+            // 
+            // chkWednesday
+            // 
             chkWednesday.Checked = true;
             chkWednesday.CheckState = CheckState.Checked;
             chkWednesday.Font = new Font("Segoe UI", 9F);
@@ -314,7 +365,9 @@ namespace AirManager.Forms
             chkWednesday.Size = new Size(70, 25);
             chkWednesday.TabIndex = 2;
             chkWednesday.Text = "Mer";
-
+            // 
+            // chkThursday
+            // 
             chkThursday.Checked = true;
             chkThursday.CheckState = CheckState.Checked;
             chkThursday.Font = new Font("Segoe UI", 9F);
@@ -323,7 +376,9 @@ namespace AirManager.Forms
             chkThursday.Size = new Size(70, 25);
             chkThursday.TabIndex = 3;
             chkThursday.Text = "Gio";
-
+            // 
+            // chkFriday
+            // 
             chkFriday.Checked = true;
             chkFriday.CheckState = CheckState.Checked;
             chkFriday.Font = new Font("Segoe UI", 9F);
@@ -332,7 +387,9 @@ namespace AirManager.Forms
             chkFriday.Size = new Size(70, 25);
             chkFriday.TabIndex = 4;
             chkFriday.Text = "Ven";
-
+            // 
+            // chkSaturday
+            // 
             chkSaturday.Checked = true;
             chkSaturday.CheckState = CheckState.Checked;
             chkSaturday.Font = new Font("Segoe UI", 9F);
@@ -341,7 +398,9 @@ namespace AirManager.Forms
             chkSaturday.Size = new Size(70, 25);
             chkSaturday.TabIndex = 5;
             chkSaturday.Text = "Sab";
-
+            // 
+            // chkSunday
+            // 
             chkSunday.Checked = true;
             chkSunday.CheckState = CheckState.Checked;
             chkSunday.Font = new Font("Segoe UI", 9F);
@@ -350,7 +409,9 @@ namespace AirManager.Forms
             chkSunday.Size = new Size(70, 25);
             chkSunday.TabIndex = 6;
             chkSunday.Text = "Dom";
-
+            // 
+            // btnAllDays
+            // 
             btnAllDays.Cursor = Cursors.Hand;
             btnAllDays.FlatStyle = FlatStyle.Flat;
             btnAllDays.Font = new Font("Segoe UI", 7F);
@@ -360,7 +421,9 @@ namespace AirManager.Forms
             btnAllDays.TabIndex = 7;
             btnAllDays.Text = "✓ Tutti";
             btnAllDays.Click += BtnAllDays_Click;
-
+            // 
+            // grpTimes
+            // 
             grpTimes.Controls.Add(lblAddTime);
             grpTimes.Controls.Add(dtpTime);
             grpTimes.Controls.Add(btnAddTime);
@@ -373,14 +436,18 @@ namespace AirManager.Forms
             grpTimes.TabIndex = 4;
             grpTimes.TabStop = false;
             grpTimes.Text = "Orari di Esecuzione";
-
+            // 
+            // lblAddTime
+            // 
             lblAddTime.Font = new Font("Segoe UI", 9F);
             lblAddTime.Location = new Point(18, 48);
             lblAddTime.Name = "lblAddTime";
             lblAddTime.Size = new Size(100, 20);
             lblAddTime.TabIndex = 0;
             lblAddTime.Text = "Aggiungi Orario: ";
-
+            // 
+            // dtpTime
+            // 
             dtpTime.CustomFormat = "HH:mm:ss";
             dtpTime.Font = new Font("Segoe UI", 9F);
             dtpTime.Format = DateTimePickerFormat.Custom;
@@ -389,69 +456,84 @@ namespace AirManager.Forms
             dtpTime.ShowUpDown = true;
             dtpTime.Size = new Size(120, 23);
             dtpTime.TabIndex = 1;
-
-            btnAddTime.BackColor = System.Drawing.Color.FromArgb(76, 175, 80);
+            // 
+            // btnAddTime
+            // 
+            btnAddTime.BackColor = Color.FromArgb(76, 175, 80);
             btnAddTime.Cursor = Cursors.Hand;
             btnAddTime.FlatAppearance.BorderSize = 0;
             btnAddTime.FlatStyle = FlatStyle.Flat;
-            btnAddTime.ForeColor = System.Drawing.Color.White;
+            btnAddTime.ForeColor = Color.White;
             btnAddTime.Location = new Point(138, 93);
             btnAddTime.Name = "btnAddTime";
             btnAddTime.Size = new Size(90, 27);
             btnAddTime.TabIndex = 2;
             btnAddTime.Text = "➕ Aggiungi";
+            btnAddTime.UseVisualStyleBackColor = false;
             btnAddTime.Click += BtnAddTime_Click;
-
-            btnRemoveTime.BackColor = System.Drawing.Color.FromArgb(244, 67, 54);
+            // 
+            // btnRemoveTime
+            // 
+            btnRemoveTime.BackColor = Color.FromArgb(244, 67, 54);
             btnRemoveTime.Cursor = Cursors.Hand;
             btnRemoveTime.FlatAppearance.BorderSize = 0;
             btnRemoveTime.FlatStyle = FlatStyle.Flat;
-            btnRemoveTime.ForeColor = System.Drawing.Color.White;
+            btnRemoveTime.ForeColor = Color.White;
             btnRemoveTime.Location = new Point(138, 135);
             btnRemoveTime.Name = "btnRemoveTime";
             btnRemoveTime.Size = new Size(90, 27);
             btnRemoveTime.TabIndex = 3;
             btnRemoveTime.Text = "🗑️ Rimuovi";
+            btnRemoveTime.UseVisualStyleBackColor = false;
             btnRemoveTime.Click += BtnRemoveTime_Click;
-
+            // 
+            // lstTimes
+            // 
             lstTimes.Font = new Font("Consolas", 10F);
-            lstTimes.ItemHeight = 15;
             lstTimes.Location = new Point(273, 30);
             lstTimes.Name = "lstTimes";
             lstTimes.Size = new Size(290, 199);
             lstTimes.TabIndex = 4;
-
-            btnSave.BackColor = System.Drawing.Color.FromArgb(76, 175, 80);
+            // 
+            // btnSave
+            // 
+            btnSave.BackColor = Color.FromArgb(76, 175, 80);
             btnSave.Cursor = Cursors.Hand;
             btnSave.FlatAppearance.BorderSize = 0;
             btnSave.FlatStyle = FlatStyle.Flat;
             btnSave.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnSave.ForeColor = System.Drawing.Color.White;
+            btnSave.ForeColor = Color.White;
             btnSave.Location = new Point(480, 625);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(90, 35);
             btnSave.TabIndex = 5;
             btnSave.Text = "💾 Salva";
+            btnSave.UseVisualStyleBackColor = false;
             btnSave.Click += BtnSave_Click;
-
-            btnCancel.BackColor = System.Drawing.Color.FromArgb(244, 67, 54);
+            // 
+            // btnCancel
+            // 
+            btnCancel.BackColor = Color.FromArgb(244, 67, 54);
             btnCancel.Cursor = Cursors.Hand;
-            btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            btnCancel.DialogResult = DialogResult.Cancel;
             btnCancel.FlatAppearance.BorderSize = 0;
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            btnCancel.ForeColor = System.Drawing.Color.White;
+            btnCancel.ForeColor = Color.White;
             btnCancel.Location = new Point(580, 625);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(90, 35);
             btnCancel.TabIndex = 6;
             btnCancel.Text = "✖ Annulla";
-
-            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            btnCancel.UseVisualStyleBackColor = false;
+            // 
+            // ScheduleEditorForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
+            BackColor = Color.FromArgb(245, 245, 245);
             CancelButton = btnCancel;
-            ClientSize = new System.Drawing.Size(700, 685);
+            ClientSize = new Size(700, 685);
             Controls.Add(btnCancel);
             Controls.Add(btnSave);
             Controls.Add(grpTimes);
@@ -470,6 +552,7 @@ namespace AirManager.Forms
             Text = "📅 Schedulazione";
             grpAction.ResumeLayout(false);
             grpAction.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).EndInit();
             grpDays.ResumeLayout(false);
             grpTimes.ResumeLayout(false);
             ResumeLayout(false);
