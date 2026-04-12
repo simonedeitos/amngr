@@ -68,6 +68,7 @@ namespace AirManager
         private ArchiveControl _archiveClipsControl;
         private ReportAdvancedControl _reportControl;
         private ProgrammingControl _programmingControl;
+        private PlaylistEditorControl _playlistEditorControl;
 
         private StationConfig _currentStation;
 
@@ -157,6 +158,12 @@ namespace AirManager
 
             menuStrip.Items.Add(menuProgramming);
 
+            // ✅ MENU PLAYLIST
+            menuPlaylist = new ToolStripMenuItem(LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist"));
+            menuItemOpenPlaylistEditor = new ToolStripMenuItem("🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist"), null, MenuPlaylist_Click);
+            menuPlaylist.DropDownItems.Add(menuItemOpenPlaylistEditor);
+            menuStrip.Items.Add(menuPlaylist);
+
             // ✅ MENU REPORT
             menuReport = new ToolStripMenuItem("📊 Report");
 
@@ -176,12 +183,6 @@ namespace AirManager
             menuReport.DropDownItems.Add(menuItemExportReport);
 
             menuStrip.Items.Add(menuReport);
-
-            // ✅ MENU PLAYLIST
-            menuPlaylist = new ToolStripMenuItem(LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist"));
-            menuItemOpenPlaylistEditor = new ToolStripMenuItem("🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist"), null, MenuPlaylist_Click);
-            menuPlaylist.DropDownItems.Add(menuItemOpenPlaylistEditor);
-            menuStrip.Items.Add(menuPlaylist);
 
             // ✅ MENU AIUTO
             menuHelp = new ToolStripMenuItem("❓ Aiuto");
@@ -771,10 +772,27 @@ namespace AirManager
 
         private void MenuPlaylist_Click(object sender, EventArgs e)
         {
-            using (var form = new PlaylistEditorForm())
+            if (_currentStation == null)
             {
-                form.ShowDialog(this);
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
             }
+
+            contentPanel.Controls.Clear();
+
+            if (_playlistEditorControl == null)
+            {
+                _playlistEditorControl = new PlaylistEditorControl();
+            }
+
+            _playlistEditorControl.Dock = DockStyle.Fill;
+            contentPanel.Controls.Add(_playlistEditorControl);
+
+            lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.PlaylistEditor", "Playlist Editor")} - {_currentStation.Name}";
         }
 
         private void MenuLicense_Click(object sender, EventArgs e)
@@ -824,6 +842,7 @@ namespace AirManager
                     _reportControl?.Dispose();
                     _stationManager?.Dispose();
                     _programmingControl?.Dispose();
+                    _playlistEditorControl?.Dispose();
                 }
                 catch (Exception ex)
                 {
