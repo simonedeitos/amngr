@@ -59,6 +59,10 @@ namespace AirManager
         private ToolStripMenuItem menuItemManual;
         private ToolStripMenuItem menuItemLicense;
 
+        // ✅ RIFERIMENTI AL MENU PLAYLIST
+        private ToolStripMenuItem menuPlaylist;
+        private ToolStripMenuItem menuItemOpenPlaylistEditor;
+
         private StationManagerControl _stationManager;
         private ArchiveControl _archiveMusicControl;
         private ArchiveControl _archiveClipsControl;
@@ -172,6 +176,12 @@ namespace AirManager
             menuReport.DropDownItems.Add(menuItemExportReport);
 
             menuStrip.Items.Add(menuReport);
+
+            // ✅ MENU PLAYLIST
+            menuPlaylist = new ToolStripMenuItem(LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist"));
+            menuItemOpenPlaylistEditor = new ToolStripMenuItem("🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist"), null, MenuPlaylist_Click);
+            menuPlaylist.DropDownItems.Add(menuItemOpenPlaylistEditor);
+            menuStrip.Items.Add(menuPlaylist);
 
             // ✅ MENU AIUTO
             menuHelp = new ToolStripMenuItem("❓ Aiuto");
@@ -291,6 +301,10 @@ namespace AirManager
             menuItemAbout.Text = "ℹ️ " + LanguageManager.GetString("MainForm.Menu.Help.About");
             menuItemManual.Text = "📖 " + LanguageManager.GetString("MainForm.Menu.Help.Manual");
             menuItemLicense.Text = "🔑 " + LanguageManager.GetString("MainForm.Menu.Help.License");
+
+            // ✅ MENU PLAYLIST
+            menuPlaylist.Text = "🎶 " + LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist");
+            menuItemOpenPlaylistEditor.Text = "🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist");
 
             // ✅ STATUS BAR
             if (lblStatus.Text == "Pronto" || lblStatus.Text.Contains("Ready"))
@@ -750,6 +764,14 @@ namespace AirManager
             }
 
             using (var form = new MusicStatisticsForm())
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        private void MenuPlaylist_Click(object sender, EventArgs e)
+        {
+            using (var form = new PlaylistEditorForm())
             {
                 form.ShowDialog(this);
             }

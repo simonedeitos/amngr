@@ -268,6 +268,7 @@ namespace AirManager.Controls
             string icon = schedule.Type == "PlayClock" ? "🕐" :
                          schedule.Type == "PlayAudio" ? "🎵" :
                          schedule.Type == "PlayMiniPLS" ? "📋" :
+                         schedule.Type == "PlayPlaylist" ? "📋" :
                          schedule.Type == "TimeSignal" ? "⏰" :
                          schedule.Type == "URLStreaming" ? "🌐" : "📄";
 
@@ -275,6 +276,8 @@ namespace AirManager.Controls
             if (schedule.Type == "PlayClock")
                 target = schedule.ClockName;
             else if (schedule.Type == "PlayAudio")
+                target = Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
+            else if (schedule.Type == "PlayPlaylist")
                 target = Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
             else if (schedule.Type == "PlayMiniPLS")
                 target = $"MiniPLS #{schedule.MiniPLSID}";

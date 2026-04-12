@@ -18,6 +18,7 @@ namespace AirManager.Forms
         private TextBox txtAudioFile;
         private Button btnBrowseAudio;
         private NumericUpDown numMiniPLSID;
+        private ComboBox cmbPlaylist;
         private TextBox txtStreamURL;
         private MaskedTextBox txtStreamDuration;
 
@@ -70,6 +71,7 @@ namespace AirManager.Forms
             txtAudioFile = new TextBox();
             btnBrowseAudio = new Button();
             radMiniPLS = new RadioButton();
+            cmbPlaylist = new ComboBox();
             numMiniPLSID = new NumericUpDown();
             radTimeSignal = new RadioButton();
             radURLStreaming = new RadioButton();
@@ -98,7 +100,6 @@ namespace AirManager.Forms
             btnSave = new Button();
             btnCancel = new Button();
             grpAction.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).BeginInit();
             grpDays.SuspendLayout();
             grpTimes.SuspendLayout();
             SuspendLayout();
@@ -123,7 +124,7 @@ namespace AirManager.Forms
             grpAction.Controls.Add(txtAudioFile);
             grpAction.Controls.Add(btnBrowseAudio);
             grpAction.Controls.Add(radMiniPLS);
-            grpAction.Controls.Add(numMiniPLSID);
+            grpAction.Controls.Add(cmbPlaylist);
             grpAction.Controls.Add(radTimeSignal);
             grpAction.Controls.Add(radURLStreaming);
             grpAction.Controls.Add(lblStreamURL);
@@ -184,6 +185,14 @@ namespace AirManager.Forms
             radMiniPLS.Text = "📋 Riproduci Mini Playlist";
             radMiniPLS.CheckedChanged += RadAction_CheckedChanged;
 
+            cmbPlaylist.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbPlaylist.Enabled = false;
+            cmbPlaylist.Font = new Font("Segoe UI", 9F);
+            cmbPlaylist.Location = new Point(201, 85);
+            cmbPlaylist.Name = "cmbPlaylist";
+            cmbPlaylist.Size = new Size(419, 23);
+            cmbPlaylist.TabIndex = 6;
+
             numMiniPLSID.Enabled = false;
             numMiniPLSID.Font = new Font("Segoe UI", 9F);
             numMiniPLSID.Location = new Point(201, 85);
@@ -192,6 +201,7 @@ namespace AirManager.Forms
             numMiniPLSID.Name = "numMiniPLSID";
             numMiniPLSID.Size = new Size(44, 23);
             numMiniPLSID.TabIndex = 6;
+            numMiniPLSID.Visible = false;
 
             radTimeSignal.Location = new Point(10, 115);
             radTimeSignal.Name = "radTimeSignal";
@@ -460,7 +470,6 @@ namespace AirManager.Forms
             Text = "📅 Schedulazione";
             grpAction.ResumeLayout(false);
             grpAction.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).EndInit();
             grpDays.ResumeLayout(false);
             grpTimes.ResumeLayout(false);
             ResumeLayout(false);
