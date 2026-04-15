@@ -130,6 +130,13 @@ namespace AirManager.Services.Database
                 Console.WriteLine("[DbcManager] ✅ Music.dbc creato");
             }
 
+            string artistsPath = Path.Combine(DatabasePath, "Artists.dbc");
+            if (!File.Exists(artistsPath))
+            {
+                SaveToCsvInternal(artistsPath, new List<ArtistAliasEntry>());
+                Console.WriteLine("[DbcManager] ✅ Artists.dbc creato");
+            }
+
             // ✅ CLIPS.DBC
             string clipsPath = Path.Combine(DatabasePath, "Clips.dbc");
             if (!File.Exists(clipsPath))
@@ -640,6 +647,13 @@ namespace AirManager.Services.Database
         public int IgnoreHourlySeparation { get; set; }
     }
 
+    public class ArtistAliasEntry : IDbcEntry
+    {
+        public int ID { get; set; }
+        public string ArtistName { get; set; } = "";
+        public string Aliases { get; set; } = "";
+    }
+
     public enum VideoSourceType
     {
         None = 0,
@@ -655,6 +669,7 @@ namespace AirManager.Services.Database
         public int ID { get; set; }
         public string FilePath { get; set; } = "";
         public string Artist { get; set; } = "";
+        public string FeaturedArtists { get; set; } = "";
         public string Title { get; set; } = "";
         public string Album { get; set; } = "";
         public string Genre { get; set; } = "";

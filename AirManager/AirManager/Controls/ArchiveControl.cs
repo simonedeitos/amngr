@@ -2042,6 +2042,10 @@ namespace AirManager.Controls
                 new[] { ".mp4", ".avi", ".mkv", ".mov", ".wmv", ".ts", ".mts", ".m2ts", ".webm" },
                 StringComparer.OrdinalIgnoreCase);
 
+            List<ArtistAliasEntry> _importAliases;
+            try { _importAliases = DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc"); }
+            catch { _importAliases = new List<ArtistAliasEntry>(); }
+
             try
             {
                 foreach (string filePath in filePaths)
@@ -2117,8 +2121,8 @@ namespace AirManager.Controls
                         if (_archiveType == "Music")
                         {
                             var musicEntry = isVideo
-                                ? CreateMusicEntryFromVideo(currentPath)
-                                : CreateMusicEntryFromFile(currentPath);
+                                ? CreateMusicEntryFromVideo(currentPath, _importAliases)
+                                : CreateMusicEntryFromFile(currentPath, _importAliases);
 
                             // Override artist/title with conversion form settings
                             if (!string.IsNullOrWhiteSpace(importArtist)) musicEntry.Artist = importArtist;
@@ -2142,7 +2146,11 @@ namespace AirManager.Controls
                                 $"IN={musicEntry.MarkerIN}ms INTRO={musicEntry.MarkerINTRO}ms " +
                                 $"MIX={musicEntry.MarkerMIX}ms OUT={musicEntry.MarkerOUT}ms");
 
-                            if (DbcManager.Insert("Music.dbc", musicEntry)) imported++;
+                            if (DbcManager.Insert("Music.dbc", musicEntry))
+                            {
+                                imported++;
+                                PersistImportedFeaturedArtists(musicEntry, _importAliases);
+                            }
                             else errors++;
                         }
                         else
@@ -2201,7 +2209,7 @@ namespace AirManager.Controls
             }
         }
 
-        private MusicEntry CreateMusicEntryFromFile(string filePath)
+        private MusicEntry CreateMusicEntryFromFile(string filePath, List<ArtistAliasEntry> importAliases = null)
         {
             string artist = "Unknown Artist";
             string title = Path.GetFileNameWithoutExtension(filePath);
@@ -2262,11 +2270,14 @@ namespace AirManager.Controls
             }
 
             int mixDuration = 5000;
+            var aliases = importAliases ?? DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc");
+            var (_primaryArtist, _featuredArtists) = ArtistParsingService.ParseArtists(artist, title, aliases);
 
             return new MusicEntry
             {
                 FilePath = filePath,
-                Artist = artist,
+                Artist = _primaryArtist,
+                FeaturedArtists = _featuredArtists.Count > 0 ? string.Join(";", _featuredArtists) : "",
                 Title = title,
                 Album = "",
                 Genre = genre,
@@ -2296,8 +2307,42 @@ namespace AirManager.Controls
             };
         }
 
+        private void PersistImportedFeaturedArtists(MusicEntry musicEntry, List<ArtistAliasEntry> importAliases)
+        {
+            if (musicEntry == null || importAliases == null || string.IsNullOrWhiteSpace(musicEntry.FeaturedArtists))
+                return;
+
+            var featuredNames = musicEntry.FeaturedArtists
+                .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(n => n.Trim())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            var existingArtistNames = importAliases
+                .Select(a => a.ArtistName?.Trim())
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var artistName in featuredNames)
+            {
+                if (existingArtistNames.Contains(artistName)) continue;
+
+                var newEntry = new ArtistAliasEntry
+                {
+                    ArtistName = artistName,
+                    Aliases = ""
+                };
+
+                if (DbcManager.Insert("Artists.dbc", newEntry))
+                {
+                    importAliases.Add(newEntry);
+                    existingArtistNames.Add(artistName);
+                }
+            }
+        }
+
         // ✅ NUOVO:  Crea MusicEntry da file video MP4
-        private MusicEntry CreateMusicEntryFromVideo(string filePath)
+        private MusicEntry CreateMusicEntryFromVideo(string filePath, List<ArtistAliasEntry> importAliases = null)
         {
             string artist = "Unknown Artist";
             string title = Path.GetFileNameWithoutExtension(filePath);
@@ -2347,11 +2392,14 @@ namespace AirManager.Controls
             }
 
             int mixDuration = 5000;
+            var aliases = importAliases ?? DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc");
+            var (_primaryArtist, _featuredArtists) = ArtistParsingService.ParseArtists(artist, title, aliases);
 
             return new MusicEntry
             {
                 FilePath = filePath,
-                Artist = artist,
+                Artist = _primaryArtist,
+                FeaturedArtists = _featuredArtists.Count > 0 ? string.Join(";", _featuredArtists) : "",
                 Title = title,
                 Album = "",
                 Genre = genre,

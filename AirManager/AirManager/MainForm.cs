@@ -44,6 +44,7 @@ namespace AirManager
         private ToolStripMenuItem menuItemNewStation;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU ARCHIVES
+        private ToolStripMenuItem menuItemArtistAliases;
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
 
@@ -143,6 +144,10 @@ namespace AirManager
 
             // ✅ MENU ARCHIVI
             menuArchives = new ToolStripMenuItem("🗂️ Archivi");
+
+            menuItemArtistAliases = new ToolStripMenuItem("🎤 Gestione Alias Artisti", null, MenuArtistAliases_Click);
+            menuArchives.DropDownItems.Insert(0, menuItemArtistAliases);
+            menuArchives.DropDownItems.Insert(1, new ToolStripSeparator());
 
             menuItemArchiveMusic = new ToolStripMenuItem("🎵 Archivio Musica", null, MenuArchiveMusic_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveMusic);
@@ -286,6 +291,7 @@ namespace AirManager
             menuItemNewStation.Text = "➕ " + LanguageManager.GetString("MainForm.Menu.Stations.New");
 
             // ✅ MENU ARCHIVES
+            menuItemArtistAliases.Text = "🎤 " + LanguageManager.GetString("MainForm.Menu.Archives.ArtistAliases", "Gestione Alias Artisti");
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
 
@@ -624,6 +630,24 @@ namespace AirManager
             _archiveMusicControl.RefreshArchive();
 
             lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.ArchiveMusic")} - {_currentStation.Name}";
+        }
+
+        private void MenuArtistAliases_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new ArtistAliasManagerForm())
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void MenuArchiveClips_Click(object sender, EventArgs e)
