@@ -61,6 +61,9 @@ namespace AirManager.Forms
         private System.Windows.Forms.Label lblCategories;
         private System.Windows.Forms.TextBox txtCategoriesDisplay;
         private System.Windows.Forms.Button btnCategoriesDropdown;
+        private System.Windows.Forms.Label lblFeaturedArtists;
+        private System.Windows.Forms.TextBox txtFeaturedArtistsDisplay;
+        private System.Windows.Forms.Button btnFeaturedArtistsDropdown;
         private System.Windows.Forms.Label lblFilePath;
         private System.Windows.Forms.TextBox txtFilePath;
 
@@ -151,6 +154,9 @@ namespace AirManager.Forms
             lblCategories = new Label();
             txtCategoriesDisplay = new TextBox();
             btnCategoriesDropdown = new Button();
+            lblFeaturedArtists = new Label();
+            txtFeaturedArtistsDisplay = new TextBox();
+            btnFeaturedArtistsDropdown = new Button();
             lblFilePath = new Label();
             txtFilePath = new TextBox();
             grpPeriod = new GroupBox();
@@ -747,6 +753,9 @@ namespace AirManager.Forms
             bottomPanel.Controls.Add(lblCategories);
             bottomPanel.Controls.Add(txtCategoriesDisplay);
             bottomPanel.Controls.Add(btnCategoriesDropdown);
+            bottomPanel.Controls.Add(lblFeaturedArtists);
+            bottomPanel.Controls.Add(txtFeaturedArtistsDisplay);
+            bottomPanel.Controls.Add(btnFeaturedArtistsDropdown);
             bottomPanel.Controls.Add(lblFilePath);
             bottomPanel.Controls.Add(txtFilePath);
             bottomPanel.Controls.Add(grpPeriod);
@@ -758,7 +767,7 @@ namespace AirManager.Forms
             bottomPanel.Dock = DockStyle.Bottom;
             bottomPanel.Location = new Point(0, 410);
             bottomPanel.Name = "bottomPanel";
-            bottomPanel.Size = new Size(1263, 317);
+            bottomPanel.Size = new Size(1263, 352);
             bottomPanel.TabIndex = 3;
             // 
             // lblTitle
@@ -888,11 +897,44 @@ namespace AirManager.Forms
             btnCategoriesDropdown.UseVisualStyleBackColor = true;
             btnCategoriesDropdown.Click += btnCategoriesDropdown_Click;
             // 
+            // lblFeaturedArtists
+            // 
+            lblFeaturedArtists.AutoSize = true;
+            lblFeaturedArtists.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+            lblFeaturedArtists.Location = new Point(15, 88);
+            lblFeaturedArtists.Name = "lblFeaturedArtists";
+            lblFeaturedArtists.Size = new Size(80, 15);
+            lblFeaturedArtists.TabIndex = 15;
+            lblFeaturedArtists.Text = "Artisti Feat.:";
+            // 
+            // txtFeaturedArtistsDisplay
+            // 
+            txtFeaturedArtistsDisplay.Cursor = Cursors.Hand;
+            txtFeaturedArtistsDisplay.Font = new Font("Segoe UI", 10F);
+            txtFeaturedArtistsDisplay.Location = new Point(100, 85);
+            txtFeaturedArtistsDisplay.Name = "txtFeaturedArtistsDisplay";
+            txtFeaturedArtistsDisplay.ReadOnly = true;
+            txtFeaturedArtistsDisplay.Size = new Size(420, 25);
+            txtFeaturedArtistsDisplay.TabIndex = 16;
+            txtFeaturedArtistsDisplay.Click += txtFeaturedArtistsDisplay_Click;
+            // 
+            // btnFeaturedArtistsDropdown
+            // 
+            btnFeaturedArtistsDropdown.FlatStyle = FlatStyle.Flat;
+            btnFeaturedArtistsDropdown.Font = new Font("Segoe UI", 9F);
+            btnFeaturedArtistsDropdown.Location = new Point(520, 85);
+            btnFeaturedArtistsDropdown.Name = "btnFeaturedArtistsDropdown";
+            btnFeaturedArtistsDropdown.Size = new Size(30, 25);
+            btnFeaturedArtistsDropdown.TabIndex = 17;
+            btnFeaturedArtistsDropdown.Text = "▼";
+            btnFeaturedArtistsDropdown.UseVisualStyleBackColor = true;
+            btnFeaturedArtistsDropdown.Click += btnFeaturedArtistsDropdown_Click;
+            // 
             // lblFilePath
             // 
             lblFilePath.AutoSize = true;
             lblFilePath.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            lblFilePath.Location = new Point(25, 261);
+            lblFilePath.Location = new Point(25, 296);
             lblFilePath.Name = "lblFilePath";
             lblFilePath.Size = new Size(64, 15);
             lblFilePath.TabIndex = 13;
@@ -901,7 +943,7 @@ namespace AirManager.Forms
             // txtFilePath
             // 
             txtFilePath.Font = new Font("Consolas", 9F);
-            txtFilePath.Location = new Point(110, 258);
+            txtFilePath.Location = new Point(110, 293);
             txtFilePath.Name = "txtFilePath";
             txtFilePath.ReadOnly = true;
             txtFilePath.Size = new Size(800, 22);
@@ -914,7 +956,7 @@ namespace AirManager.Forms
             grpPeriod.Controls.Add(chkEnableValidTo);
             grpPeriod.Controls.Add(dtpValidTo);
             grpPeriod.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            grpPeriod.Location = new Point(15, 95);
+            grpPeriod.Location = new Point(15, 130);
             grpPeriod.Name = "grpPeriod";
             grpPeriod.Size = new Size(365, 74);
             grpPeriod.TabIndex = 14;
@@ -966,7 +1008,7 @@ namespace AirManager.Forms
             // grpMonths
             // 
             grpMonths.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            grpMonths.Location = new Point(15, 175);
+            grpMonths.Location = new Point(15, 210);
             grpMonths.Name = "grpMonths";
             grpMonths.Size = new Size(680, 55);
             grpMonths.TabIndex = 15;
@@ -976,7 +1018,7 @@ namespace AirManager.Forms
             // grpDays
             // 
             grpDays.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            grpDays.Location = new Point(736, 175);
+            grpDays.Location = new Point(736, 210);
             grpDays.Name = "grpDays";
             grpDays.Size = new Size(500, 55);
             grpDays.TabIndex = 16;
@@ -986,7 +1028,7 @@ namespace AirManager.Forms
             // grpHours
             // 
             grpHours.Font = new Font("Segoe UI", 8F, FontStyle.Bold);
-            grpHours.Location = new Point(386, 108);
+            grpHours.Location = new Point(386, 143);
             grpHours.Name = "grpHours";
             grpHours.Size = new Size(850, 55);
             grpHours.TabIndex = 17;
@@ -997,7 +1039,7 @@ namespace AirManager.Forms
             // 
             btnSave.FlatStyle = FlatStyle.Flat;
             btnSave.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnSave.Location = new Point(1006, 245);
+            btnSave.Location = new Point(1006, 280);
             btnSave.Name = "btnSave";
             btnSave.Size = new Size(110, 45);
             btnSave.TabIndex = 18;
@@ -1010,7 +1052,7 @@ namespace AirManager.Forms
             btnCancel.DialogResult = DialogResult.Cancel;
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.Font = new Font("Segoe UI", 11F, FontStyle.Bold);
-            btnCancel.Location = new Point(1126, 245);
+            btnCancel.Location = new Point(1126, 280);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(110, 45);
             btnCancel.TabIndex = 19;
@@ -1022,7 +1064,7 @@ namespace AirManager.Forms
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             CancelButton = btnCancel;
-            ClientSize = new Size(1263, 727);
+            ClientSize = new Size(1263, 762);
             Controls.Add(picWaveform);
             Controls.Add(hScrollWaveform);
             Controls.Add(vuMeterPanel);

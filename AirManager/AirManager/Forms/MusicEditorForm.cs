@@ -86,6 +86,8 @@ namespace AirManager.Forms
         // ✅ CATEGORIE – dati interni per popup
         private List<string> _allCategories = new List<string>();
         private HashSet<string> _checkedCategories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private List<string> _allFeaturedArtists = new List<string>();
+        private HashSet<string> _checkedFeaturedArtists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // ✅ VIDEO PREVIEW (RadioTV mode) – separate preview window
         private string _videoPath;
@@ -144,6 +146,7 @@ namespace AirManager.Forms
             SetupVideoPreview();
             LoadGenreSuggestions();
             LoadCategorySuggestions();
+            LoadFeaturedArtistSuggestions();
 
             // ✅ APPLICA LINGUA
             ApplyLanguage();
@@ -398,6 +401,249 @@ namespace AirManager.Forms
             catch (Exception ex)
             {
                 Console.WriteLine($"[MusicEditor] ⚠️ Errore salvataggio nuova categoria: {ex.Message}");
+            }
+        }
+
+        private void LoadFeaturedArtistSuggestions()
+        {
+            try
+            {
+                var allArtists = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                try
+                {
+                    var artistEntries = DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc");
+                    foreach (var ae in artistEntries)
+                    {
+                        if (!string.IsNullOrWhiteSpace(ae.ArtistName))
+                            allArtists.Add(ae.ArtistName.Trim());
+                    }
+                }
+                catch { }
+
+                if (!_isClip)
+                {
+                    try
+                    {
+                        var allMusic = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
+                        foreach (var m in allMusic)
+                        {
+                            if (!string.IsNullOrWhiteSpace(m.Artist))
+                                allArtists.Add(m.Artist.Trim());
+                            if (!string.IsNullOrWhiteSpace(m.FeaturedArtists))
+                            {
+                                foreach (var fa in m.FeaturedArtists.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    string trimmed = fa.Trim();
+                                    if (!string.IsNullOrWhiteSpace(trimmed))
+                                        allArtists.Add(trimmed);
+                                }
+                            }
+                        }
+                    }
+                    catch { }
+                }
+
+                _allFeaturedArtists = allArtists.OrderBy(a => a).ToList();
+                Console.WriteLine($"[MusicEditor] ✅ Caricati {_allFeaturedArtists.Count} artisti per suggerimenti feat.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore LoadFeaturedArtistSuggestions: {ex.Message}");
+            }
+        }
+
+        private void UpdateFeaturedArtistsDisplay()
+        {
+            txtFeaturedArtistsDisplay.Text = _checkedFeaturedArtists.Count > 0
+                ? string.Join("; ", _checkedFeaturedArtists.OrderBy(a => a))
+                : "";
+        }
+
+        private void ShowFeaturedArtistsPopup()
+        {
+            var popup = new Form
+            {
+                FormBorderStyle = FormBorderStyle.FixedToolWindow,
+                StartPosition = FormStartPosition.Manual,
+                ShowInTaskbar = false,
+                Text = LanguageManager.GetString("MusicEditor.FeaturedArtists", "Artisti Feat."),
+                Size = new Size(280, 300),
+                BackColor = this.BackColor
+            };
+
+            var clb = new CheckedListBox
+            {
+                Dock = DockStyle.Fill,
+                CheckOnClick = true,
+                Font = new Font("Segoe UI", 9F),
+                BorderStyle = BorderStyle.None
+            };
+
+            var allItems = new HashSet<string>(_allFeaturedArtists, StringComparer.OrdinalIgnoreCase);
+            foreach (var a in _checkedFeaturedArtists)
+                allItems.Add(a);
+
+            string currentArtist = txtArtist.Text?.Trim() ?? "";
+            if (!string.IsNullOrWhiteSpace(currentArtist))
+                allItems.Remove(currentArtist);
+
+            foreach (var artist in allItems.OrderBy(a => a))
+            {
+                int idx = clb.Items.Add(artist);
+                if (_checkedFeaturedArtists.Contains(artist))
+                    clb.SetItemChecked(idx, true);
+            }
+
+            var addPanel = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                Height = 66,
+                BackColor = AppTheme.BgLight,
+                Padding = new Padding(4, 4, 4, 4)
+            };
+            var txtNew = new TextBox
+            {
+                Location = new Point(4, 6),
+                Size = new Size(168, 24),
+                Font = new Font("Segoe UI", 9F),
+                BackColor = AppTheme.Surface,
+                ForeColor = AppTheme.TextPrimary
+            };
+            var btnAdd = new Button
+            {
+                Text = "+ " + LanguageManager.GetString("Download.Add", "Aggiungi"),
+                Location = new Point(176, 4),
+                Size = new Size(90, 26),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                BackColor = AppTheme.Primary,
+                ForeColor = Color.White,
+                Cursor = Cursors.Hand
+            };
+            btnAdd.FlatAppearance.BorderSize = 0;
+
+            var btnAutoDetect = new Button
+            {
+                Text = "🔍 " + LanguageManager.GetString("MusicEditor.AutoDetect", "Auto-detect"),
+                Location = new Point(4, 34),
+                Size = new Size(262, 26),
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                BackColor = AppTheme.BgLight,
+                ForeColor = AppTheme.TextPrimary,
+                Cursor = Cursors.Hand
+            };
+            btnAutoDetect.FlatAppearance.BorderSize = 1;
+
+            txtNew.KeyDown += (sk, ek) => { if (ek.KeyCode == Keys.Enter) { ek.SuppressKeyPress = true; btnAdd.PerformClick(); } };
+            btnAdd.Click += (s2, e2) =>
+            {
+                string newArtist = txtNew.Text.Trim();
+                if (string.IsNullOrWhiteSpace(newArtist)) return;
+
+                bool exists = false;
+                for (int i = 0; i < clb.Items.Count; i++)
+                {
+                    if (string.Equals(clb.Items[i].ToString(), newArtist, StringComparison.OrdinalIgnoreCase))
+                    {
+                        clb.SetItemChecked(i, true);
+                        exists = true;
+                        break;
+                    }
+                }
+                if (!exists)
+                {
+                    int idx = clb.Items.Add(newArtist);
+                    clb.SetItemChecked(idx, true);
+                    if (!_allFeaturedArtists.Contains(newArtist))
+                    {
+                        _allFeaturedArtists.Add(newArtist);
+                        PersistNewArtistAlias(newArtist);
+                    }
+                }
+                txtNew.Text = "";
+            };
+
+            btnAutoDetect.Click += (s2, e2) =>
+            {
+                try
+                {
+                    var aliases = DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc");
+                    var (_, detected) = ArtistParsingService.ParseArtists(
+                        txtArtist.Text?.Trim() ?? "",
+                        txtTitle.Text?.Trim() ?? "",
+                        aliases);
+
+                    foreach (var detectedArtist in detected)
+                    {
+                        bool found = false;
+                        for (int i = 0; i < clb.Items.Count; i++)
+                        {
+                            if (string.Equals(clb.Items[i].ToString(), detectedArtist, StringComparison.OrdinalIgnoreCase))
+                            {
+                                clb.SetItemChecked(i, true);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found)
+                        {
+                            int idx = clb.Items.Add(detectedArtist);
+                            clb.SetItemChecked(idx, true);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MusicEditor] ⚠️ Errore Auto-detect: {ex.Message}");
+                }
+            };
+
+            addPanel.Controls.Add(txtNew);
+            addPanel.Controls.Add(btnAdd);
+            addPanel.Controls.Add(btnAutoDetect);
+
+            popup.Controls.Add(clb);
+            popup.Controls.Add(addPanel);
+
+            var screenPos = txtFeaturedArtistsDisplay.PointToScreen(new Point(0, txtFeaturedArtistsDisplay.Height));
+            popup.Location = screenPos;
+
+            popup.FormClosed += (s2, e2) =>
+            {
+                _checkedFeaturedArtists.Clear();
+                for (int i = 0; i < clb.Items.Count; i++)
+                {
+                    if (clb.GetItemChecked(i))
+                        _checkedFeaturedArtists.Add(clb.Items[i].ToString());
+                }
+                UpdateFeaturedArtistsDisplay();
+            };
+
+            popup.Show(this);
+        }
+
+        private void PersistNewArtistAlias(string artistName)
+        {
+            try
+            {
+                var existing = DbcManager.LoadFromCsv<ArtistAliasEntry>("Artists.dbc");
+                bool alreadyExists = existing.Any(a =>
+                    string.Equals(a.ArtistName?.Trim(), artistName, StringComparison.OrdinalIgnoreCase));
+
+                if (!alreadyExists)
+                {
+                    DbcManager.Insert("Artists.dbc", new ArtistAliasEntry
+                    {
+                        ArtistName = artistName,
+                        Aliases = ""
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MusicEditor] ⚠️ Errore salvataggio nuovo artista: {ex.Message}");
             }
         }
 
@@ -974,6 +1220,7 @@ namespace AirManager.Forms
                 lblYear.Text = LanguageManager.GetString("MusicEditor.Year", "Anno:");
                 lblGenre.Text = LanguageManager.GetString("MusicEditor.Genre", "Genere:");
                 lblCategories.Text = LanguageManager.GetString("MusicEditor.Categories", "Categorie:");
+                if (!_isClip) lblFeaturedArtists.Text = LanguageManager.GetString("MusicEditor.FeaturedArtists", "Artisti Feat.");
                 lblFilePath.Text = LanguageManager.GetString("MusicEditor.FilePath", "File Audio:");
 
                 // ✅ GROUPBOX
@@ -1326,6 +1573,19 @@ namespace AirManager.Forms
                     _checkedCategories.Add(trimmed);
             }
             UpdateCategoryDisplay();
+
+            _checkedFeaturedArtists.Clear();
+            if (!_isClip)
+            {
+                string currentFeat = _musicEntry.FeaturedArtists ?? "";
+                foreach (var part in currentFeat.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    string trimmed = part.Trim();
+                    if (!string.IsNullOrWhiteSpace(trimmed))
+                        _checkedFeaturedArtists.Add(trimmed);
+                }
+                UpdateFeaturedArtistsDisplay();
+            }
 
             LoadValidityData();
         }
@@ -2248,6 +2508,13 @@ namespace AirManager.Forms
                     ? string.Join(";", _checkedCategories.OrderBy(c => c))
                     : "";
 
+                if (!_isClip)
+                {
+                    _musicEntry.FeaturedArtists = _checkedFeaturedArtists.Count > 0
+                        ? string.Join(";", _checkedFeaturedArtists.OrderBy(a => a))
+                        : "";
+                }
+
                 _musicEntry.MarkerIN = ParseTime(txtMarkerIn.Text);
                 _musicEntry.MarkerINTRO = ParseTime(txtMarkerIntro.Text);
                 _musicEntry.MarkerMIX = ParseTime(txtMarkerMix.Text);
@@ -2496,6 +2763,16 @@ namespace AirManager.Forms
         private void txtCategoriesDisplay_Click(object sender, EventArgs e) => ShowCategoryPopup();
 
         private void btnCategoriesDropdown_Click(object sender, EventArgs e) => ShowCategoryPopup();
+
+        private void txtFeaturedArtistsDisplay_Click(object sender, EventArgs e)
+        {
+            if (!_isClip) ShowFeaturedArtistsPopup();
+        }
+
+        private void btnFeaturedArtistsDropdown_Click(object sender, EventArgs e)
+        {
+            if (!_isClip) ShowFeaturedArtistsPopup();
+        }
 
         #endregion
     }
