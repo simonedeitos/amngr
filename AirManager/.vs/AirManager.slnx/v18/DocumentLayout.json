@@ -3,12 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
-      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\licenseform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\licenseform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
+      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\airmanager\\forms\\musicstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}|Form",
@@ -21,10 +29,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musicstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musicstatisticsform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musicstatisticsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musicstatisticsform.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\broadcasthistoryform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -71,10 +75,6 @@
       "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\mainform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\musiceditorform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\controls\\stationmanagercontrol.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\controls\\stationmanagercontrol.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -93,10 +93,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\reportexportdialog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\forms\\reportexportdialog.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|solutionrelative:airmanager\\controls\\archivecontrol.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{B4CA4E48-F5D3-FFC5-0159-364F3A344CFA}|AirManager\\AirManager.csproj|c:\\users\\simone\\source\\repos\\amngr\\airmanager\\airmanager\\forms\\batcheditform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -186,46 +182,23 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "MusicStatisticsForm.cs [Progettazione]",
-              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.cs",
-              "RelativeDocumentMoniker": "AirManager\\Forms\\MusicStatisticsForm.cs",
-              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.cs [Progettazione]",
-              "RelativeToolTip": "AirManager\\Forms\\MusicStatisticsForm.cs [Progettazione]",
+              "Title": "ArchiveControl.cs [Progettazione]",
+              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs",
+              "RelativeDocumentMoniker": "AirManager\\Controls\\ArchiveControl.cs",
+              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs [Progettazione]",
+              "RelativeToolTip": "AirManager\\Controls\\ArchiveControl.cs [Progettazione]",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-10T19:10:14.116Z"
+              "WhenOpened": "2026-04-15T18:15:35.919Z",
+              "EditorCaption": " [Progettazione]"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "LicenseForm.cs",
-              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\LicenseForm.cs",
-              "RelativeDocumentMoniker": "AirManager\\Forms\\LicenseForm.cs",
-              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\LicenseForm.cs",
-              "RelativeToolTip": "AirManager\\Forms\\LicenseForm.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAowEMAAAAnAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-10T18:06:11.821Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "MusicStatisticsForm.Designer.cs",
-              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.Designer.cs",
-              "RelativeDocumentMoniker": "AirManager\\Forms\\MusicStatisticsForm.Designer.cs",
-              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.Designer.cs",
-              "RelativeToolTip": "AirManager\\Forms\\MusicStatisticsForm.Designer.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAgAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-09T11:15:43.784Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "MusicStatisticsForm.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\MusicStatisticsForm.cs",
@@ -237,7 +210,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 7,
               "Title": "BroadcastHistoryForm.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\BroadcastHistoryForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\BroadcastHistoryForm.cs",
@@ -250,7 +223,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "MusicEditorForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\MusicEditorForm.cs",
@@ -262,7 +235,44 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
+              "Title": "MusicEditorForm.cs",
+              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.cs",
+              "RelativeDocumentMoniker": "AirManager\\Forms\\MusicEditorForm.cs",
+              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.cs",
+              "RelativeToolTip": "AirManager\\Forms\\MusicEditorForm.cs",
+              "ViewState": "AgIAAHMHAAAAAAAAAAAcwHoHAAAlAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T19:39:45.29Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ArchiveControl.cs",
+              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs",
+              "RelativeDocumentMoniker": "AirManager\\Controls\\ArchiveControl.cs",
+              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs",
+              "RelativeToolTip": "AirManager\\Controls\\ArchiveControl.cs",
+              "ViewState": "AgIAACQHAAAAAAAAAAAcwCsHAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-09T19:32:27.75Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "MusicStatisticsForm.cs [Progettazione]",
+              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.cs",
+              "RelativeDocumentMoniker": "AirManager\\Forms\\MusicStatisticsForm.cs",
+              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicStatisticsForm.cs [Progettazione]",
+              "RelativeToolTip": "AirManager\\Forms\\MusicStatisticsForm.cs [Progettazione]",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-10T19:10:14.116Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "BatchEditForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\BatchEditForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\BatchEditForm.cs",
@@ -273,7 +283,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 8,
               "Title": "BroadcastHistoryForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\BroadcastHistoryForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\BroadcastHistoryForm.cs",
@@ -284,7 +294,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 9,
               "Title": "TrackHistoryForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\TrackHistoryForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\TrackHistoryForm.cs",
@@ -295,7 +305,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 12,
               "Title": "ReportAdvancedControl.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ReportAdvancedControl.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\ReportAdvancedControl.Designer.cs",
@@ -307,7 +317,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "ReportAdvancedControl.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ReportAdvancedControl.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\ReportAdvancedControl.cs",
@@ -318,7 +328,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 13,
               "Title": "MainForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\MainForm.cs",
               "RelativeDocumentMoniker": "AirManager\\MainForm.cs",
@@ -329,7 +339,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "MusicEditorForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\MusicEditorForm.Designer.cs",
@@ -342,7 +352,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 16,
               "Title": "LanguageManager.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Services\\LanguageManager.cs",
               "RelativeDocumentMoniker": "AirManager\\Services\\LanguageManager.cs",
@@ -354,7 +364,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 10,
               "Title": "ReportAdvancedControl.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ReportAdvancedControl.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\ReportAdvancedControl.cs",
@@ -363,18 +373,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-09T19:12:18.715Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "MusicEditorForm.cs",
-              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.cs",
-              "RelativeDocumentMoniker": "AirManager\\Forms\\MusicEditorForm.cs",
-              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\MusicEditorForm.cs",
-              "RelativeToolTip": "AirManager\\Forms\\MusicEditorForm.cs",
-              "ViewState": "AgIAABwBAADAZWZmZmYhwCkBAAAxAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T19:39:45.29Z"
             },
             {
               "$type": "Document",
@@ -390,7 +388,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 14,
               "Title": "MainForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\MainForm.cs",
               "RelativeDocumentMoniker": "AirManager\\MainForm.cs",
@@ -426,7 +424,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 17,
               "Title": "MainForm.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\MainForm.cs",
               "RelativeDocumentMoniker": "AirManager\\MainForm.cs",
@@ -463,18 +461,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 23,
-              "Title": "ArchiveControl.cs",
-              "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs",
-              "RelativeDocumentMoniker": "AirManager\\Controls\\ArchiveControl.cs",
-              "ToolTip": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\ArchiveControl.cs",
-              "RelativeToolTip": "AirManager\\Controls\\ArchiveControl.cs",
-              "ViewState": "AgIAAGkGAADAmZmZmRkpwJMGAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-09T19:32:27.75Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 24,
               "Title": "BatchEditForm.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\BatchEditForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\BatchEditForm.cs",
@@ -486,7 +472,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 24,
               "Title": "StationManagerControl.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\StationManagerControl.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\StationManagerControl.cs",
@@ -498,7 +484,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 25,
               "Title": "StationManagementDialog.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationManagementDialog.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationManagementDialog.cs",
@@ -511,7 +497,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 26,
               "Title": "SettingsForm.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\SettingsForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\SettingsForm.cs",
@@ -524,7 +510,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 27,
               "Title": "SettingsForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\SettingsForm.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\SettingsForm.Designer.cs",
@@ -536,7 +522,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 28,
               "Title": "SettingsForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\SettingsForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\SettingsForm.cs",
@@ -547,7 +533,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 32,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Program.cs",
               "RelativeDocumentMoniker": "AirManager\\Program.cs",
@@ -559,7 +545,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 33,
               "Title": "StationExportImportForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationExportImportForm.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationExportImportForm.Designer.cs",
@@ -571,7 +557,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 34,
               "Title": "ReportManager.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Services\\Database\\ReportManager.cs",
               "RelativeDocumentMoniker": "AirManager\\Services\\Database\\ReportManager.cs",
@@ -583,7 +569,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 35,
               "Title": "AppTheme.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Themes\\AppTheme.cs",
               "RelativeDocumentMoniker": "AirManager\\Themes\\AppTheme.cs",
@@ -595,7 +581,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 36,
               "Title": "StationManagementDialog.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationManagementDialog.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationManagementDialog.Designer.cs",
@@ -607,7 +593,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 37,
               "Title": "StationSelectorControl.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\StationSelectorControl.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\StationSelectorControl.Designer.cs",
@@ -619,7 +605,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 38,
               "Title": "StationSelectorControl.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\StationSelectorControl.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\StationSelectorControl.cs",
@@ -632,7 +618,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 39,
               "Title": "StationConfigForm.Designer.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationConfigForm.Designer.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationConfigForm.Designer.cs",
@@ -644,7 +630,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 40,
               "Title": "DbcManager.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Services\\Database\\DbcManager.cs",
               "RelativeDocumentMoniker": "AirManager\\Services\\Database\\DbcManager.cs",
@@ -656,7 +642,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 41,
               "Title": "StationRegistry.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Services\\StationRegistry.cs",
               "RelativeDocumentMoniker": "AirManager\\Services\\StationRegistry.cs",
@@ -668,7 +654,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 42,
               "Title": "StationConfig.cs",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Services\\StationConfig.cs",
               "RelativeDocumentMoniker": "AirManager\\Services\\StationConfig.cs",
@@ -680,7 +666,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 29,
               "Title": "StationExportImportForm.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationExportImportForm.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationExportImportForm.cs",
@@ -691,7 +677,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 30,
               "Title": "StationManagementDialog.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Forms\\StationManagementDialog.cs",
               "RelativeDocumentMoniker": "AirManager\\Forms\\StationManagementDialog.cs",
@@ -702,7 +688,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 31,
               "Title": "StationSelectorControl.cs [Progettazione]",
               "DocumentMoniker": "C:\\Users\\Simone\\source\\repos\\amngr\\AirManager\\AirManager\\Controls\\StationSelectorControl.cs",
               "RelativeDocumentMoniker": "AirManager\\Controls\\StationSelectorControl.cs",
