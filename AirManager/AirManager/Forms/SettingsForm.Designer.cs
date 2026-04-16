@@ -6,16 +6,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SettingsForm));
+            SuspendLayout();
             // 
             // SettingsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 450);
-            this.Name = "SettingsForm";
-            this.Text = "Impostazioni";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(600, 450);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "SettingsForm";
+            Text = "Impostazioni";
+            ResumeLayout(false);
         }
     }
 }

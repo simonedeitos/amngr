@@ -6,16 +6,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CopyToStationsForm));
+            SuspendLayout();
             // 
             // CopyToStationsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(580, 520);
-            this.Name = "CopyToStationsForm";
-            this.Text = "Copy to other stations";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(580, 520);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "CopyToStationsForm";
+            Text = "Copy to other stations";
+            ResumeLayout(false);
         }
     }
 }

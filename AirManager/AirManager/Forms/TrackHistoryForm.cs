@@ -296,6 +296,11 @@ namespace AirManager.Forms
             return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
         }
 
+        private void InitializeComponent()
+        {
+
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

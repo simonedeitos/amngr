@@ -586,6 +586,11 @@ namespace AirManager.Forms
             }
         }
 
+        private void InitializeComponent()
+        {
+
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         private void PersistArtistEntry(string artistName)

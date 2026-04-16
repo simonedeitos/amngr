@@ -15,16 +15,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StationManagementDialog));
+            SuspendLayout();
             // 
             // StationManagementDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1200, 800);
-            this.Name = "StationManagementDialog";
-            this.Text = "Gestione Emittenti";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1200, 800);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "StationManagementDialog";
+            Text = "Gestione Emittenti";
+            ResumeLayout(false);
         }
     }
 }

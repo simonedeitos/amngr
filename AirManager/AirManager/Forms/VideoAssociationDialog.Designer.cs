@@ -6,16 +6,18 @@ namespace AirManager.Forms
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VideoAssociationDialog));
+            SuspendLayout();
             // 
             // VideoAssociationDialog
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 420);
-            this.Name = "VideoAssociationDialog";
-            this.Text = "Video Association";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(600, 420);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "VideoAssociationDialog";
+            Text = "Video Association";
+            ResumeLayout(false);
         }
     }
 }

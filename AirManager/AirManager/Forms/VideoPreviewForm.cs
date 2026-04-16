@@ -96,6 +96,11 @@ namespace AirManager.Forms
             catch { }
         }
 
+        private void InitializeComponent()
+        {
+
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)

@@ -96,6 +96,7 @@ namespace AirManager.Forms
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MusicEditorForm));
             toolbarPanel = new Panel();
             btnPlay = new Button();
             btnStop = new Button();
@@ -903,7 +904,7 @@ namespace AirManager.Forms
             lblFeaturedArtists.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
             lblFeaturedArtists.Location = new Point(15, 88);
             lblFeaturedArtists.Name = "lblFeaturedArtists";
-            lblFeaturedArtists.Size = new Size(80, 15);
+            lblFeaturedArtists.Size = new Size(74, 15);
             lblFeaturedArtists.TabIndex = 15;
             lblFeaturedArtists.Text = "Artisti Feat.:";
             // 
@@ -1072,6 +1073,7 @@ namespace AirManager.Forms
             Controls.Add(bottomPanel);
             Controls.Add(toolbarPanel);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             Name = "MusicEditorForm";
             StartPosition = FormStartPosition.CenterScreen;

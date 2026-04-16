@@ -15,16 +15,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StationConfigForm));
+            SuspendLayout();
             // 
             // StationConfigForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(700, 600);
-            this.Name = "StationConfigForm";
-            this.Text = "Configurazione Emittente";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(700, 600);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "StationConfigForm";
+            Text = "Configurazione Emittente";
+            ResumeLayout(false);
         }
     }
 }

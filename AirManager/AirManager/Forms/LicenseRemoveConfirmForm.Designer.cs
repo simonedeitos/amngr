@@ -15,8 +15,17 @@ namespace AirManager.Forms
 
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(LicenseRemoveConfirmForm));
+            SuspendLayout();
+            // 
+            // LicenseRemoveConfirmForm
+            // 
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(284, 261);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "LicenseRemoveConfirmForm";
+            ResumeLayout(false);
         }
     }
 }

@@ -62,6 +62,7 @@ namespace AirManager.Forms
 
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScheduleEditorForm));
             lblName = new Label();
             txtName = new TextBox();
             grpAction = new GroupBox();
@@ -545,6 +546,7 @@ namespace AirManager.Forms
             Controls.Add(txtName);
             Controls.Add(lblName);
             FormBorderStyle = FormBorderStyle.FixedDialog;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ScheduleEditorForm";

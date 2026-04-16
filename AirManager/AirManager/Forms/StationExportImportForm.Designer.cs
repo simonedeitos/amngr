@@ -15,16 +15,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StationExportImportForm));
+            SuspendLayout();
             // 
             // StationExportImportForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(700, 650);
-            this.Name = "StationExportImportForm";
-            this.Text = "Export/Import Emittenti";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(700, 650);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "StationExportImportForm";
+            Text = "Export/Import Emittenti";
+            ResumeLayout(false);
         }
     }
 }

@@ -7,16 +7,18 @@
 
         private void InitializeComponent()
         {
-            this.SuspendLayout();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BroadcastHistoryForm));
+            SuspendLayout();
             // 
             // BroadcastHistoryForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1100, 700);
-            this.Name = "BroadcastHistoryForm";
-            this.Text = "Broadcast History";
-            this.ResumeLayout(false);
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1100, 700);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Name = "BroadcastHistoryForm";
+            Text = "Broadcast History";
+            ResumeLayout(false);
         }
     }
 }
