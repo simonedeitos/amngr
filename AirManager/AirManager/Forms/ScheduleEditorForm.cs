@@ -1,6 +1,7 @@
+using AirManager.Models;
+using AirManager.Controls;
 using AirManager.Services.Database;
 using AirManager.Services;
-using AirManager.Models;
 using AirManager.Themes;
 using System;
 using System.Collections.Generic;
@@ -16,7 +17,14 @@ namespace AirManager.Forms
         private ScheduleEntry _schedule;
         private List<ClockEntry> _clocks;
         private bool _isNewSchedule;
-        private List<string> _playlistPaths = new List<string>();
+        private List<string> _playlistFiles = new List<string>();
+        private bool _isRadioTVMode;
+        private List<StreamingEntry> _streamingEntries = new List<StreamingEntry>();
+        private List<CommandEntry> _commandEntries = new List<CommandEntry>();
+        private ComboBox _cmbStreamingArchive;
+        private RadioButton _radCommand;
+        private ComboBox _cmbCommandSelect;
+        private Label _lblCommandSelect;
 
         public ScheduleEditorForm(ScheduleEntry schedule, List<ClockEntry> clocks)
         {
@@ -47,9 +55,13 @@ namespace AirManager.Forms
                 _schedule = schedule;
             }
 
+            _isRadioTVMode = StationRegistry.GetActiveStation()?.StationType == StationType.RadioTV;
+
             InitializeComponent();
+            SetupDynamicActionControls();
             ApplyLanguage();
             LoadData();
+            ApplyModeVisibility();
 
             LanguageManager.LanguageChanged += OnLanguageChanged;
         }
@@ -61,9 +73,9 @@ namespace AirManager.Forms
 
         private void ApplyLanguage()
         {
-            this.Text = _isNewSchedule
-                ? "📅 " + LanguageManager.GetString("ScheduleEditor.New", "Nuova Schedulazione")
-                : "✏️ " + LanguageManager.GetString("ScheduleEditor.Edit", "Modifica Schedulazione");
+            this.Text = _isNewSchedule ?
+                "📅 " + LanguageManager.GetString("ScheduleEditor.New", "Nuova Schedulazione") :
+                "✏️ " + LanguageManager.GetString("ScheduleEditor.Edit", "Modifica Schedulazione");
 
             if (lblName != null)
                 lblName.Text = LanguageManager.GetString("ScheduleEditor.ScheduleName", "Nome Schedulazione:");
@@ -88,6 +100,19 @@ namespace AirManager.Forms
 
             if (lblStreamURL != null)
                 lblStreamURL.Text = LanguageManager.GetString("ScheduleEditor.StreamURL", "URL:");
+
+            if (_radCommand != null)
+                _radCommand.Text = "📡 " + LanguageManager.GetString("ScheduleEditor.Command", "Comando");
+
+            if (_lblCommandSelect != null)
+                _lblCommandSelect.Text = LanguageManager.GetString("ScheduleEditor.SelectCommand", "Comando:");
+            if (_lblCommandSelect != null && _cmbCommandSelect != null)
+            {
+                _lblCommandSelect.AutoSize = true;
+                int commandComboLeft = Math.Max(445, _lblCommandSelect.Right + 12);
+                _cmbCommandSelect.Left = commandComboLeft;
+                _cmbCommandSelect.Width = Math.Max(120, grpAction.ClientSize.Width - commandComboLeft - 20);
+            }
 
             if (lblStreamDuration != null)
                 lblStreamDuration.Text = LanguageManager.GetString("ScheduleEditor.StreamDuration", "Durata:");
@@ -152,6 +177,8 @@ namespace AirManager.Forms
         private void LoadData()
         {
             txtName.Text = _schedule.Name;
+            LoadStreamingArchive();
+            LoadCommandsArchive();
 
             cmbClock.Items.Clear();
             foreach (var clock in _clocks)
@@ -177,42 +204,46 @@ namespace AirManager.Forms
                 radTimeSignal.Checked = true;
             else if (_schedule.Type == "URLStreaming")
                 radURLStreaming.Checked = true;
+            else if (_schedule.Type == "LogoShow" || _schedule.Type == "LogoHide" || _schedule.Type == "HTTP" || _schedule.Type == "UDP")
+                _radCommand.Checked = true;
 
             txtAudioFile.Text = _schedule.AudioFilePath;
 
             // Populate playlist dropdown
-            _playlistPaths.Clear();
+            _playlistFiles.Clear();
             cmbPlaylist.Items.Clear();
             try
             {
-                string playlistDir = Path.Combine(DbcManager.GetDatabasePath(), "Playlist");
-                if (Directory.Exists(playlistDir))
+                string folder = Path.Combine(DbcManager.GetDatabasePath(), "Playlist");
+                if (Directory.Exists(folder))
                 {
-                    foreach (string filePath in Directory.GetFiles(playlistDir, "*.airpls").OrderBy(f => f))
+                    var files = Directory.GetFiles(folder, "*.airpls").OrderBy(f => f);
+                    foreach (string filePath in files)
                     {
                         try
                         {
-                            string name = AirPlaylist.Load(filePath).Name;
-                            if (string.IsNullOrEmpty(name))
-                                name = Path.GetFileNameWithoutExtension(filePath);
+                            var pl = AirPlaylist.Load(filePath);
+                            string name = pl?.Name ?? Path.GetFileNameWithoutExtension(filePath);
+                            _playlistFiles.Add(filePath);
                             cmbPlaylist.Items.Add(name);
-                            _playlistPaths.Add(filePath);
                         }
                         catch
                         {
-                            cmbPlaylist.Items.Add(Path.GetFileNameWithoutExtension(filePath));
-                            _playlistPaths.Add(filePath);
+                            // Skip broken files
                         }
                     }
                 }
             }
-            catch { }
+            catch
+            {
+                // Ignore if folder not accessible
+            }
 
-            // Select existing playlist when editing
+            // Select current playlist if editing
             if ((_schedule.Type == "PlayPlaylist" || _schedule.Type == "PlayMiniPLS") &&
                 !string.IsNullOrEmpty(_schedule.AudioFilePath))
             {
-                int idx = _playlistPaths.IndexOf(_schedule.AudioFilePath);
+                int idx = _playlistFiles.IndexOf(_schedule.AudioFilePath);
                 if (idx >= 0)
                     cmbPlaylist.SelectedIndex = idx;
             }
@@ -221,11 +252,48 @@ namespace AirManager.Forms
             {
                 var parts = _schedule.ClockName.Split('|');
                 if (parts.Length >= 1)
-                    txtStreamURL.Text = parts[0];
+                {
+                    string streamValue = parts[0];
+                    int streamIndex = _streamingEntries.FindIndex(s =>
+                        string.Equals(s.URL, streamValue, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(s.Name, streamValue, StringComparison.OrdinalIgnoreCase));
+                    if (streamIndex < 0 && _streamingEntries.Count > 0)
+                        streamIndex = 0;
+                    if (streamIndex >= 0 && _cmbStreamingArchive.Items.Count > streamIndex)
+                        _cmbStreamingArchive.SelectedIndex = streamIndex;
+                }
                 if (parts.Length >= 2)
                     txtStreamDuration.Text = parts[1];
                 else
                     txtStreamDuration.Text = "01:00:00";
+            }
+            else if (radURLStreaming.Checked && _cmbStreamingArchive.Items.Count > 0)
+            {
+                _cmbStreamingArchive.SelectedIndex = 0;
+                txtStreamDuration.Text = "01:00:00";
+            }
+
+            if ((_schedule.Type == "LogoShow" || _schedule.Type == "LogoHide" || _schedule.Type == "HTTP" || _schedule.Type == "UDP") &&
+                !string.IsNullOrWhiteSpace(_schedule.ClockName))
+            {
+                int commandIndex = _commandEntries.FindIndex(c =>
+                    string.Equals(c.Type, _schedule.Type, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(c.CommandString, _schedule.ClockName, StringComparison.OrdinalIgnoreCase));
+                if (commandIndex < 0)
+                {
+                    var legacy = new CommandEntry
+                    {
+                        ID = 0,
+                        Name = $"[Legacy] {_schedule.Type} - {_schedule.ClockName}",
+                        Type = _schedule.Type,
+                        CommandString = _schedule.ClockName
+                    };
+                    _commandEntries.Insert(0, legacy);
+                    _cmbCommandSelect?.Items.Insert(0, legacy);
+                    commandIndex = 0;
+                }
+                if (commandIndex >= 0 && _cmbCommandSelect != null && _cmbCommandSelect.Items.Count > commandIndex)
+                    _cmbCommandSelect.SelectedIndex = commandIndex;
             }
 
             txtVideoBufferPath.Text = _schedule.VideoBufferPath ?? "";
@@ -256,22 +324,28 @@ namespace AirManager.Forms
             txtAudioFile.Enabled = radAudio.Checked;
             btnBrowseAudio.Enabled = radAudio.Checked;
             cmbPlaylist.Enabled = radMiniPLS.Checked;
-            txtStreamURL.Enabled = radURLStreaming.Checked;
+            if (_cmbStreamingArchive != null)
+                _cmbStreamingArchive.Enabled = radURLStreaming.Checked;
             txtStreamDuration.Enabled = radURLStreaming.Checked;
             lblStreamURL.Enabled = radURLStreaming.Checked;
             lblStreamDuration.Enabled = radURLStreaming.Checked;
+            if (_cmbCommandSelect != null)
+                _cmbCommandSelect.Enabled = (_radCommand?.Checked == true);
+            if (_lblCommandSelect != null)
+                _lblCommandSelect.Enabled = (_radCommand?.Checked == true);
         }
 
         private void BtnBrowseAudio_Click(object sender, EventArgs e)
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Filter = LanguageManager.GetString("ScheduleEditor.AudioFilter",
-                    "File Audio (*.mp3;*.wav;*.wma;*.aac)|*.mp3;*.wav;*.wma;*.aac|Tutti i file (*.*)|*.*");
+                ofd.Filter = LanguageManager.GetString("ScheduleEditor.AudioFilter", "File Audio (*.mp3;*.wav;*.wma;*.aac)|*.mp3;*.wav;*.wma;*.aac|Tutti i file (*.*)|*.*");
                 ofd.Title = LanguageManager.GetString("ScheduleEditor.SelectAudioFile", "Seleziona File Audio");
 
                 if (ofd.ShowDialog() == DialogResult.OK)
+                {
                     txtAudioFile.Text = ofd.FileName;
+                }
             }
         }
 
@@ -279,12 +353,13 @@ namespace AirManager.Forms
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Filter = LanguageManager.GetString("ScheduleEditor.VideoFilter",
-                    "File Video (*.mp4;*.mov;*.avi;*.mkv;*.wmv)|*.mp4;*.mov;*.avi;*.mkv;*.wmv|Tutti i file (*.*)|*.*");
+                ofd.Filter = LanguageManager.GetString("ScheduleEditor.VideoFilter", "File Video (*.mp4;*.mov;*.avi;*.mkv;*.wmv)|*.mp4;*.mov;*.avi;*.mkv;*.wmv|Tutti i file (*.*)|*.*");
                 ofd.Title = LanguageManager.GetString("ScheduleEditor.SelectVideoBufferFile", "Seleziona File Video Buffer");
 
                 if (ofd.ShowDialog() == DialogResult.OK)
+                {
                     txtVideoBufferPath.Text = ofd.FileName;
+                }
             }
         }
 
@@ -302,13 +377,14 @@ namespace AirManager.Forms
 
                 lstTimes.Items.Clear();
                 foreach (var t in sortedTimes)
+                {
                     lstTimes.Items.Add(t);
+                }
             }
             else
             {
                 MessageBox.Show(
-                    string.Format(LanguageManager.GetString("ScheduleEditor.TimeDuplicate",
-                        "⚠️ L'orario {0} è già presente nella lista"), time),
+                    string.Format(LanguageManager.GetString("ScheduleEditor.TimeDuplicate", "⚠️ L'orario {0} è già presente nella lista"), time),
                     LanguageManager.GetString("ScheduleEditor.DuplicateTime", "Orario Duplicato"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -341,8 +417,7 @@ namespace AirManager.Forms
             if (string.IsNullOrWhiteSpace(txtName.Text))
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("ScheduleEditor.ErrorEmptyName",
-                        "❌ Il nome della schedulazione non può essere vuoto"),
+                    LanguageManager.GetString("ScheduleEditor.ErrorEmptyName", "❌ Il nome della schedulazione non può essere vuoto"),
                     LanguageManager.GetString("Common.Error", "Errore"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -354,8 +429,7 @@ namespace AirManager.Forms
                 !chkThursday.Checked && !chkFriday.Checked && !chkSaturday.Checked && !chkSunday.Checked)
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("ScheduleEditor.ErrorNoDay",
-                        "❌ Devi selezionare almeno un giorno della settimana"),
+                    LanguageManager.GetString("ScheduleEditor.ErrorNoDay", "❌ Devi selezionare almeno un giorno della settimana"),
                     LanguageManager.GetString("Common.Error", "Errore"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -395,8 +469,7 @@ namespace AirManager.Forms
             if (radAudio.Checked && !File.Exists(txtAudioFile.Text))
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("ScheduleEditor.ErrorAudioFileNotExists",
-                        "❌ Il file audio selezionato non esiste"),
+                    LanguageManager.GetString("ScheduleEditor.ErrorAudioFileNotExists", "❌ Il file audio selezionato non esiste"),
                     LanguageManager.GetString("Common.Error", "Errore"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -413,10 +486,20 @@ namespace AirManager.Forms
                 return;
             }
 
-            if (radURLStreaming.Checked && string.IsNullOrWhiteSpace(txtStreamURL.Text))
+            if (radURLStreaming.Checked && (_cmbStreamingArchive == null || _cmbStreamingArchive.SelectedItem == null))
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("ScheduleEditor.ErrorNoStreamURL", "❌ Devi inserire un URL valido"),
+                    LanguageManager.GetString("ScheduleEditor.ErrorNoStreaming", "❌ Devi selezionare uno Streaming dall'archivio"),
+                    LanguageManager.GetString("Common.Error", "Errore"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
+            if ((_radCommand?.Checked == true) && (_cmbCommandSelect?.SelectedItem == null))
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("ScheduleEditor.ErrorNoCommand", "❌ Devi selezionare un comando"),
                     LanguageManager.GetString("Common.Error", "Errore"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -434,7 +517,9 @@ namespace AirManager.Forms
 
             List<string> times = new List<string>();
             foreach (var item in lstTimes.Items)
+            {
                 times.Add(item.ToString());
+            }
             _schedule.Times = string.Join(";", times);
 
             if (radClock.Checked)
@@ -455,7 +540,7 @@ namespace AirManager.Forms
             {
                 _schedule.Type = "PlayPlaylist";
                 _schedule.ClockName = "";
-                _schedule.AudioFilePath = cmbPlaylist.SelectedIndex >= 0 ? _playlistPaths[cmbPlaylist.SelectedIndex] : "";
+                _schedule.AudioFilePath = cmbPlaylist.SelectedIndex >= 0 ? _playlistFiles[cmbPlaylist.SelectedIndex] : "";
                 _schedule.MiniPLSID = 0;
             }
             else if (radTimeSignal.Checked)
@@ -468,7 +553,16 @@ namespace AirManager.Forms
             else if (radURLStreaming.Checked)
             {
                 _schedule.Type = "URLStreaming";
-                _schedule.ClockName = $"{txtStreamURL.Text.Trim()}|{txtStreamDuration.Text}";
+                var selectedStreaming = _cmbStreamingArchive?.SelectedItem as StreamingEntry;
+                _schedule.ClockName = $"{selectedStreaming?.URL ?? ""}|{txtStreamDuration.Text}";
+                _schedule.AudioFilePath = "";
+                _schedule.MiniPLSID = 0;
+            }
+            else if (_radCommand?.Checked == true)
+            {
+                var selectedCommand = _cmbCommandSelect?.SelectedItem as CommandEntry;
+                _schedule.Type = selectedCommand?.Type ?? "";
+                _schedule.ClockName = selectedCommand?.CommandString ?? "";
                 _schedule.AudioFilePath = "";
                 _schedule.MiniPLSID = 0;
             }
@@ -477,9 +571,13 @@ namespace AirManager.Forms
 
             bool success;
             if (_isNewSchedule)
+            {
                 success = DbcManager.Insert("Schedules.dbc", _schedule);
+            }
             else
+            {
                 success = DbcManager.Update("Schedules.dbc", _schedule);
+            }
 
             if (success)
             {
@@ -489,13 +587,91 @@ namespace AirManager.Forms
             else
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("ScheduleEditor.SaveError",
-                        "❌ Errore durante il salvataggio della schedulazione"),
+                    LanguageManager.GetString("ScheduleEditor.SaveError", "❌ Errore durante il salvataggio della schedulazione"),
                     LanguageManager.GetString("ScheduleEditor.DatabaseError", "Errore Database"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                LanguageManager.SaveMissingKeysToFile();
+                LanguageManager.LanguageChanged -= OnLanguageChanged;
+            }
+            base.Dispose(disposing);
+        }
+
+        private void SetupDynamicActionControls()
+        {
+            txtStreamURL.Visible = false;
+
+            _cmbStreamingArchive = new ComboBox
+            {
+                Name = "cmbStreamingArchive",
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Enabled = false,
+                Font = txtStreamURL.Font,
+                Location = txtStreamURL.Location,
+                Size = txtStreamURL.Size
+            };
+            grpAction.Controls.Add(_cmbStreamingArchive);
+
+            _radCommand = new RadioButton
+            {
+                Name = "radCommand",
+                Location = new Point(170, 115),
+                Size = new Size(180, 25)
+            };
+            _radCommand.CheckedChanged += RadAction_CheckedChanged;
+            grpAction.Controls.Add(_radCommand);
+
+            _lblCommandSelect = new Label
+            {
+                Name = "lblCommandSelect",
+                Location = new Point(360, 117),
+                AutoSize = true,
+                ForeColor = Color.Black
+            };
+            grpAction.Controls.Add(_lblCommandSelect);
+
+            _cmbCommandSelect = new ComboBox
+            {
+                Name = "cmbCommandSelect",
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Enabled = false,
+                Font = cmbClock.Font,
+                Location = new Point(445, 115),
+                Size = new Size(195, 23)
+            };
+            grpAction.Controls.Add(_cmbCommandSelect);
+        }
+
+        private void ApplyModeVisibility()
+        {
+            if (_radCommand != null) _radCommand.Visible = true;
+            if (_cmbCommandSelect != null) _cmbCommandSelect.Visible = true;
+            if (_lblCommandSelect != null) _lblCommandSelect.Visible = true;
+        }
+
+        private void LoadStreamingArchive()
+        {
+            _streamingEntries = DbcManager.LoadFromCsv<StreamingEntry>("Streaming.dbc");
+            _cmbStreamingArchive?.Items.Clear();
+            if (_cmbStreamingArchive == null) return;
+            foreach (var stream in _streamingEntries)
+                _cmbStreamingArchive.Items.Add(stream);
+        }
+
+        private void LoadCommandsArchive()
+        {
+            _commandEntries = DbcManager.LoadFromCsv<CommandEntry>("Commands.dbc");
+            _cmbCommandSelect?.Items.Clear();
+            if (_cmbCommandSelect == null) return;
+            foreach (var command in _commandEntries)
+                _cmbCommandSelect.Items.Add(command);
+        }
     }
 }

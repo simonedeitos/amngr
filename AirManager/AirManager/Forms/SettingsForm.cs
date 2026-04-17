@@ -23,6 +23,11 @@ namespace AirManager.Forms
         private GroupBox grpLanguage;
         private Label lblLanguage;
         private ComboBox cmbLanguage;
+        private GroupBox grpPaths;
+        private DataGridView dgvPaths;
+        private Button btnAddPath;
+        private Button btnEditPath;
+        private Button btnRemovePath;
 
         private Button btnSave;
         private Button btnCancel;
@@ -31,6 +36,7 @@ namespace AirManager.Forms
 
         private List<WaveOutCapabilities> _audioDevices;
         private List<string> _languageFiles;
+        private List<PathMappingEntry> _pathMappings;
 
         public SettingsForm()
         {
@@ -46,7 +52,7 @@ namespace AirManager.Forms
         private void InitializeCustomUI()
         {
             this.Text = "⚙️ Impostazioni";
-            this.Size = new Size(600, 450);
+            this.Size = new Size(600, 650);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -139,11 +145,81 @@ namespace AirManager.Forms
 
             this.Controls.Add(grpLanguage);
 
+            // ✅ PERCORSI (MAPPATURE)
+            grpPaths = new GroupBox
+            {
+                Text = "📂 Percorsi",
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                ForeColor = Color.White,
+                Location = new Point(20, 320),
+                Size = new Size(540, 220)
+            };
+
+            dgvPaths = new DataGridView
+            {
+                Location = new Point(15, 30),
+                Size = new Size(400, 175),
+                ReadOnly = true,
+                AllowUserToAddRows = false,
+                AllowUserToDeleteRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
+                MultiSelect = false,
+                RowHeadersVisible = false,
+                AutoGenerateColumns = false,
+                BackgroundColor = Color.FromArgb(50, 50, 50),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            dgvPaths.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                HeaderText = LanguageManager.GetString("SettingsForm.Paths.Source", "Origine"),
+                DataPropertyName = "SourcePath",
+                Width = 190
+            });
+            dgvPaths.Columns.Add(new DataGridViewTextBoxColumn
+            {
+                HeaderText = LanguageManager.GetString("SettingsForm.Paths.Target", "Destinazione"),
+                DataPropertyName = "TargetPath",
+                Width = 190
+            });
+            grpPaths.Controls.Add(dgvPaths);
+
+            btnAddPath = new Button
+            {
+                Text = "➕",
+                Location = new Point(430, 40),
+                Size = new Size(90, 32),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnAddPath.Click += BtnAddPath_Click;
+            grpPaths.Controls.Add(btnAddPath);
+
+            btnEditPath = new Button
+            {
+                Text = "✏️",
+                Location = new Point(430, 80),
+                Size = new Size(90, 32),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnEditPath.Click += BtnEditPath_Click;
+            grpPaths.Controls.Add(btnEditPath);
+
+            btnRemovePath = new Button
+            {
+                Text = "🗑️",
+                Location = new Point(430, 120),
+                Size = new Size(90, 32),
+                FlatStyle = FlatStyle.Flat
+            };
+            btnRemovePath.Click += BtnRemovePath_Click;
+            grpPaths.Controls.Add(btnRemovePath);
+
+            this.Controls.Add(grpPaths);
+
             // ✅ BOTTONI
             btnCancel = new Button
             {
                 Text = "✖ Annulla",
-                Location = new Point(360, 350),
+                Location = new Point(360, 560),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(220, 53, 69),
                 ForeColor = Color.White,
@@ -158,7 +234,7 @@ namespace AirManager.Forms
             btnSave = new Button
             {
                 Text = "💾 Salva",
-                Location = new Point(480, 350),
+                Location = new Point(480, 560),
                 Size = new Size(110, 40),
                 BackColor = Color.FromArgb(40, 167, 69),
                 ForeColor = Color.White,
@@ -186,6 +262,15 @@ namespace AirManager.Forms
 
             grpLanguage.Text = "🌐 " + LanguageManager.GetString("SettingsForm.Language.GroupTitle");
             lblLanguage.Text = LanguageManager.GetString("SettingsForm.Language.Label");
+            grpPaths.Text = "📂 " + LanguageManager.GetString("SettingsForm.Paths.GroupTitle", "Percorsi");
+            btnAddPath.Text = "➕ " + LanguageManager.GetString("SettingsForm.Paths.Add", "Aggiungi");
+            btnEditPath.Text = "✏️ " + LanguageManager.GetString("SettingsForm.Paths.Edit", "Modifica");
+            btnRemovePath.Text = "🗑️ " + LanguageManager.GetString("SettingsForm.Paths.Remove", "Rimuovi");
+            if (dgvPaths.Columns.Count >= 2)
+            {
+                dgvPaths.Columns[0].HeaderText = LanguageManager.GetString("SettingsForm.Paths.Source", "Origine");
+                dgvPaths.Columns[1].HeaderText = LanguageManager.GetString("SettingsForm.Paths.Target", "Destinazione");
+            }
 
             btnSave.Text = "💾 " + LanguageManager.GetString("Common.Save");
             btnCancel.Text = "✖ " + LanguageManager.GetString("Common.Cancel");
@@ -198,6 +283,20 @@ namespace AirManager.Forms
             LoadAudioDevices();
             LoadLanguageFiles();
             LoadSavedSettings();
+            LoadPathMappings();
+        }
+
+        private void LoadPathMappings()
+        {
+            _pathMappings = PathMappingService.LoadMappings();
+            RefreshPathMappingsGrid();
+        }
+
+        private void RefreshPathMappingsGrid()
+        {
+            if (dgvPaths == null) return;
+            dgvPaths.DataSource = null;
+            dgvPaths.DataSource = _pathMappings?.ToList();
         }
 
         private void LoadAudioDevices()
@@ -399,6 +498,8 @@ Confirm=Conferma
                         string selectedLanguage = _languageFiles[cmbLanguage.SelectedIndex];
                         key.SetValue("Language", selectedLanguage);
 
+                        PathMappingService.SaveMappings(_pathMappings ?? new List<PathMappingEntry>());
+
                         // ✅ APPLICA NUOVA LINGUA IMMEDIATAMENTE
                         LanguageManager.SetLanguage(selectedLanguage);
 
@@ -424,6 +525,100 @@ Confirm=Conferma
                     LanguageManager.GetString("Common.Error"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnAddPath_Click(object sender, EventArgs e)
+        {
+            var entry = ShowPathMappingDialog(new PathMappingEntry());
+            if (entry == null) return;
+            _pathMappings.Add(entry);
+            RefreshPathMappingsGrid();
+        }
+
+        private void BtnEditPath_Click(object sender, EventArgs e)
+        {
+            if (dgvPaths.SelectedRows.Count != 1) return;
+            int index = dgvPaths.SelectedRows[0].Index;
+            if (index < 0 || index >= _pathMappings.Count) return;
+            var edited = ShowPathMappingDialog(new PathMappingEntry
+            {
+                SourcePath = _pathMappings[index].SourcePath,
+                TargetPath = _pathMappings[index].TargetPath
+            });
+            if (edited == null) return;
+            _pathMappings[index] = edited;
+            RefreshPathMappingsGrid();
+        }
+
+        private void BtnRemovePath_Click(object sender, EventArgs e)
+        {
+            if (dgvPaths.SelectedRows.Count != 1) return;
+            int index = dgvPaths.SelectedRows[0].Index;
+            if (index < 0 || index >= _pathMappings.Count) return;
+            _pathMappings.RemoveAt(index);
+            RefreshPathMappingsGrid();
+        }
+
+        private PathMappingEntry ShowPathMappingDialog(PathMappingEntry entry)
+        {
+            using (var form = new Form())
+            {
+                form.Text = LanguageManager.GetString("SettingsForm.Paths.DialogTitle", "Mappatura Percorso");
+                form.StartPosition = FormStartPosition.CenterParent;
+                form.FormBorderStyle = FormBorderStyle.FixedDialog;
+                form.MaximizeBox = false;
+                form.MinimizeBox = false;
+                form.ClientSize = new Size(560, 170);
+
+                var lblSource = new Label { Left = 12, Top = 20, Width = 110, Text = LanguageManager.GetString("SettingsForm.Paths.Source", "Origine") };
+                var txtSource = new TextBox { Left = 130, Top = 18, Width = 340, Text = entry.SourcePath ?? "" };
+                var btnBrowseSource = new Button { Left = 480, Top = 18, Width = 65, Text = "..." };
+                btnBrowseSource.Click += (s, e) => BrowseFolderInto(txtSource);
+
+                var lblTarget = new Label { Left = 12, Top = 60, Width = 110, Text = LanguageManager.GetString("SettingsForm.Paths.Target", "Destinazione") };
+                var txtTarget = new TextBox { Left = 130, Top = 58, Width = 340, Text = entry.TargetPath ?? "" };
+                var btnBrowseTarget = new Button { Left = 480, Top = 58, Width = 65, Text = "..." };
+                btnBrowseTarget.Click += (s, e) => BrowseFolderInto(txtTarget);
+
+                var btnOk = new Button { Left = 390, Top = 110, Width = 75, Text = LanguageManager.GetString("Common.Save", "Salva"), DialogResult = DialogResult.OK };
+                var btnCancelDialog = new Button { Left = 470, Top = 110, Width = 75, Text = LanguageManager.GetString("Common.Cancel", "Annulla"), DialogResult = DialogResult.Cancel };
+                btnOk.Click += (s, e) =>
+                {
+                    if (string.IsNullOrWhiteSpace(txtSource.Text) || string.IsNullOrWhiteSpace(txtTarget.Text))
+                    {
+                        MessageBox.Show(
+                            LanguageManager.GetString("SettingsForm.Paths.Validation", "Origine e destinazione sono obbligatorie."),
+                            LanguageManager.GetString("Common.Warning", "Attenzione"),
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        form.DialogResult = DialogResult.None;
+                        return;
+                    }
+                };
+
+                form.Controls.AddRange(new Control[] { lblSource, txtSource, btnBrowseSource, lblTarget, txtTarget, btnBrowseTarget, btnOk, btnCancelDialog });
+                form.AcceptButton = btnOk;
+                form.CancelButton = btnCancelDialog;
+
+                if (form.ShowDialog(this) != DialogResult.OK)
+                    return null;
+
+                return new PathMappingEntry
+                {
+                    SourcePath = txtSource.Text.Trim(),
+                    TargetPath = txtTarget.Text.Trim()
+                };
+            }
+        }
+
+        private void BrowseFolderInto(TextBox textBox)
+        {
+            using (var fbd = new FolderBrowserDialog())
+            {
+                fbd.SelectedPath = textBox.Text;
+                if (fbd.ShowDialog(this) == DialogResult.OK)
+                    textBox.Text = fbd.SelectedPath;
             }
         }
 

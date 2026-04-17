@@ -270,7 +270,7 @@ namespace AirManager.Services
         /// </summary>
         public static string GetCurrentDatabasePath()
         {
-            return _currentDatabasePath;
+            return PathMappingService.ResolvePath(_currentDatabasePath);
         }
 
         /// <summary>

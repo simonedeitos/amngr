@@ -26,6 +26,9 @@ namespace AirManager.Forms
         private List<string> _musicGenres;
         private List<string> _clipCategories;
         private List<string> _clipGenres;
+        private List<StreamingEntry> _streamingEntries;
+        private List<CommandEntry> _commandEntries;
+        private bool _isRadioTVMode;
 
         // ── Left panel controls ──────────────────────────────────────────────
         private Label _lblHeader;
@@ -73,6 +76,24 @@ namespace AirManager.Forms
         private NumericUpDown _numRuleYearTo;
         private Label _lblRuleFoundTracks;
         private Button _btnAddRule;
+        private GroupBox _grpRuleCommands;
+        private Label _lblRuleCommandSelect;
+        private ComboBox _cmbRuleCommand;
+        private Button _btnInsertCommand;
+        private ComboBox _cmbPlaylistStreaming;
+        private MaskedTextBox _txtPlaylistStreamDuration;
+        private TextBox _txtPlaylistStreamingBuffer;
+        private Button _btnBrowsePlaylistStreamingBuffer;
+        private Button _btnInsertStreaming;
+        private TextBox _txtRuleAudioFile;
+        private Button _btnBrowseRuleAudioFile;
+        private CheckBox _chkRuleBufferVideo;
+        private TextBox _txtRuleBufferVideo;
+        private Button _btnBrowseRuleBufferVideo;
+        private CheckBox _chkRuleVideoMp4;
+        private TextBox _txtRuleVideoMp4;
+        private Button _btnBrowseRuleVideoMp4;
+        private Button _btnInsertAudio;
 
         // ── Drag & Drop ──────────────────────────────────────────────────────
         private int _dragSourceRow = -1;
@@ -97,6 +118,9 @@ namespace AirManager.Forms
             _musicGenres = new List<string>();
             _clipCategories = new List<string>();
             _clipGenres = new List<string>();
+            _streamingEntries = new List<StreamingEntry>();
+            _commandEntries = new List<CommandEntry>();
+            _isRadioTVMode = StationRegistry.GetActiveStation()?.StationType == StationType.RadioTV;
 
             LoadAvailableData();
             InitializeComponent();
@@ -152,6 +176,12 @@ namespace AirManager.Forms
                 _clipGenres = clipGenres.OrderBy(g => g).ToList();
             }
             catch { _allClipEntries = new List<ClipEntry>(); }
+
+            try { _streamingEntries = DbcManager.LoadFromCsv<StreamingEntry>("Streaming.dbc"); }
+            catch { _streamingEntries = new List<StreamingEntry>(); }
+
+            try { _commandEntries = DbcManager.LoadFromCsv<CommandEntry>("Commands.dbc"); }
+            catch { _commandEntries = new List<CommandEntry>(); }
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -161,7 +191,7 @@ namespace AirManager.Forms
         private void InitializeComponent()
         {
             this.Text = LanguageManager.GetString("PlaylistEditor.Title", "PLAYLIST EDITOR");
-            this.Size = new Size(1400, 850);
+            this.Size = new Size(1500, 950);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.Sizable;
             this.BackColor = Color.FromArgb(25, 25, 25);
@@ -437,10 +467,10 @@ namespace AirManager.Forms
 
             // DataGridView
             _dgvMusic = CreateArchiveDgv();
-            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Artist", HeaderText = "Artista", Width = 180 });
-            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = "Titolo", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Genre", HeaderText = "Genere", Width = 80 });
-            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Duration", HeaderText = "Durata", Width = 60 });
+            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Artist", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnArtist", "Artista"), Width = 180 });
+            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnTitle", "Titolo"), AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Genre", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnGenre", "Genere"), Width = 80 });
+            _dgvMusic.Columns.Add(new DataGridViewTextBoxColumn { Name = "Duration", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnDuration", "Durata"), Width = 60 });
             _dgvMusic.Dock = DockStyle.Fill;
             _dgvMusic.DoubleClick += (s, e) => AddSelectedMusicToPlaylist();
             _dgvMusic.MouseDown += DgvMusic_MouseDown;
@@ -489,9 +519,9 @@ namespace AirManager.Forms
             filterRow.Controls.AddRange(new Control[] { lblCat, _cmbClipCategory, lblGen, _cmbClipGenre });
 
             _dgvClips = CreateArchiveDgv();
-            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = "Titolo", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Genre", HeaderText = "Genere", Width = 80 });
-            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Duration", HeaderText = "Durata", Width = 60 });
+            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Title", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnTitle", "Titolo"), AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Genre", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnGenre", "Genere"), Width = 80 });
+            _dgvClips.Columns.Add(new DataGridViewTextBoxColumn { Name = "Duration", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnDuration", "Durata"), Width = 60 });
             _dgvClips.Dock = DockStyle.Fill;
             _dgvClips.DoubleClick += (s, e) => AddSelectedClipToPlaylist();
             _dgvClips.MouseDown += DgvClips_MouseDown;
@@ -518,9 +548,9 @@ namespace AirManager.Forms
             { BackColor = Color.FromArgb(28, 28, 28), Padding = new Padding(6) };
 
             _dgvPlaylists = CreateArchiveDgv();
-            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Name", HeaderText = "Nome", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
-            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Modified", HeaderText = "Modificato", Width = 130 });
-            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Items", HeaderText = "Elementi", Width = 70 });
+            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Name", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistName", "Nome"), AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill });
+            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Modified", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistModified", "Modificato"), Width = 130 });
+            _dgvPlaylists.Columns.Add(new DataGridViewTextBoxColumn { Name = "Items", HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistItems", "Elementi"), Width = 70 });
             _dgvPlaylists.Dock = DockStyle.Fill;
             _dgvPlaylists.DoubleClick += (s, e) => OpenSelectedPlaylist();
 
@@ -590,11 +620,11 @@ namespace AirManager.Forms
             page.Controls.Add(_chkRuleYearFilter);
             y += 34;
 
-            Label lblFrom = new Label { Text = LanguageManager.GetString("PlaylistEditor.YearFrom", "Da:"), ForeColor = Color.White, Left = 26, Top = y + 3, Width = 28, Height = 22, Font = new Font("Segoe UI", 10) };
-            _numRuleYearFrom = new NumericUpDown { Left = 58, Top = y, Width = 80, Minimum = 1900, Maximum = DateTime.Now.Year, Value = 2000, BackColor = Color.FromArgb(45, 45, 45), ForeColor = Color.White, Font = new Font("Segoe UI", 10) };
+            Label lblFrom = new Label { Text = LanguageManager.GetString("PlaylistEditor.YearFrom", "Da:"), ForeColor = Color.White, Left = 20, Top = y + 3, Width = 60, Height = 22, Font = new Font("Segoe UI", 10) };
+            _numRuleYearFrom = new NumericUpDown { Left = 86, Top = y, Width = 90, Minimum = 1900, Maximum = DateTime.Now.Year, Value = 2000, BackColor = Color.FromArgb(45, 45, 45), ForeColor = Color.White, Font = new Font("Segoe UI", 10) };
             _numRuleYearFrom.ValueChanged += (s, e) => UpdateRuleFoundCount();
-            Label lblTo = new Label { Text = LanguageManager.GetString("PlaylistEditor.YearTo", "A:"), ForeColor = Color.White, Left = 140, Top = y + 3, Width = 20, Height = 22, Font = new Font("Segoe UI", 10) };
-            _numRuleYearTo = new NumericUpDown { Left = 162, Top = y, Width = 80, Minimum = 1900, Maximum = DateTime.Now.Year, Value = DateTime.Now.Year, BackColor = Color.FromArgb(45, 45, 45), ForeColor = Color.White, Font = new Font("Segoe UI", 10) };
+            Label lblTo = new Label { Text = LanguageManager.GetString("PlaylistEditor.YearTo", "A:"), ForeColor = Color.White, Left = 180, Top = y + 3, Width = 60, Height = 22, Font = new Font("Segoe UI", 10) };
+            _numRuleYearTo = new NumericUpDown { Left = 250, Top = y, Width = 90, Minimum = 1900, Maximum = DateTime.Now.Year, Value = DateTime.Now.Year, BackColor = Color.FromArgb(45, 45, 45), ForeColor = Color.White, Font = new Font("Segoe UI", 10) };
             _numRuleYearTo.ValueChanged += (s, e) => UpdateRuleFoundCount();
             page.Controls.AddRange(new Control[] { lblFrom, _numRuleYearFrom, lblTo, _numRuleYearTo });
             y += 40;
@@ -618,6 +648,106 @@ namespace AirManager.Forms
             _btnAddRule.Left = 16; _btnAddRule.Top = y; _btnAddRule.Width = 220; _btnAddRule.Height = 34;
             _btnAddRule.Click += BtnAddRule_Click;
             page.Controls.Add(_btnAddRule);
+            y += 48;
+
+            _grpRuleCommands = new GroupBox
+            {
+                Text = LanguageManager.GetString("PlaylistEditor.InsertCommand", "Inserisci Comando"),
+                ForeColor = Color.White,
+                Left = 16,
+                Top = y,
+                Width = 620,
+                Height = 90
+            };
+            _lblRuleCommandSelect = new Label
+            {
+                Text = LanguageManager.GetString("PlaylistEditor.SelectCommand", "Comando:"),
+                Left = 12,
+                Top = 28,
+                AutoSize = true,
+                ForeColor = Color.White
+            };
+            _grpRuleCommands.Controls.Add(_lblRuleCommandSelect);
+
+            int commandComboLeft = Math.Max(120, _lblRuleCommandSelect.Right + 12);
+            int commandComboWidth = Math.Max(260, _grpRuleCommands.Width - commandComboLeft - 140);
+            _cmbRuleCommand = new ComboBox { Left = commandComboLeft, Top = 24, Width = commandComboWidth, DropDownStyle = ComboBoxStyle.DropDownList };
+            foreach (var command in _commandEntries.OrderBy(c => c.Name))
+                _cmbRuleCommand.Items.Add(command);
+            if (_cmbRuleCommand.Items.Count > 0) _cmbRuleCommand.SelectedIndex = 0;
+            _btnInsertCommand = CreateButton(LanguageManager.GetString("PlaylistEditor.InsertCommandBtn", "Inserisci Comando"), Color.FromArgb(33, 150, 83));
+            _btnInsertCommand.Left = _grpRuleCommands.Width - 130; _btnInsertCommand.Top = 22; _btnInsertCommand.Width = 120; _btnInsertCommand.Height = 30;
+            _btnInsertCommand.Click += BtnInsertCommand_Click;
+            _grpRuleCommands.Controls.AddRange(new Control[] { _cmbRuleCommand, _btnInsertCommand });
+            page.Controls.Add(_grpRuleCommands);
+            y += _grpRuleCommands.Height + 10;
+
+            GroupBox grpStreaming = new GroupBox
+            {
+                Text = LanguageManager.GetString("PlaylistEditor.InsertStreaming", "Inserisci Streaming"),
+                ForeColor = Color.White,
+                Left = 16,
+                Top = y,
+                Width = 620,
+                Height = _isRadioTVMode ? 130 : 95
+            };
+            grpStreaming.Controls.Add(new Label { Text = LanguageManager.GetString("ScheduleEditor.URLStreaming", "URL Streaming") + ":", Left = 12, Top = 28, Width = 85, ForeColor = Color.White });
+            _cmbPlaylistStreaming = new ComboBox { Left = 100, Top = 24, Width = 290, DropDownStyle = ComboBoxStyle.DropDownList };
+            foreach (var stream in _streamingEntries) _cmbPlaylistStreaming.Items.Add(stream);
+            if (_cmbPlaylistStreaming.Items.Count > 0) _cmbPlaylistStreaming.SelectedIndex = 0;
+            grpStreaming.Controls.Add(_cmbPlaylistStreaming);
+            grpStreaming.Controls.Add(new Label { Text = LanguageManager.GetString("PlaylistEditor.StreamingDuration", "Durata:"), Left = 400, Top = 28, Width = 55, ForeColor = Color.White });
+            _txtPlaylistStreamDuration = new MaskedTextBox { Left = 460, Top = 24, Width = 80, Mask = "00:00:00", Text = "010000" };
+            grpStreaming.Controls.Add(_txtPlaylistStreamDuration);
+
+            _txtPlaylistStreamingBuffer = new TextBox { Left = 130, Top = 57, Width = 410, Visible = _isRadioTVMode };
+            _btnBrowsePlaylistStreamingBuffer = new Button { Text = "📁", Left = 545, Top = 56, Width = 30, Height = 24, Visible = _isRadioTVMode };
+            _btnBrowsePlaylistStreamingBuffer.Click += (s, e) => BrowseFileInto(_txtPlaylistStreamingBuffer, LanguageManager.GetString("PlaylistEditor.SelectBufferFile", "Seleziona file buffer video"), "Video|*.mp4;*.mov;*.avi;*.mkv;*.wmv|All files|*.*");
+            grpStreaming.Controls.Add(new Label { Text = "File Buffer Video:", Left = 12, Top = 60, Width = 115, ForeColor = Color.White, Visible = _isRadioTVMode });
+            grpStreaming.Controls.Add(_txtPlaylistStreamingBuffer);
+            grpStreaming.Controls.Add(_btnBrowsePlaylistStreamingBuffer);
+
+            _btnInsertStreaming = CreateButton(LanguageManager.GetString("PlaylistEditor.InsertStreamingBtn", "Inserisci Streaming in Playlist"), Color.FromArgb(33, 150, 83));
+            _btnInsertStreaming.Left = 390; _btnInsertStreaming.Top = _isRadioTVMode ? 88 : 56; _btnInsertStreaming.Width = 220; _btnInsertStreaming.Height = 30;
+            _btnInsertStreaming.Click += BtnInsertStreaming_Click;
+            grpStreaming.Controls.Add(_btnInsertStreaming);
+            page.Controls.Add(grpStreaming);
+            y += grpStreaming.Height + 10;
+
+            GroupBox grpAudio = new GroupBox
+            {
+                Text = LanguageManager.GetString("PlaylistEditor.InsertAudio", "Inserisci Audio"),
+                ForeColor = Color.White,
+                Left = 16,
+                Top = y,
+                Width = 620,
+                Height = _isRadioTVMode ? 170 : 95
+            };
+            grpAudio.Controls.Add(new Label { Text = LanguageManager.GetString("PlaylistEditor.SelectAudioFile", "Seleziona file audio") + ":", Left = 12, Top = 28, Width = 110, ForeColor = Color.White });
+            _txtRuleAudioFile = new TextBox { Left = 125, Top = 24, Width = 415 };
+            _btnBrowseRuleAudioFile = new Button { Text = "📁", Left = 545, Top = 24, Width = 30, Height = 24 };
+            _btnBrowseRuleAudioFile.Click += (s, e) => BrowseFileInto(_txtRuleAudioFile, LanguageManager.GetString("PlaylistEditor.SelectAudioFile", "Seleziona file audio"), "Audio|*.mp3;*.wav;*.wma;*.aac;*.flac|All files|*.*");
+            grpAudio.Controls.AddRange(new Control[] { _txtRuleAudioFile, _btnBrowseRuleAudioFile });
+
+            _chkRuleBufferVideo = new CheckBox { Left = 12, Top = 58, Width = 200, Text = LanguageManager.GetString("PlaylistEditor.AddBufferVideo", "Aggiungi File Buffer Video"), ForeColor = Color.White, Visible = _isRadioTVMode };
+            _chkRuleBufferVideo.CheckedChanged += (s, e) => UpdateRuleVideoOptions();
+            _txtRuleBufferVideo = new TextBox { Left = 220, Top = 56, Width = 320, Visible = false };
+            _btnBrowseRuleBufferVideo = new Button { Text = "📁", Left = 545, Top = 56, Width = 30, Height = 24, Visible = false };
+            _btnBrowseRuleBufferVideo.Click += (s, e) => BrowseFileInto(_txtRuleBufferVideo, LanguageManager.GetString("PlaylistEditor.SelectBufferFile", "Seleziona file buffer video"), "Video|*.mp4;*.mov;*.avi;*.mkv;*.wmv|All files|*.*");
+            grpAudio.Controls.AddRange(new Control[] { _chkRuleBufferVideo, _txtRuleBufferVideo, _btnBrowseRuleBufferVideo });
+
+            _chkRuleVideoMp4 = new CheckBox { Left = 12, Top = 88, Width = 280, Text = LanguageManager.GetString("PlaylistEditor.AddVideoMP4", "Aggiungi File Video MP4 (non da archivio)"), ForeColor = Color.White, Visible = _isRadioTVMode };
+            _chkRuleVideoMp4.CheckedChanged += (s, e) => UpdateRuleVideoOptions();
+            _txtRuleVideoMp4 = new TextBox { Left = 300, Top = 86, Width = 240, Visible = false };
+            _btnBrowseRuleVideoMp4 = new Button { Text = "📁", Left = 545, Top = 86, Width = 30, Height = 24, Visible = false };
+            _btnBrowseRuleVideoMp4.Click += (s, e) => BrowseFileInto(_txtRuleVideoMp4, LanguageManager.GetString("PlaylistEditor.SelectVideoFile", "Seleziona file video"), "MP4|*.mp4|All files|*.*");
+            grpAudio.Controls.AddRange(new Control[] { _chkRuleVideoMp4, _txtRuleVideoMp4, _btnBrowseRuleVideoMp4 });
+
+            _btnInsertAudio = CreateButton(LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist"), Color.FromArgb(33, 150, 83));
+            _btnInsertAudio.Left = 390; _btnInsertAudio.Top = _isRadioTVMode ? 122 : 56; _btnInsertAudio.Width = 220; _btnInsertAudio.Height = 30;
+            _btnInsertAudio.Click += BtnInsertAudio_Click;
+            grpAudio.Controls.Add(_btnInsertAudio);
+            page.Controls.Add(grpAudio);
 
             UpdateRuleControls();
             return page;
@@ -703,12 +833,57 @@ namespace AirManager.Forms
             if (_btnAddClip != null) _btnAddClip.Text = LanguageManager.GetString("PlaylistEditor.AddToPlaylist", "+ Aggiungi");
             if (_btnAddRule != null) _btnAddRule.Text = LanguageManager.GetString("PlaylistEditor.AddRuleToPlaylist", "+ Aggiungi Regola");
             if (_btnDeletePlaylist != null) _btnDeletePlaylist.Text = LanguageManager.GetString("PlaylistEditor.DeletePlaylist", "Elimina");
+            if (_grpRuleCommands != null) _grpRuleCommands.Text = LanguageManager.GetString("PlaylistEditor.InsertCommand", "Inserisci Comando");
+            if (_lblRuleCommandSelect != null) _lblRuleCommandSelect.Text = LanguageManager.GetString("PlaylistEditor.SelectCommand", "Comando:");
+            if (_cmbRuleCommand != null && _btnInsertCommand != null && _grpRuleCommands != null && _lblRuleCommandSelect != null)
+            {
+                int commandComboLeft = Math.Max(120, _lblRuleCommandSelect.Right + 12);
+                int commandComboWidth = Math.Max(260, _grpRuleCommands.Width - commandComboLeft - 140);
+                _cmbRuleCommand.Left = commandComboLeft;
+                _cmbRuleCommand.Width = commandComboWidth;
+                _btnInsertCommand.Left = _grpRuleCommands.Width - 130;
+            }
+            if (_btnInsertCommand != null) _btnInsertCommand.Text = LanguageManager.GetString("PlaylistEditor.InsertCommandBtn", "Inserisci Comando");
+            if (_btnInsertStreaming != null) _btnInsertStreaming.Text = LanguageManager.GetString("PlaylistEditor.InsertStreamingBtn", "Inserisci Streaming in Playlist");
+            if (_btnInsertAudio != null) _btnInsertAudio.Text = LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist");
+            if (_chkRuleBufferVideo != null) _chkRuleBufferVideo.Text = LanguageManager.GetString("PlaylistEditor.AddBufferVideo", "Aggiungi File Buffer Video");
+            if (_chkRuleVideoMp4 != null) _chkRuleVideoMp4.Text = LanguageManager.GetString("PlaylistEditor.AddVideoMP4", "Aggiungi File Video MP4 (non da archivio)");
             if (_tabArchive != null && _tabArchive.TabPages.Count >= 4)
             {
                 _tabArchive.TabPages[0].Text = LanguageManager.GetString("PlaylistEditor.TabMusic", "🎵 Music");
                 _tabArchive.TabPages[1].Text = LanguageManager.GetString("PlaylistEditor.TabClips", "🔔 Clips");
                 _tabArchive.TabPages[2].Text = LanguageManager.GetString("PlaylistEditor.TabPlaylists", "📋 Playlist");
                 _tabArchive.TabPages[3].Text = LanguageManager.GetString("PlaylistEditor.TabRules", "🔧 Regole");
+            }
+            // Music archive columns
+            if (_dgvMusic != null && _dgvMusic.Columns.Count >= 4)
+            {
+                _dgvMusic.Columns["Artist"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnArtist", "Artista");
+                _dgvMusic.Columns["Title"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnTitle", "Titolo");
+                _dgvMusic.Columns["Genre"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnGenre", "Genere");
+                _dgvMusic.Columns["Duration"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnDuration", "Durata");
+            }
+            // Clips archive columns
+            if (_dgvClips != null && _dgvClips.Columns.Count >= 3)
+            {
+                _dgvClips.Columns["Title"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnTitle", "Titolo");
+                _dgvClips.Columns["Genre"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnGenre", "Genere");
+                _dgvClips.Columns["Duration"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnDuration", "Durata");
+            }
+            // Playlists archive columns
+            if (_dgvPlaylists != null && _dgvPlaylists.Columns.Count >= 3)
+            {
+                _dgvPlaylists.Columns["Name"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistName", "Nome");
+                _dgvPlaylists.Columns["Modified"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistModified", "Modificato");
+                _dgvPlaylists.Columns["Items"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnPlaylistItems", "Elementi");
+            }
+            // Editor columns
+            if (_dgvEditor != null && _dgvEditor.Columns.Count >= 5)
+            {
+                _dgvEditor.Columns["colTime"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnTime", "Orario");
+                _dgvEditor.Columns["colType"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnType", "Tipo");
+                _dgvEditor.Columns["colElement"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnElement", "Elemento");
+                _dgvEditor.Columns["colDuration"].HeaderText = LanguageManager.GetString("PlaylistEditor.ColumnDuration", "Durata");
             }
             UpdateTotalDurationLabel();
         }
@@ -996,7 +1171,11 @@ namespace AirManager.Forms
                     YearTo = item.YearTo,
                     RuleSourceType = item.RuleSourceType,
                     RuleCategoryName = item.RuleCategoryName,
-                    RuleGenreName = item.RuleGenreName
+                    RuleGenreName = item.RuleGenreName,
+                    StreamDuration = item.StreamDuration,
+                    CommandValue = item.CommandValue,
+                    AssociatedBufferPath = item.AssociatedBufferPath,
+                    AssociatedVideoPath = item.AssociatedVideoPath
                 };
                 _playlist.Items.Insert(insertIndex++, newItem);
             }
@@ -1380,6 +1559,113 @@ namespace AirManager.Forms
         // ══════════════════════════════════════════════════════════════════
         // RULES TAB
         // ══════════════════════════════════════════════════════════════════
+
+        private void BrowseFileInto(TextBox target, string title, string filter)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = title;
+                ofd.Filter = filter;
+                if (ofd.ShowDialog(this) == DialogResult.OK)
+                    target.Text = ofd.FileName;
+            }
+        }
+
+        private void UpdateRuleVideoOptions()
+        {
+            if (!_isRadioTVMode)
+                return;
+
+            if (_chkRuleBufferVideo != null && _chkRuleVideoMp4 != null)
+            {
+                if (_chkRuleBufferVideo.Checked && _chkRuleVideoMp4.Checked)
+                {
+                    if (ReferenceEquals(ActiveControl, _chkRuleBufferVideo))
+                        _chkRuleVideoMp4.Checked = false;
+                    else
+                        _chkRuleBufferVideo.Checked = false;
+                }
+            }
+
+            bool showBuffer = _chkRuleBufferVideo?.Checked == true;
+            bool showVideo = _chkRuleVideoMp4?.Checked == true;
+            if (_txtRuleBufferVideo != null) _txtRuleBufferVideo.Visible = showBuffer;
+            if (_btnBrowseRuleBufferVideo != null) _btnBrowseRuleBufferVideo.Visible = showBuffer;
+            if (_txtRuleVideoMp4 != null) _txtRuleVideoMp4.Visible = showVideo;
+            if (_btnBrowseRuleVideoMp4 != null) _btnBrowseRuleVideoMp4.Visible = showVideo;
+        }
+
+        private void BtnInsertCommand_Click(object sender, EventArgs e)
+        {
+            var selectedCommand = _cmbRuleCommand?.SelectedItem as CommandEntry;
+            if (selectedCommand == null)
+                return;
+
+            AirPlaylistItemType type;
+            if (string.Equals(selectedCommand.Type, "LogoShow", StringComparison.OrdinalIgnoreCase))
+                type = AirPlaylistItemType.LogoShow;
+            else if (string.Equals(selectedCommand.Type, "LogoHide", StringComparison.OrdinalIgnoreCase))
+                type = AirPlaylistItemType.LogoHide;
+            else if (string.Equals(selectedCommand.Type, "UDP", StringComparison.OrdinalIgnoreCase))
+                type = AirPlaylistItemType.CommandUdp;
+            else
+                type = AirPlaylistItemType.CommandHttp;
+
+            var item = new AirPlaylistItem
+            {
+                Type = type,
+                CommandValue = selectedCommand.CommandString ?? "",
+                Title = selectedCommand.Name ?? "",
+                DurationSeconds = 0
+            };
+
+            _playlist.Items.Add(item);
+            MarkChanged();
+            RefreshEditorGrid();
+        }
+
+        private void BtnInsertStreaming_Click(object sender, EventArgs e)
+        {
+            var selected = _cmbPlaylistStreaming?.SelectedItem as StreamingEntry;
+            if (selected == null)
+                return;
+
+            TimeSpan duration = TimeSpan.FromHours(1);
+            TimeSpan.TryParse((_txtPlaylistStreamDuration?.Text ?? "01:00:00").Trim(), out duration);
+
+            var item = new AirPlaylistItem
+            {
+                Type = AirPlaylistItemType.URLStreaming,
+                Title = selected.Name,
+                FilePath = selected.URL,
+                StreamDuration = duration.ToString(@"hh\:mm\:ss"),
+                DurationSeconds = (int)duration.TotalSeconds,
+                AssociatedBufferPath = _isRadioTVMode ? (_txtPlaylistStreamingBuffer?.Text ?? "") : ""
+            };
+            _playlist.Items.Add(item);
+            MarkChanged();
+            RefreshEditorGrid();
+        }
+
+        private void BtnInsertAudio_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(_txtRuleAudioFile?.Text))
+                return;
+
+            var item = new AirPlaylistItem
+            {
+                Type = AirPlaylistItemType.ExternalAudio,
+                FilePath = _txtRuleAudioFile.Text.Trim(),
+                Title = Path.GetFileNameWithoutExtension(_txtRuleAudioFile.Text.Trim()),
+                DurationSeconds = 0,
+                AssociatedBufferPath = (_chkRuleBufferVideo?.Checked == true) ? (_txtRuleBufferVideo?.Text ?? "") : "",
+                AssociatedVideoPath = (_chkRuleVideoMp4?.Checked == true) ? (_txtRuleVideoMp4?.Text ?? "") : ""
+            };
+
+            _playlist.Items.Add(item);
+            MarkChanged();
+            RefreshEditorGrid();
+        }
 
         private void OnRuleSourceChanged()
         {

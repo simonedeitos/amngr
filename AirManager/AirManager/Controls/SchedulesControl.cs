@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using AirManager.Services.Database;
 using AirManager.Services;
 using AirManager.Forms;
 using AirManager.Themes;
+using AirManager.Models;
 
 namespace AirManager.Controls
 {
@@ -15,7 +15,6 @@ namespace AirManager.Controls
     {
         private FlowLayoutPanel flowSchedules;
         private Label lblStatus;
-        private Label lblTitle;
         private Button btnNew;
         private Button btnRefresh;
 
@@ -39,9 +38,6 @@ namespace AirManager.Controls
 
         private void ApplyLanguage()
         {
-            if (lblTitle != null)
-                lblTitle.Text = LanguageManager.GetString("Schedules.Title", "📅 GESTIONE SCHEDULAZIONI");
-
             if (btnNew != null)
                 btnNew.Text = "➕ " + LanguageManager.GetString("Schedules.NewSchedule", "Nuova Schedulazione");
 
@@ -68,28 +64,16 @@ namespace AirManager.Controls
             Panel headerPanel = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 70,
+                Height = 60,
                 BackColor = AppTheme.Surface
             };
             this.Controls.Add(headerPanel);
 
-            lblTitle = new Label
-            {
-                Name = "lblTitle",
-                Text = "📅 GESTIONE SCHEDULAZIONI",
-                Location = new Point(12, 8),
-                Size = new Size(300, 26),
-                Font = new Font("Segoe UI", 13F, FontStyle.Bold),
-                ForeColor = AppTheme.Primary,
-                BackColor = Color.Transparent
-            };
-            headerPanel.Controls.Add(lblTitle);
-
             btnNew = new Button
             {
                 Text = "➕ Nuova Schedulazione",
-                Location = new Point(12, 38),
-                Size = new Size(180, 28),
+                Location = new Point(10, 15),
+                Size = new Size(180, 35),
                 BackColor = AppTheme.Success,
                 ForeColor = AppTheme.TextInverse,
                 FlatStyle = FlatStyle.Flat,
@@ -103,8 +87,8 @@ namespace AirManager.Controls
             btnRefresh = new Button
             {
                 Text = "🔄 Aggiorna",
-                Location = new Point(200, 38),
-                Size = new Size(110, 28),
+                Location = new Point(200, 15),
+                Size = new Size(110, 35),
                 BackColor = AppTheme.Info,
                 ForeColor = AppTheme.TextInverse,
                 FlatStyle = FlatStyle.Flat,
@@ -117,8 +101,8 @@ namespace AirManager.Controls
 
             lblStatus = new Label
             {
-                Location = new Point(320, 42),
-                Size = new Size(600, 20),
+                Location = new Point(320, 20),
+                Size = new Size(600, 25),
                 Font = new Font("Segoe UI", 9, FontStyle.Italic),
                 ForeColor = AppTheme.TextSecondary,
                 TextAlign = ContentAlignment.MiddleLeft
@@ -165,8 +149,7 @@ namespace AirManager.Controls
             if (clocks.Count == 0)
             {
                 MessageBox.Show(
-                    LanguageManager.GetString("Schedules.NoClocks",
-                        "⚠️ Devi creare almeno un Clock prima di aggiungere una schedulazione.\n\nVai nella sezione 'Clocks' per crearne uno."),
+                    LanguageManager.GetString("Schedules.NoClocks", "⚠️ Devi creare almeno un Clock prima di aggiungere una schedulazione.\n\nVai nella sezione 'Clocks' per crearne uno."),
                     LanguageManager.GetString("Schedules.NoClocksTitle", "Nessun Clock Disponibile"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -177,16 +160,12 @@ namespace AirManager.Controls
             if (editorForm.ShowDialog() == DialogResult.OK)
             {
                 RefreshSchedules();
-                StatusChanged?.Invoke(this,
-                    LanguageManager.GetString("Schedules.ScheduleCreated", "✅ Schedulazione creata con successo"));
+                StatusChanged?.Invoke(this, LanguageManager.GetString("Schedules.ScheduleCreated", "✅ Schedulazione creata con successo"));
             }
         }
 
         public void RefreshSchedules()
         {
-            if (flowSchedules == null)
-                return;
-
             flowSchedules.SuspendLayout();
             flowSchedules.Controls.Clear();
 
@@ -203,16 +182,12 @@ namespace AirManager.Controls
             flowSchedules.ResumeLayout();
 
             int activeCount = schedules.Count(s => s.IsEnabled == 1);
-            if (lblStatus != null)
-            {
-                lblStatus.Text = string.Format(
-                    LanguageManager.GetString("Schedules.StatusCount",
-                        "📊 {0} schedulazioni ({1} attive, {2} disabilitate)"),
-                    schedules.Count, activeCount, schedules.Count - activeCount);
-            }
-
-            StatusChanged?.Invoke(this,
-                $"Schedulazioni: {schedules.Count} " + LanguageManager.GetString("Schedules.Elements", "elementi"));
+            lblStatus.Text = string.Format(
+                LanguageManager.GetString("Schedules.StatusCount", "📊 {0} schedulazioni ({1} attive, {2} disabilitate)"),
+                schedules.Count,
+                activeCount,
+                schedules.Count - activeCount);
+            StatusChanged?.Invoke(this, $"Schedulazioni: {schedules.Count} " + LanguageManager.GetString("Schedules.Elements", "elementi"));
         }
 
         private TimeSpan GetFirstTime(string times)
@@ -250,10 +225,7 @@ namespace AirManager.Controls
                 }
             };
 
-            string firstTime = !string.IsNullOrEmpty(schedule.Times)
-                ? schedule.Times.Split(';')[0]
-                : "--:--:--";
-
+            string firstTime = !string.IsNullOrEmpty(schedule.Times) ? schedule.Times.Split(';')[0] : "--:--:--";
             Label lblTime = new Label
             {
                 Text = firstTime,
@@ -267,18 +239,21 @@ namespace AirManager.Controls
 
             string icon = schedule.Type == "PlayClock" ? "🕐" :
                          schedule.Type == "PlayAudio" ? "🎵" :
-                         schedule.Type == "PlayMiniPLS" ? "📋" :
-                         schedule.Type == "PlayPlaylist" ? "📋" :
+                         (schedule.Type == "PlayMiniPLS" || schedule.Type == "PlayPlaylist") ? "📋" :
                          schedule.Type == "TimeSignal" ? "⏰" :
-                         schedule.Type == "URLStreaming" ? "🌐" : "📄";
+                         schedule.Type == "URLStreaming" ? "🌐" :
+                         schedule.Type == "HTTP" ? "🌐" :
+                         schedule.Type == "UDP" ? "📶" :
+                         schedule.Type == "LogoShow" ? "🟢" :
+                         schedule.Type == "LogoHide" ? "🔴" : "📄";
 
             string target = "";
             if (schedule.Type == "PlayClock")
                 target = schedule.ClockName;
             else if (schedule.Type == "PlayAudio")
-                target = Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
+                target = System.IO.Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
             else if (schedule.Type == "PlayPlaylist")
-                target = Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
+                target = System.IO.Path.GetFileNameWithoutExtension(schedule.AudioFilePath);
             else if (schedule.Type == "PlayMiniPLS")
                 target = $"MiniPLS #{schedule.MiniPLSID}";
             else if (schedule.Type == "TimeSignal")
@@ -288,6 +263,14 @@ namespace AirManager.Controls
                 var urlParts = schedule.ClockName?.Split('|');
                 target = urlParts?.Length > 0 ? urlParts[0] : "";
             }
+            else if (schedule.Type == "HTTP" || schedule.Type == "UDP")
+            {
+                target = schedule.ClockName ?? "";
+            }
+            else if (schedule.Type == "LogoShow" || schedule.Type == "LogoHide")
+            {
+                target = System.IO.Path.GetFileName(schedule.ClockName ?? "");
+            }
 
             Label lblTitle = new Label
             {
@@ -295,7 +278,7 @@ namespace AirManager.Controls
                 Location = new Point(95, 8),
                 Size = new Size(cardWidth - 265, 18),
                 Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = isEnabled ? Color.Black : Color.Gray,
+                ForeColor = isEnabled ? AppTheme.TextPrimary : Color.Gray,
                 AutoEllipsis = true
             };
             card.Controls.Add(lblTitle);
@@ -309,13 +292,11 @@ namespace AirManager.Controls
             if (schedule.Saturday == 1) days.Add(LanguageManager.GetString("Download.DaySat", "Sab"));
             if (schedule.Sunday == 1) days.Add(LanguageManager.GetString("Download.DaySun", "Dom"));
 
-            string daysText = days.Count == 7
-                ? "📅 " + LanguageManager.GetString("Download.EveryDay", "Tutti i giorni")
-                : $"📅 {string.Join(", ", days)}";
+            string daysText = days.Count == 7 ?
+                "📅 " + LanguageManager.GetString("Download.EveryDay", "Tutti i giorni") :
+                $"📅 {string.Join(", ", days)}";
 
-            string allTimes = !string.IsNullOrEmpty(schedule.Times)
-                ? schedule.Times.Replace(";", ", ")
-                : "--:--:--";
+            string allTimes = !string.IsNullOrEmpty(schedule.Times) ? schedule.Times.Replace(";", ", ") : "--:--:--";
             string timesInfo = schedule.Times?.Split(';').Length > 1 ? $" | ⏰ {allTimes}" : "";
 
             Label lblDays = new Label
@@ -386,9 +367,9 @@ namespace AirManager.Controls
 
             ToolTip tooltip = new ToolTip();
             tooltip.SetToolTip(btnEdit, LanguageManager.GetString("Schedules.Edit", "Modifica schedulazione"));
-            tooltip.SetToolTip(btnToggle, isEnabled
-                ? LanguageManager.GetString("Schedules.Disable", "Disabilita schedulazione")
-                : LanguageManager.GetString("Schedules.Enable", "Abilita schedulazione"));
+            tooltip.SetToolTip(btnToggle, isEnabled ?
+                LanguageManager.GetString("Schedules.Disable", "Disabilita schedulazione") :
+                LanguageManager.GetString("Schedules.Enable", "Abilita schedulazione"));
             tooltip.SetToolTip(btnDelete, LanguageManager.GetString("Schedules.Delete", "Elimina schedulazione"));
 
             return card;
@@ -421,11 +402,10 @@ namespace AirManager.Controls
             if (success)
             {
                 RefreshSchedules();
-                string status = entry.IsEnabled == 1
-                    ? LanguageManager.GetString("Schedules.Enabled", "abilitata")
-                    : LanguageManager.GetString("Schedules.Disabled", "disabilitata");
-                StatusChanged?.Invoke(this, "✅ " + string.Format(
-                    LanguageManager.GetString("Schedules.ScheduleToggled", "Schedulazione {0}"), status));
+                string status = entry.IsEnabled == 1 ?
+                    LanguageManager.GetString("Schedules.Enabled", "abilitata") :
+                    LanguageManager.GetString("Schedules.Disabled", "disabilitata");
+                StatusChanged?.Invoke(this, $"✅ " + string.Format(LanguageManager.GetString("Schedules.ScheduleToggled", "Schedulazione {0}"), status));
             }
             else
             {
@@ -443,8 +423,7 @@ namespace AirManager.Controls
             ScheduleEntry entry = btn.Tag as ScheduleEntry;
 
             var result = MessageBox.Show(
-                string.Format(LanguageManager.GetString("Schedules.ConfirmDelete",
-                    "🗑️ Eliminare la schedulazione '{0}'?\n\nQuesta operazione non può essere annullata."), entry.Name),
+                string.Format(LanguageManager.GetString("Schedules.ConfirmDelete", "🗑️ Eliminare la schedulazione '{0}'?\n\nQuesta operazione non può essere annullata."), entry.Name),
                 LanguageManager.GetString("Common.Confirm", "Conferma Eliminazione"),
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -468,5 +447,6 @@ namespace AirManager.Controls
                 }
             }
         }
+
     }
 }

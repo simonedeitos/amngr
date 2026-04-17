@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 using AirManager.Themes;
 
@@ -17,7 +17,6 @@ namespace AirManager.Forms
         private ComboBox cmbClock;
         private TextBox txtAudioFile;
         private Button btnBrowseAudio;
-        private NumericUpDown numMiniPLSID;
         private ComboBox cmbPlaylist;
         private TextBox txtStreamURL;
         private MaskedTextBox txtStreamDuration;
@@ -50,19 +49,9 @@ namespace AirManager.Forms
         private Label lblStreamURL;
         private Label lblStreamDuration;
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                components?.Dispose();
-                AirManager.Services.LanguageManager.LanguageChanged -= OnLanguageChanged;
-            }
-            base.Dispose(disposing);
-        }
 
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScheduleEditorForm));
             lblName = new Label();
             txtName = new TextBox();
             grpAction = new GroupBox();
@@ -79,7 +68,6 @@ namespace AirManager.Forms
             lblStreamURL = new Label();
             lblStreamDuration = new Label();
             txtStreamDuration = new MaskedTextBox();
-            numMiniPLSID = new NumericUpDown();
             lblVideoBuffer = new Label();
             txtVideoBufferPath = new TextBox();
             btnBrowseVideoBuffer = new Button();
@@ -101,7 +89,6 @@ namespace AirManager.Forms
             btnSave = new Button();
             btnCancel = new Button();
             grpAction.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).BeginInit();
             grpDays.SuspendLayout();
             grpTimes.SuspendLayout();
             SuspendLayout();
@@ -152,7 +139,7 @@ namespace AirManager.Forms
             txtStreamURL.Font = new Font("Segoe UI", 9F);
             txtStreamURL.Location = new Point(170, 145);
             txtStreamURL.Name = "txtStreamURL";
-            txtStreamURL.Size = new Size(393, 23);
+            txtStreamURL.Size = new Size(312, 23);
             txtStreamURL.TabIndex = 10;
             // 
             // radClock
@@ -170,9 +157,9 @@ namespace AirManager.Forms
             // 
             cmbClock.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbClock.Font = new Font("Segoe UI", 9F);
-            cmbClock.Location = new Point(170, 23);
+            cmbClock.Location = new Point(255, 23);
             cmbClock.Name = "cmbClock";
-            cmbClock.Size = new Size(450, 23);
+            cmbClock.Size = new Size(308, 23);
             cmbClock.TabIndex = 1;
             // 
             // radAudio
@@ -188,9 +175,9 @@ namespace AirManager.Forms
             // 
             txtAudioFile.Enabled = false;
             txtAudioFile.Font = new Font("Segoe UI", 9F);
-            txtAudioFile.Location = new Point(170, 53);
+            txtAudioFile.Location = new Point(171, 53);
             txtAudioFile.Name = "txtAudioFile";
-            txtAudioFile.Size = new Size(395, 23);
+            txtAudioFile.Size = new Size(394, 23);
             txtAudioFile.TabIndex = 3;
             // 
             // btnBrowseAudio
@@ -198,9 +185,9 @@ namespace AirManager.Forms
             btnBrowseAudio.Cursor = Cursors.Hand;
             btnBrowseAudio.Enabled = false;
             btnBrowseAudio.FlatStyle = FlatStyle.Flat;
-            btnBrowseAudio.Location = new Point(575, 53);
+            btnBrowseAudio.Location = new Point(575, 52);
             btnBrowseAudio.Name = "btnBrowseAudio";
-            btnBrowseAudio.Size = new Size(30, 23);
+            btnBrowseAudio.Size = new Size(31, 23);
             btnBrowseAudio.TabIndex = 4;
             btnBrowseAudio.Text = "📁";
             btnBrowseAudio.Click += BtnBrowseAudio_Click;
@@ -209,7 +196,7 @@ namespace AirManager.Forms
             // 
             radMiniPLS.Location = new Point(10, 85);
             radMiniPLS.Name = "radMiniPLS";
-            radMiniPLS.Size = new Size(239, 25);
+            radMiniPLS.Size = new Size(245, 25);
             radMiniPLS.TabIndex = 5;
             radMiniPLS.Text = "📋 Riproduci Mini Playlist";
             radMiniPLS.CheckedChanged += RadAction_CheckedChanged;
@@ -221,7 +208,7 @@ namespace AirManager.Forms
             cmbPlaylist.Font = new Font("Segoe UI", 9F);
             cmbPlaylist.Location = new Point(255, 85);
             cmbPlaylist.Name = "cmbPlaylist";
-            cmbPlaylist.Size = new Size(308, 23);
+            cmbPlaylist.Size = new Size(310, 23);
             cmbPlaylist.TabIndex = 6;
             // 
             // radTimeSignal
@@ -257,7 +244,7 @@ namespace AirManager.Forms
             // 
             lblStreamDuration.Enabled = false;
             lblStreamDuration.Font = new Font("Segoe UI", 9F);
-            lblStreamDuration.Location = new Point(569, 126);
+            lblStreamDuration.Location = new Point(488, 150);
             lblStreamDuration.Name = "lblStreamDuration";
             lblStreamDuration.Size = new Size(75, 16);
             lblStreamDuration.TabIndex = 11;
@@ -274,19 +261,6 @@ namespace AirManager.Forms
             txtStreamDuration.TabIndex = 12;
             txtStreamDuration.Text = "010000";
             // 
-            // numMiniPLSID
-            // 
-            numMiniPLSID.Enabled = false;
-            numMiniPLSID.Font = new Font("Segoe UI", 9F);
-            numMiniPLSID.Location = new Point(201, 85);
-            numMiniPLSID.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
-            numMiniPLSID.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
-            numMiniPLSID.Name = "numMiniPLSID";
-            numMiniPLSID.Size = new Size(44, 23);
-            numMiniPLSID.TabIndex = 6;
-            numMiniPLSID.Value = new decimal(new int[] { 1, 0, 0, 0 });
-            numMiniPLSID.Visible = false;
-            // 
             // lblVideoBuffer
             // 
             lblVideoBuffer.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
@@ -299,19 +273,18 @@ namespace AirManager.Forms
             // txtVideoBufferPath
             // 
             txtVideoBufferPath.Font = new Font("Segoe UI", 9F);
-            txtVideoBufferPath.Location = new Point(190, 250);
+            txtVideoBufferPath.Location = new Point(180, 250);
             txtVideoBufferPath.Name = "txtVideoBufferPath";
-            txtVideoBufferPath.Size = new Size(395, 23);
+            txtVideoBufferPath.Size = new Size(405, 23);
             txtVideoBufferPath.TabIndex = 21;
             // 
             // btnBrowseVideoBuffer
             // 
             btnBrowseVideoBuffer.Cursor = Cursors.Hand;
             btnBrowseVideoBuffer.FlatStyle = FlatStyle.Flat;
-            btnBrowseVideoBuffer.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            btnBrowseVideoBuffer.Location = new Point(595, 250);
+            btnBrowseVideoBuffer.Location = new Point(594, 249);
             btnBrowseVideoBuffer.Name = "btnBrowseVideoBuffer";
-            btnBrowseVideoBuffer.Size = new Size(30, 23);
+            btnBrowseVideoBuffer.Size = new Size(32, 24);
             btnBrowseVideoBuffer.TabIndex = 22;
             btnBrowseVideoBuffer.Text = "📁";
             btnBrowseVideoBuffer.Click += BtnBrowseVideoBuffer_Click;
@@ -491,6 +464,7 @@ namespace AirManager.Forms
             // lstTimes
             // 
             lstTimes.Font = new Font("Consolas", 10F);
+            lstTimes.ItemHeight = 15;
             lstTimes.Location = new Point(273, 30);
             lstTimes.Name = "lstTimes";
             lstTimes.Size = new Size(290, 199);
@@ -504,9 +478,9 @@ namespace AirManager.Forms
             btnSave.FlatStyle = FlatStyle.Flat;
             btnSave.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnSave.ForeColor = Color.White;
-            btnSave.Location = new Point(480, 625);
+            btnSave.Location = new Point(559, 625);
             btnSave.Name = "btnSave";
-            btnSave.Size = new Size(90, 35);
+            btnSave.Size = new Size(111, 35);
             btnSave.TabIndex = 5;
             btnSave.Text = "💾 Salva";
             btnSave.UseVisualStyleBackColor = false;
@@ -521,9 +495,9 @@ namespace AirManager.Forms
             btnCancel.FlatStyle = FlatStyle.Flat;
             btnCancel.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             btnCancel.ForeColor = Color.White;
-            btnCancel.Location = new Point(580, 625);
+            btnCancel.Location = new Point(435, 625);
             btnCancel.Name = "btnCancel";
-            btnCancel.Size = new Size(90, 35);
+            btnCancel.Size = new Size(111, 35);
             btnCancel.TabIndex = 6;
             btnCancel.Text = "✖ Annulla";
             btnCancel.UseVisualStyleBackColor = false;
@@ -546,7 +520,6 @@ namespace AirManager.Forms
             Controls.Add(txtName);
             Controls.Add(lblName);
             FormBorderStyle = FormBorderStyle.FixedDialog;
-            Icon = (Icon)resources.GetObject("$this.Icon");
             MaximizeBox = false;
             MinimizeBox = false;
             Name = "ScheduleEditorForm";
@@ -554,7 +527,6 @@ namespace AirManager.Forms
             Text = "📅 Schedulazione";
             grpAction.ResumeLayout(false);
             grpAction.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)numMiniPLSID).EndInit();
             grpDays.ResumeLayout(false);
             grpTimes.ResumeLayout(false);
             ResumeLayout(false);
