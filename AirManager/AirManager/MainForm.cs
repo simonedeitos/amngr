@@ -63,6 +63,8 @@ namespace AirManager
         // ✅ RIFERIMENTI AL MENU PLAYLIST
         private ToolStripMenuItem menuPlaylist;
         private ToolStripMenuItem menuItemOpenPlaylistEditor;
+        private ToolStripMenuItem menuItemStreamingManager;
+        private ToolStripMenuItem menuItemCommandManager;
 
         private StationManagerControl _stationManager;
         private ArchiveControl _archiveMusicControl;
@@ -167,6 +169,11 @@ namespace AirManager
             menuPlaylist = new ToolStripMenuItem(LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist"));
             menuItemOpenPlaylistEditor = new ToolStripMenuItem("🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist"), null, MenuPlaylist_Click);
             menuPlaylist.DropDownItems.Add(menuItemOpenPlaylistEditor);
+            menuPlaylist.DropDownItems.Add(new ToolStripSeparator());
+            menuItemStreamingManager = new ToolStripMenuItem("🌐 " + LanguageManager.GetString("MainForm.OpenStreamingManager", "Gestione Streaming"), null, MenuStreamingManager_Click);
+            menuPlaylist.DropDownItems.Add(menuItemStreamingManager);
+            menuItemCommandManager = new ToolStripMenuItem("📡 " + LanguageManager.GetString("MainForm.OpenCommandManager", "Gestione Comandi"), null, MenuCommandManager_Click);
+            menuPlaylist.DropDownItems.Add(menuItemCommandManager);
             menuStrip.Items.Add(menuPlaylist);
 
             // ✅ MENU REPORT
@@ -312,6 +319,8 @@ namespace AirManager
             // ✅ MENU PLAYLIST
             menuPlaylist.Text = "🎶 " + LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist");
             menuItemOpenPlaylistEditor.Text = "🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist");
+            menuItemStreamingManager.Text = "🌐 " + LanguageManager.GetString("MainForm.OpenStreamingManager", "Gestione Streaming");
+            menuItemCommandManager.Text = "📡 " + LanguageManager.GetString("MainForm.OpenCommandManager", "Gestione Comandi");
 
             // ✅ STATUS BAR
             if (lblStatus.Text == "Pronto" || lblStatus.Text.Contains("Ready"))
@@ -817,6 +826,42 @@ namespace AirManager
             contentPanel.Controls.Add(_playlistEditorControl);
 
             lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.PlaylistEditor", "Playlist Editor")} - {_currentStation.Name}";
+        }
+
+        private void MenuStreamingManager_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new StreamingManagerForm())
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        private void MenuCommandManager_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new CommandManagerForm())
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void MenuLicense_Click(object sender, EventArgs e)

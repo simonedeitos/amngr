@@ -137,6 +137,20 @@ namespace AirManager.Services.Database
                 Console.WriteLine("[DbcManager] ✅ Artists.dbc creato");
             }
 
+            string streamingPath = Path.Combine(DatabasePath, "Streaming.dbc");
+            if (!File.Exists(streamingPath))
+            {
+                SaveToCsvInternal(streamingPath, new List<AirManager.Models.StreamingEntry>());
+                Console.WriteLine("[DbcManager] ✅ Streaming.dbc creato");
+            }
+
+            string commandsPath = Path.Combine(DatabasePath, "Commands.dbc");
+            if (!File.Exists(commandsPath))
+            {
+                SaveToCsvInternal(commandsPath, new List<AirManager.Models.CommandEntry>());
+                Console.WriteLine("[DbcManager] ✅ Commands.dbc creato");
+            }
+
             // ✅ CLIPS.DBC
             string clipsPath = Path.Combine(DatabasePath, "Clips.dbc");
             if (!File.Exists(clipsPath))

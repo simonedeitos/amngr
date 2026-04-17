@@ -10,7 +10,13 @@ namespace AirManager.Models
         Track,      // Brano musicale dall'archivio
         Clip,       // Jingle/clip dall'archivio
         Category,   // Regola: categoria (risolto a runtime)
-        Genre       // Regola: genere (risolto a runtime)
+        Genre,      // Regola: genere (risolto a runtime)
+        URLStreaming,
+        ExternalAudio,
+        LogoShow,
+        LogoHide,
+        CommandHttp,
+        CommandUdp
     }
 
     /// <summary>
@@ -33,6 +39,10 @@ namespace AirManager.Models
         public int YearFrom { get; set; }
         public int YearTo { get; set; }
         public TimeSpan ScheduledTime { get; set; } // Orario calcolato
+        public string StreamDuration { get; set; }
+        public string CommandValue { get; set; }
+        public string AssociatedBufferPath { get; set; }
+        public string AssociatedVideoPath { get; set; }
 
         public AirPlaylistItem()
         {
@@ -48,6 +58,10 @@ namespace AirManager.Models
             YearFrom = 1900;
             YearTo = DateTime.Now.Year;
             ScheduledTime = TimeSpan.Zero;
+            StreamDuration = "01:00:00";
+            CommandValue = string.Empty;
+            AssociatedBufferPath = string.Empty;
+            AssociatedVideoPath = string.Empty;
         }
 
         /// <summary>
@@ -81,6 +95,7 @@ namespace AirManager.Models
                 case AirPlaylistItemType.Clip:
                     if (string.IsNullOrEmpty(FilePath))
                     {
+                        // Regola Clips (senza FilePath diretto)
                         string source = RuleSourceType ?? "Clips";
                         var clipParts = new System.Collections.Generic.List<string>();
                         if (!string.IsNullOrEmpty(RuleGenreName)) clipParts.Add($"Genere: {RuleGenreName}");
@@ -102,6 +117,18 @@ namespace AirManager.Models
                         return $"{source} - {string.Join(", ", parts)}";
                     return CategoryName ?? "";
                 }
+                case AirPlaylistItemType.URLStreaming:
+                    return $"Streaming: {Title}";
+                case AirPlaylistItemType.ExternalAudio:
+                    return $"Audio: {System.IO.Path.GetFileName(FilePath ?? "")}";
+                case AirPlaylistItemType.LogoShow:
+                    return $"Logo Show: {CommandValue}";
+                case AirPlaylistItemType.LogoHide:
+                    return $"Logo Hide: {CommandValue}";
+                case AirPlaylistItemType.CommandHttp:
+                    return $"HTTP: {CommandValue}";
+                case AirPlaylistItemType.CommandUdp:
+                    return $"UDP: {CommandValue}";
                 default:
                     return string.Empty;
             }
@@ -118,6 +145,12 @@ namespace AirManager.Models
                 case AirPlaylistItemType.Clip:     return "🔔";
                 case AirPlaylistItemType.Category: return "📁";
                 case AirPlaylistItemType.Genre:    return "🎸";
+                case AirPlaylistItemType.URLStreaming: return "🌐";
+                case AirPlaylistItemType.ExternalAudio: return "🎵";
+                case AirPlaylistItemType.LogoShow: return "🟢";
+                case AirPlaylistItemType.LogoHide: return "🔴";
+                case AirPlaylistItemType.CommandHttp: return "🌐";
+                case AirPlaylistItemType.CommandUdp: return "📶";
                 default:                           return "❓";
             }
         }
