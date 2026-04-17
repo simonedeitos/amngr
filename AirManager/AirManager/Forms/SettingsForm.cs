@@ -296,9 +296,7 @@ namespace AirManager.Forms
         {
             if (dgvPaths == null) return;
             dgvPaths.DataSource = null;
-            dgvPaths.DataSource = _pathMappings
-                .Select(p => new PathMappingEntry { SourcePath = p.SourcePath, TargetPath = p.TargetPath })
-                .ToList();
+            dgvPaths.DataSource = _pathMappings?.ToList();
         }
 
         private void LoadAudioDevices()

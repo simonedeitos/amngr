@@ -604,11 +604,6 @@ namespace AirManager.Forms
             base.Dispose(disposing);
         }
 
-        private void lblStreamDuration_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void SetupDynamicActionControls()
         {
             txtStreamURL.Visible = false;

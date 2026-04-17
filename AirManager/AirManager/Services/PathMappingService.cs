@@ -16,19 +16,33 @@ namespace AirManager.Services
     {
         private const string RegistryPath = @"SOFTWARE\AirManager\Settings";
         private const string RegistryValue = "PathMappingsJson";
+        private static readonly object Sync = new object();
+        private static List<PathMappingEntry> _cachedMappings;
 
         public static List<PathMappingEntry> LoadMappings()
         {
+            lock (Sync)
+            {
+                if (_cachedMappings != null)
+                    return _cachedMappings.Select(m => new PathMappingEntry { SourcePath = m.SourcePath, TargetPath = m.TargetPath }).ToList();
+            }
+
             try
             {
                 using (var key = Registry.CurrentUser.OpenSubKey(RegistryPath))
                 {
                     string json = key?.GetValue(RegistryValue, "[]")?.ToString() ?? "[]";
-                    return JsonConvert.DeserializeObject<List<PathMappingEntry>>(json) ?? new List<PathMappingEntry>();
+                    var mappings = JsonConvert.DeserializeObject<List<PathMappingEntry>>(json) ?? new List<PathMappingEntry>();
+                    lock (Sync)
+                    {
+                        _cachedMappings = mappings;
+                    }
+                    return mappings.Select(m => new PathMappingEntry { SourcePath = m.SourcePath, TargetPath = m.TargetPath }).ToList();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[PathMappingService] ❌ Errore caricamento mappature: {ex.Message}");
                 return new List<PathMappingEntry>();
             }
         }
@@ -39,6 +53,13 @@ namespace AirManager.Services
             {
                 string json = JsonConvert.SerializeObject(mappings ?? new List<PathMappingEntry>());
                 key?.SetValue(RegistryValue, json);
+            }
+
+            lock (Sync)
+            {
+                _cachedMappings = (mappings ?? new List<PathMappingEntry>())
+                    .Select(m => new PathMappingEntry { SourcePath = m.SourcePath, TargetPath = m.TargetPath })
+                    .ToList();
             }
         }
 

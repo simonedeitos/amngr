@@ -249,7 +249,6 @@ namespace AirManager.Forms
             lblStreamDuration.Size = new Size(75, 16);
             lblStreamDuration.TabIndex = 11;
             lblStreamDuration.Text = "Durata:";
-            lblStreamDuration.Click += lblStreamDuration_Click;
             // 
             // txtStreamDuration
             // 
