@@ -45,6 +45,8 @@ namespace AirManager
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU ARCHIVES
         private ToolStripMenuItem menuItemArtistAliases;
+        private ToolStripMenuItem menuItemArchiveCommandManager;
+        private ToolStripMenuItem menuItemArchiveStreamingManager;
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
 
@@ -63,8 +65,6 @@ namespace AirManager
         // ✅ RIFERIMENTI AL MENU PLAYLIST
         private ToolStripMenuItem menuPlaylist;
         private ToolStripMenuItem menuItemOpenPlaylistEditor;
-        private ToolStripMenuItem menuItemStreamingManager;
-        private ToolStripMenuItem menuItemCommandManager;
 
         private StationManagerControl _stationManager;
         private ArchiveControl _archiveMusicControl;
@@ -149,7 +149,11 @@ namespace AirManager
 
             menuItemArtistAliases = new ToolStripMenuItem("🎤 Gestione Alias Artisti", null, MenuArtistAliases_Click);
             menuArchives.DropDownItems.Insert(0, menuItemArtistAliases);
-            menuArchives.DropDownItems.Insert(1, new ToolStripSeparator());
+            menuItemArchiveCommandManager = new ToolStripMenuItem("📡 " + LanguageManager.GetString("MainForm.Menu.Archives.CommandManager", "Gestione Comandi"), null, MenuCommandManager_Click);
+            menuArchives.DropDownItems.Insert(1, menuItemArchiveCommandManager);
+            menuItemArchiveStreamingManager = new ToolStripMenuItem("🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming"), null, MenuStreamingManager_Click);
+            menuArchives.DropDownItems.Insert(2, menuItemArchiveStreamingManager);
+            menuArchives.DropDownItems.Insert(3, new ToolStripSeparator());
 
             menuItemArchiveMusic = new ToolStripMenuItem("🎵 Archivio Musica", null, MenuArchiveMusic_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveMusic);
@@ -169,11 +173,6 @@ namespace AirManager
             menuPlaylist = new ToolStripMenuItem(LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist"));
             menuItemOpenPlaylistEditor = new ToolStripMenuItem("🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist"), null, MenuPlaylist_Click);
             menuPlaylist.DropDownItems.Add(menuItemOpenPlaylistEditor);
-            menuPlaylist.DropDownItems.Add(new ToolStripSeparator());
-            menuItemStreamingManager = new ToolStripMenuItem("🌐 " + LanguageManager.GetString("MainForm.OpenStreamingManager", "Gestione Streaming"), null, MenuStreamingManager_Click);
-            menuPlaylist.DropDownItems.Add(menuItemStreamingManager);
-            menuItemCommandManager = new ToolStripMenuItem("📡 " + LanguageManager.GetString("MainForm.OpenCommandManager", "Gestione Comandi"), null, MenuCommandManager_Click);
-            menuPlaylist.DropDownItems.Add(menuItemCommandManager);
             menuStrip.Items.Add(menuPlaylist);
 
             // ✅ MENU REPORT
@@ -299,6 +298,8 @@ namespace AirManager
 
             // ✅ MENU ARCHIVES
             menuItemArtistAliases.Text = "🎤 " + LanguageManager.GetString("MainForm.Menu.Archives.ArtistAliases", "Gestione Alias Artisti");
+            menuItemArchiveCommandManager.Text = "📡 " + LanguageManager.GetString("MainForm.Menu.Archives.CommandManager", "Gestione Comandi");
+            menuItemArchiveStreamingManager.Text = "🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming");
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
 
@@ -319,8 +320,6 @@ namespace AirManager
             // ✅ MENU PLAYLIST
             menuPlaylist.Text = "🎶 " + LanguageManager.GetString("MainForm.MenuPlaylist", "Playlist");
             menuItemOpenPlaylistEditor.Text = "🎶 " + LanguageManager.GetString("MainForm.OpenPlaylistEditor", "Editor Playlist");
-            menuItemStreamingManager.Text = "🌐 " + LanguageManager.GetString("MainForm.OpenStreamingManager", "Gestione Streaming");
-            menuItemCommandManager.Text = "📡 " + LanguageManager.GetString("MainForm.OpenCommandManager", "Gestione Comandi");
 
             // ✅ STATUS BAR
             if (lblStatus.Text == "Pronto" || lblStatus.Text.Contains("Ready"))
