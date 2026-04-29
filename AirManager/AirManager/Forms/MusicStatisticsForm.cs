@@ -35,6 +35,17 @@ namespace AirManager.Forms
         private Panel pnlSingleTrack = null!;
         private Panel pnlSingleArtist = null!;
 
+        private Panel pnlTimeSlots = null!;
+        private Panel pnlCompletion = null!;
+        private Panel pnlWeekendVsWeekday = null!;
+        private Panel pnlTopGenres = null!;
+        private Panel pnlTopCategories = null!;
+        private Panel pnlYearDist = null!;
+
+        private Label lblDailyTrendDesc = null!;
+        private Label lblHourlyDistDesc = null!;
+        private Label lblWeekdayDistDesc = null!;
+
         private ComboBox cmbSingleTrack = null!;
         private ComboBox cmbSingleArtist = null!;
 
@@ -62,7 +73,7 @@ namespace AirManager.Forms
             btnLastMonth.Text = LanguageManager.GetString("MusicStatistics.QuickRange.LastMonth", "Mese scorso");
             btnExportCsv.Text = LanguageManager.GetString("MusicStatistics.Export.Button", "📥 Esporta CSV");
 
-            if (tabControl.TabPages.Count >= 10)
+            if (tabControl.TabPages.Count >= 16)
             {
                 tabControl.TabPages[0].Text = LanguageManager.GetString("MusicStatistics.Tab.TopTracks", "Top Tracks");
                 tabControl.TabPages[1].Text = LanguageManager.GetString("MusicStatistics.Tab.TopArtists", "Top Artists");
@@ -74,7 +85,20 @@ namespace AirManager.Forms
                 tabControl.TabPages[7].Text = LanguageManager.GetString("MusicStatistics.Tab.Summary", "Summary");
                 tabControl.TabPages[8].Text = LanguageManager.GetString("MusicStatistics.Tab.SingleTrack", "Single Track");
                 tabControl.TabPages[9].Text = LanguageManager.GetString("MusicStatistics.Tab.SingleArtist", "Single Artist");
+                tabControl.TabPages[10].Text = LanguageManager.GetString("MusicStatistics.Tab.TimeSlots", "Time Slots");
+                tabControl.TabPages[11].Text = LanguageManager.GetString("MusicStatistics.Tab.Completion", "Completion");
+                tabControl.TabPages[12].Text = LanguageManager.GetString("MusicStatistics.Tab.WeekendVsWeekday", "Weekend vs Weekday");
+                tabControl.TabPages[13].Text = LanguageManager.GetString("MusicStatistics.Tab.TopGenres", "Top Genres");
+                tabControl.TabPages[14].Text = LanguageManager.GetString("MusicStatistics.Tab.TopCategories", "Top Categories");
+                tabControl.TabPages[15].Text = LanguageManager.GetString("MusicStatistics.Tab.YearDist", "Year Distribution");
             }
+
+            if (lblDailyTrendDesc != null)
+                lblDailyTrendDesc.Text = LanguageManager.GetString("MusicStatistics.Chart.DailyTrend.Desc", "Numero di brani trasmessi per giorno nel periodo selezionato");
+            if (lblHourlyDistDesc != null)
+                lblHourlyDistDesc.Text = LanguageManager.GetString("MusicStatistics.Chart.HourlyDist.Desc", "Distribuzione delle trasmissioni nelle 24 ore (0-23)");
+            if (lblWeekdayDistDesc != null)
+                lblWeekdayDistDesc.Text = LanguageManager.GetString("MusicStatistics.Chart.WeekdayDist.Desc", "Numero di brani trasmessi per giorno della settimana");
         }
 
         private void InitializeCustomUI()
@@ -267,6 +291,12 @@ namespace AirManager.Forms
             pnlSummary  = CreateDarkPanel();
             pnlSingleTrack  = CreateDarkPanel();
             pnlSingleArtist = CreateDarkPanel();
+            pnlTimeSlots        = CreateDarkPanel();
+            pnlCompletion       = CreateDarkPanel();
+            pnlWeekendVsWeekday = CreateDarkPanel();
+            pnlTopGenres        = CreateDarkPanel();
+            pnlTopCategories    = CreateDarkPanel();
+            pnlYearDist         = CreateDarkPanel();
 
             // Build Single Track tab container (Label + ComboBox on top + detail panel below)
             var tabSingleTrack = new TabPage("🎵 Single Track") { BackColor = AppTheme.BgDark };
@@ -346,16 +376,60 @@ namespace AirManager.Forms
             tabSingleArtist.Controls.Add(pnlSingleArtist);
             tabSingleArtist.Controls.Add(pnlArtistSelector);
 
+            // Build description label helper
+            lblDailyTrendDesc = CreateDescLabel(
+                LanguageManager.GetString("MusicStatistics.Chart.DailyTrend.Desc", "Numero di brani trasmessi per giorno nel periodo selezionato"));
+            lblHourlyDistDesc = CreateDescLabel(
+                LanguageManager.GetString("MusicStatistics.Chart.HourlyDist.Desc", "Distribuzione delle trasmissioni nelle 24 ore (0-23)"));
+            lblWeekdayDistDesc = CreateDescLabel(
+                LanguageManager.GetString("MusicStatistics.Chart.WeekdayDist.Desc", "Numero di brani trasmessi per giorno della settimana"));
+
+            var tabDailyTrend = new TabPage("📈 Daily Trend") { BackColor = AppTheme.BgDark };
+            tabDailyTrend.Controls.Add(chartDailyTrend);
+            tabDailyTrend.Controls.Add(lblDailyTrendDesc);
+
+            var tabHourlyDist = new TabPage("🕐 Hourly Distribution") { BackColor = AppTheme.BgDark };
+            tabHourlyDist.Controls.Add(chartHourlyDist);
+            tabHourlyDist.Controls.Add(lblHourlyDistDesc);
+
+            var tabWeekdayDist = new TabPage("📅 Weekday Distribution") { BackColor = AppTheme.BgDark };
+            tabWeekdayDist.Controls.Add(chartWeekdayDist);
+            tabWeekdayDist.Controls.Add(lblWeekdayDistDesc);
+
             tabControl.TabPages.Add(CreateTab("📊 Top Tracks",           chartTopTracks));
             tabControl.TabPages.Add(CreateTab("🎤 Top Artists",          chartTopArtists));
-            tabControl.TabPages.Add(CreateTab("📈 Daily Trend",          chartDailyTrend));
-            tabControl.TabPages.Add(CreateTab("🕐 Hourly Distribution",  chartHourlyDist));
-            tabControl.TabPages.Add(CreateTab("📅 Weekday Distribution", chartWeekdayDist));
+            tabControl.TabPages.Add(tabDailyTrend);
+            tabControl.TabPages.Add(tabHourlyDist);
+            tabControl.TabPages.Add(tabWeekdayDist);
             tabControl.TabPages.Add(CreateTab("⏱️ Avg Duration/Hour",    chartAvgDuration));
             tabControl.TabPages.Add(CreateTab("🔄 Rotation Index",       pnlRotation));
             tabControl.TabPages.Add(CreateTab("📋 Summary",              pnlSummary));
             tabControl.TabPages.Add(tabSingleTrack);
             tabControl.TabPages.Add(tabSingleArtist);
+
+            var tabTimeSlots = new TabPage("⏰ Time Slots") { BackColor = AppTheme.BgDark };
+            tabTimeSlots.Controls.Add(pnlTimeSlots);
+            tabControl.TabPages.Add(tabTimeSlots);
+
+            var tabCompletion = new TabPage("✅ Completion") { BackColor = AppTheme.BgDark };
+            tabCompletion.Controls.Add(pnlCompletion);
+            tabControl.TabPages.Add(tabCompletion);
+
+            var tabWeekendVsWeekday = new TabPage("📅 Weekend vs Weekday") { BackColor = AppTheme.BgDark };
+            tabWeekendVsWeekday.Controls.Add(pnlWeekendVsWeekday);
+            tabControl.TabPages.Add(tabWeekendVsWeekday);
+
+            var tabTopGenres = new TabPage("🎸 Top Genres") { BackColor = AppTheme.BgDark };
+            tabTopGenres.Controls.Add(pnlTopGenres);
+            tabControl.TabPages.Add(tabTopGenres);
+
+            var tabTopCategories = new TabPage("📁 Top Categories") { BackColor = AppTheme.BgDark };
+            tabTopCategories.Controls.Add(pnlTopCategories);
+            tabControl.TabPages.Add(tabTopCategories);
+
+            var tabYearDist = new TabPage("📅 Year Distribution") { BackColor = AppTheme.BgDark };
+            tabYearDist.Controls.Add(pnlYearDist);
+            tabControl.TabPages.Add(tabYearDist);
 
             // correct dock order: header (Top) added after tabControl (Fill)
             this.Controls.Add(tabControl);
@@ -373,6 +447,18 @@ namespace AirManager.Forms
             page.Controls.Add(control);
             return page;
         }
+
+        private static Label CreateDescLabel(string text) => new Label
+        {
+            Text = text,
+            ForeColor = AppTheme.TextSecondary,
+            Font = new Font("Segoe UI", 8.5f, FontStyle.Italic),
+            Dock = DockStyle.Top,
+            Height = 24,
+            TextAlign = ContentAlignment.MiddleLeft,
+            Padding = new Padding(8, 0, 0, 0),
+            BackColor = AppTheme.BgPanel
+        };
 
         // ── Data loading & chart building ────────────────────────────────────
 
@@ -633,6 +719,12 @@ namespace AirManager.Forms
             BuildSummaryPanel();
             PopulateSingleTrackCombo();
             PopulateSingleArtistCombo();
+            BuildTimeSlotsPanel();
+            BuildCompletionPanel();
+            BuildWeekendVsWeekdayPanel();
+            BuildTopGenresPanel();
+            BuildTopCategoriesPanel();
+            BuildYearDistPanel();
         }
 
         // 1. Top N Tracks ────────────────────────────────────────────────────
@@ -1186,6 +1278,406 @@ namespace AirManager.Forms
                 AutoSize = true,
                 Location = new Point(20, 20)
             });
+        }
+
+        // 11. Time Slots ─────────────────────────────────────────────────────
+        private void BuildTimeSlotsPanel()
+        {
+            pnlTimeSlots.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlTimeSlots); return; }
+
+            // Definizione fasce orarie
+            var slots = new[]
+            {
+                (LanguageManager.GetString("MusicStatistics.TimeSlots.Morning",   "Mattina (06-12)"),   6, 12),
+                (LanguageManager.GetString("MusicStatistics.TimeSlots.Afternoon", "Pomeriggio (12-18)"), 12, 18),
+                (LanguageManager.GetString("MusicStatistics.TimeSlots.Evening",   "Sera (18-22)"),       18, 22),
+                (LanguageManager.GetString("MusicStatistics.TimeSlots.Night",     "Notte (22-06)"),      22, 30)  // 30 = wrap around midnight
+            };
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TimeSlots.ColSlot",    "Fascia Oraria"),   200);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TimeSlots.ColTracks",  "Brani Trasmessi"), 150);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TimeSlots.ColArtists", "Artisti Unici"),   150);
+
+            foreach (var (label, start, end) in slots)
+            {
+                var slotData = _data.Where(r =>
+                {
+                    if (!TimeSpan.TryParse(r.StartTime, out var ts)) return false;
+                    int h = ts.Hours;
+                    if (end <= 24) return h >= start && h < end;
+                    // Night: 22-06 (wraps midnight)
+                    return h >= start || h < (end - 24);
+                }).ToList();
+
+                int tracks  = slotData.Count;
+                int artists = slotData.Where(r => !string.IsNullOrWhiteSpace(r.Artist))
+                                      .Select(r => r.Artist).Distinct().Count();
+                lv.Items.Add(new ListViewItem(new[] { label, tracks.ToString(), artists.ToString() }));
+            }
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.Tab.TimeSlots", "Time Slots"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlTimeSlots.Controls.Add(lv);
+            pnlTimeSlots.Controls.Add(lblTitle);
+        }
+
+        // 12. Completion ─────────────────────────────────────────────────────
+        private void BuildCompletionPanel()
+        {
+            pnlCompletion.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlCompletion); return; }
+
+            int total = _data.Count;
+            int completed = 0, interrupted = 0;
+
+            foreach (var r in _data)
+            {
+                bool hasPlay = TimeSpan.TryParse(r.PlayDuration, out var play);
+                bool hasFile = TimeSpan.TryParse(r.FileDuration, out var file);
+                if (hasPlay && hasFile && file.TotalSeconds > 0)
+                {
+                    // Consider completed if played >= 95% of file duration
+                    if (play.TotalSeconds >= file.TotalSeconds * 0.95)
+                        completed++;
+                    else
+                        interrupted++;
+                }
+                else
+                {
+                    // No duration info — count as completed
+                    completed++;
+                }
+            }
+
+            double pctCompleted    = total > 0 ? Math.Round((double)completed    / total * 100, 1) : 0;
+            double pctInterrupted  = total > 0 ? Math.Round((double)interrupted  / total * 100, 1) : 0;
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Metric", "Metric"), 300);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.Summary.Value", "Value"),   200);
+
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.Completion.Completed", "Completati"),
+                $"{completed}  ({pctCompleted}%)"
+            }));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.Completion.Interrupted", "Interrotti"),
+                $"{interrupted}  ({pctInterrupted}%)"
+            }));
+            lv.Items.Add(new ListViewItem(new[]
+            {
+                LanguageManager.GetString("MusicStatistics.Rotation.TotalPlays", "Total plays"),
+                total.ToString()
+            }));
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.Completion.Title", "Completamento Trasmissioni"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlCompletion.Controls.Add(lv);
+            pnlCompletion.Controls.Add(lblTitle);
+        }
+
+        // 13. Weekend vs Weekday ──────────────────────────────────────────────
+        private void BuildWeekendVsWeekdayPanel()
+        {
+            pnlWeekendVsWeekday.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlWeekendVsWeekday); return; }
+
+            var weekendData  = _data.Where(r => r.Date.DayOfWeek == DayOfWeek.Saturday || r.Date.DayOfWeek == DayOfWeek.Sunday).ToList();
+            var weekdayData  = _data.Where(r => r.Date.DayOfWeek != DayOfWeek.Saturday && r.Date.DayOfWeek != DayOfWeek.Sunday).ToList();
+
+            TimeSpan CalcDuration(List<ReportEntry> list)
+            {
+                var dur = TimeSpan.Zero;
+                foreach (var r in list)
+                    if (TimeSpan.TryParse(r.PlayDuration, out var d)) dur += d;
+                return dur;
+            }
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.ColGroup",    "Gruppo"),        200);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.ColTracks",   "N° Brani"),      120);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.ColArtists",  "Artisti Unici"), 130);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.ColDuration", "Durata Totale"), 130);
+
+            foreach (var (groupLabel, list) in new[]
+            {
+                (LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.Weekend", "Weekend (Sab+Dom)"), weekendData),
+                (LanguageManager.GetString("MusicStatistics.WeekendVsWeekday.Weekday", "Feriale (Lun-Ven)"), weekdayData)
+            })
+            {
+                int tracks  = list.Count;
+                int artists = list.Where(r => !string.IsNullOrWhiteSpace(r.Artist)).Select(r => r.Artist).Distinct().Count();
+                TimeSpan dur = CalcDuration(list);
+                lv.Items.Add(new ListViewItem(new[] { groupLabel, tracks.ToString(), artists.ToString(), FormatTs(dur) }));
+            }
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.Tab.WeekendVsWeekday", "Weekend vs Weekday"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlWeekendVsWeekday.Controls.Add(lv);
+            pnlWeekendVsWeekday.Controls.Add(lblTitle);
+        }
+
+        // 14. Top Genres ─────────────────────────────────────────────────────
+        private void BuildTopGenresPanel()
+        {
+            pnlTopGenres.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlTopGenres); return; }
+
+            // Build lookup Artist+Title → Genre from Music.dbc
+            var musicDb = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
+            var genreLookup = musicDb
+                .Where(m => !string.IsNullOrWhiteSpace(m.Genre))
+                .ToDictionary(m => $"{m.Artist?.Trim()}|{m.Title?.Trim()}", m => m.Genre, StringComparer.OrdinalIgnoreCase);
+
+            var genreCounts = _data
+                .Select(r =>
+                {
+                    string key = $"{r.Artist?.Trim()}|{r.Title?.Trim()}";
+                    return genreLookup.TryGetValue(key, out var g) ? g : null;
+                })
+                .Where(g => !string.IsNullOrWhiteSpace(g))
+                .GroupBy(g => g!)
+                .OrderByDescending(g => g.Count())
+                .Take(20)
+                .ToList();
+
+            int totalWithGenre = genreCounts.Sum(g => g.Count());
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopGenres.ColGenre",   "Genere"),        200);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopGenres.ColPlays",   "Trasmissioni"),  130);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopGenres.ColPercent", "%"),              80);
+
+            foreach (var g in genreCounts)
+            {
+                double pct = totalWithGenre > 0 ? Math.Round((double)g.Count() / totalWithGenre * 100, 1) : 0;
+                lv.Items.Add(new ListViewItem(new[] { g.Key, g.Count().ToString(), $"{pct}%" }));
+            }
+
+            if (genreCounts.Count == 0)
+                AddNoDataLabel(pnlTopGenres);
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.TopGenres.Title", "Top Generi più Trasmessi"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlTopGenres.Controls.Add(lv);
+            pnlTopGenres.Controls.Add(lblTitle);
+        }
+
+        // 15. Top Categories ─────────────────────────────────────────────────
+        private void BuildTopCategoriesPanel()
+        {
+            pnlTopCategories.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlTopCategories); return; }
+
+            var musicDb = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
+            var catLookup = musicDb
+                .Where(m => !string.IsNullOrWhiteSpace(m.Categories))
+                .ToDictionary(m => $"{m.Artist?.Trim()}|{m.Title?.Trim()}", m => m.Categories, StringComparer.OrdinalIgnoreCase);
+
+            // Each entry may have multiple categories separated by comma or semicolon
+            var catCounts = _data
+                .SelectMany(r =>
+                {
+                    string key = $"{r.Artist?.Trim()}|{r.Title?.Trim()}";
+                    if (!catLookup.TryGetValue(key, out var cats) || string.IsNullOrWhiteSpace(cats))
+                        return Enumerable.Empty<string>();
+                    return cats.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries)
+                               .Select(c => c.Trim())
+                               .Where(c => !string.IsNullOrEmpty(c));
+                })
+                .GroupBy(c => c, StringComparer.OrdinalIgnoreCase)
+                .OrderByDescending(g => g.Count())
+                .Take(20)
+                .ToList();
+
+            int totalWithCat = catCounts.Sum(g => g.Count());
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopCategories.ColCategory", "Categoria"),     200);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopCategories.ColPlays",    "Trasmissioni"),  130);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.TopCategories.ColPercent",  "%"),              80);
+
+            foreach (var g in catCounts)
+            {
+                double pct = totalWithCat > 0 ? Math.Round((double)g.Count() / totalWithCat * 100, 1) : 0;
+                lv.Items.Add(new ListViewItem(new[] { g.Key, g.Count().ToString(), $"{pct}%" }));
+            }
+
+            if (catCounts.Count == 0)
+                AddNoDataLabel(pnlTopCategories);
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.TopCategories.Title", "Top Categorie più Trasmesse"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlTopCategories.Controls.Add(lv);
+            pnlTopCategories.Controls.Add(lblTitle);
+        }
+
+        // 16. Year Distribution ──────────────────────────────────────────────
+        private void BuildYearDistPanel()
+        {
+            pnlYearDist.Controls.Clear();
+            if (_data.Count == 0) { AddNoDataLabel(pnlYearDist); return; }
+
+            var musicDb = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
+            var yearLookup = musicDb
+                .Where(m => m.Year > 0)
+                .ToDictionary(m => $"{m.Artist?.Trim()}|{m.Title?.Trim()}", m => m.Year, StringComparer.OrdinalIgnoreCase);
+
+            var yearCounts = _data
+                .Select(r =>
+                {
+                    string key = $"{r.Artist?.Trim()}|{r.Title?.Trim()}";
+                    return yearLookup.TryGetValue(key, out var y) && y > 0 ? y : (int?)null;
+                })
+                .Where(y => y.HasValue)
+                .GroupBy(y => y!.Value)
+                .OrderBy(g => g.Key)
+                .ToList();
+
+            int totalWithYear = yearCounts.Sum(g => g.Count());
+
+            var lv = new ListView
+            {
+                Dock = DockStyle.Fill,
+                View = View.Details,
+                FullRowSelect = true,
+                GridLines = true,
+                BackColor = AppTheme.BgPanel,
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 10),
+                BorderStyle = BorderStyle.None
+            };
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.YearDist.ColYear",    "Anno"),  100);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.YearDist.ColTracks",  "Brani"), 120);
+            lv.Columns.Add(LanguageManager.GetString("MusicStatistics.YearDist.ColPercent", "%"),      80);
+
+            foreach (var g in yearCounts)
+            {
+                double pct = totalWithYear > 0 ? Math.Round((double)g.Count() / totalWithYear * 100, 1) : 0;
+                lv.Items.Add(new ListViewItem(new[] { g.Key.ToString(), g.Count().ToString(), $"{pct}%" }));
+            }
+
+            if (yearCounts.Count == 0)
+                AddNoDataLabel(pnlYearDist);
+
+            var lblTitle = new Label
+            {
+                Text = LanguageManager.GetString("MusicStatistics.YearDist.Title", "Distribuzione per Anno di Pubblicazione"),
+                ForeColor = AppTheme.TextSecondary,
+                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Dock = DockStyle.Top,
+                Height = 28,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                BackColor = AppTheme.BgPanel
+            };
+
+            pnlYearDist.Controls.Add(lv);
+            pnlYearDist.Controls.Add(lblTitle);
         }
 
         // ── Inner GDI+ Chart Panel ────────────────────────────────────────────
