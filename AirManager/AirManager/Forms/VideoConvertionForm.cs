@@ -527,8 +527,13 @@ namespace AirManager.Forms
         {
             if (_useTagsFromFile)
                 return GetArtistTitleFromTags(filePath);
-            else
-                return GetArtistTitleFromFilename(filePath);
+
+            // For Clips, always use the full filename as title — no Artist-Title split
+            bool isClipArchive = string.Equals(_archiveType, "Clips", StringComparison.OrdinalIgnoreCase);
+            if (isClipArchive)
+                return ("", Path.GetFileNameWithoutExtension(filePath).Trim());
+
+            return GetArtistTitleFromFilename(filePath);
         }
 
         private static (string Artist, string Title) GetArtistTitleFromTags(string filePath)
