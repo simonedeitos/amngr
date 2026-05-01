@@ -18,6 +18,7 @@ namespace AirManager.Forms
         // Left panel
         private DataGridView dgvSongs;
         private Label lblSongsHeader;
+        private TextBox txtArtistSearch;
 
         // Right panel
         private DataGridView dgvAliases;
@@ -34,6 +35,8 @@ namespace AirManager.Forms
         // ── State ────────────────────────────────────────────────────────────
         private MusicEntry _selectedSong;
         private List<ArtistAliasEntry> _artistEntries = new List<ArtistAliasEntry>();
+        private List<MusicEntry> _allSongsWithAliases = new List<MusicEntry>();
+        private string _artistSearchPlaceholder;
 
         /// <summary>
         /// Path of the file that tracks music IDs whose featured-artists were
@@ -114,6 +117,27 @@ namespace AirManager.Forms
                 Padding = new Padding(4, 0, 0, 0)
             };
 
+            string searchPlaceholder = LanguageManager.GetString("ArtistAliasManager.SearchPlaceholder", "Cerca artista...");
+            _artistSearchPlaceholder = searchPlaceholder;
+            txtArtistSearch = new TextBox
+            {
+                Dock = DockStyle.Top,
+                Height = 26,
+                Text = searchPlaceholder,
+                ForeColor = Color.Gray,
+                Font = new Font("Segoe UI", 9F),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            txtArtistSearch.GotFocus += (s, e) =>
+            {
+                if (txtArtistSearch.ForeColor == Color.Gray) { txtArtistSearch.Text = ""; txtArtistSearch.ForeColor = SystemColors.WindowText; }
+            };
+            txtArtistSearch.LostFocus += (s, e) =>
+            {
+                if (string.IsNullOrEmpty(txtArtistSearch.Text)) { txtArtistSearch.Text = _artistSearchPlaceholder; txtArtistSearch.ForeColor = Color.Gray; }
+            };
+            txtArtistSearch.TextChanged += TxtArtistSearch_TextChanged;
+
             dgvSongs = new DataGridView
             {
                 Dock = DockStyle.Fill,
@@ -147,6 +171,7 @@ namespace AirManager.Forms
             dgvSongs.SelectionChanged += DgvSongs_SelectionChanged;
 
             splitMain.Panel1.Controls.Add(dgvSongs);
+            splitMain.Panel1.Controls.Add(txtArtistSearch);
             splitMain.Panel1.Controls.Add(lblSongsHeader);
 
             // ── Right panel: aliases for selected song ──────────────────────
@@ -336,42 +361,64 @@ namespace AirManager.Forms
             {
                 int? previousId = (_selectedSong != null) ? (int?)_selectedSong.ID : null;
 
-                dgvSongs.Rows.Clear();
                 _selectedSong = null;
 
                 var allMusic = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
-                var songsWithAliases = allMusic
+                _allSongsWithAliases = allMusic
                     .Where(m => !string.IsNullOrWhiteSpace(m.FeaturedArtists))
                     .OrderBy(m => m.Artist)
                     .ThenBy(m => m.Title)
                     .ToList();
 
-                foreach (var m in songsWithAliases)
-                {
-                    int rowIdx = dgvSongs.Rows.Add(m.Artist, m.Title, m.FeaturedArtists);
-                    dgvSongs.Rows[rowIdx].Tag = m;
-                }
-
-                // Restore previous selection if possible
-                if (previousId.HasValue)
-                {
-                    foreach (DataGridViewRow row in dgvSongs.Rows)
-                    {
-                        if (row.Tag is MusicEntry me && me.ID == previousId.Value)
-                        {
-                            row.Selected = true;
-                            dgvSongs.CurrentCell = row.Cells[0];
-                            break;
-                        }
-                    }
-                }
-
+                PopulateSongsGrid(_allSongsWithAliases, previousId);
                 RefreshAliasPanel();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[ArtistAliasManager] ⚠️ Errore caricamento brani: {ex.Message}");
             }
+        }
+
+        private void PopulateSongsGrid(List<MusicEntry> songs, int? selectId = null)
+        {
+            dgvSongs.Rows.Clear();
+
+            foreach (var m in songs)
+            {
+                int rowIdx = dgvSongs.Rows.Add(m.Artist, m.Title, m.FeaturedArtists);
+                dgvSongs.Rows[rowIdx].Tag = m;
+            }
+
+            // Restore previous selection if possible
+            if (selectId.HasValue)
+            {
+                foreach (DataGridViewRow row in dgvSongs.Rows)
+                {
+                    if (row.Tag is MusicEntry me && me.ID == selectId.Value)
+                    {
+                        row.Selected = true;
+                        dgvSongs.CurrentCell = row.Cells[0];
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void TxtArtistSearch_TextChanged(object sender, EventArgs e)
+        {
+            string searchText = txtArtistSearch.Text;
+            if (searchText == _artistSearchPlaceholder || txtArtistSearch.ForeColor == Color.Gray)
+                searchText = "";
+
+            var filtered = string.IsNullOrWhiteSpace(searchText)
+                ? _allSongsWithAliases
+                : _allSongsWithAliases
+                    .Where(m => (m.Artist ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0
+                             || (m.Title ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0)
+                    .ToList();
+
+            int? currentId = (_selectedSong != null) ? (int?)_selectedSong.ID : null;
+            PopulateSongsGrid(filtered, currentId);
         }
 
         private void RefreshAliasPanel()

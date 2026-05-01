@@ -13,6 +13,7 @@ namespace AirManager.Models
         Genre,      // Regola: genere (risolto a runtime)
         URLStreaming,
         ExternalAudio,
+        ExternalVideo,
         LogoShow,
         LogoHide,
         CommandHttp,
@@ -121,6 +122,8 @@ namespace AirManager.Models
                     return $"Streaming: {Title}";
                 case AirPlaylistItemType.ExternalAudio:
                     return $"Audio: {System.IO.Path.GetFileName(FilePath ?? "")}";
+                case AirPlaylistItemType.ExternalVideo:
+                    return $"Video: {System.IO.Path.GetFileName(FilePath ?? "")}";
                 case AirPlaylistItemType.LogoShow:
                     return $"Logo Show: {CommandValue}";
                 case AirPlaylistItemType.LogoHide:
@@ -147,6 +150,7 @@ namespace AirManager.Models
                 case AirPlaylistItemType.Genre:    return "🎸";
                 case AirPlaylistItemType.URLStreaming: return "🌐";
                 case AirPlaylistItemType.ExternalAudio: return "🎵";
+                case AirPlaylistItemType.ExternalVideo: return "🎬";
                 case AirPlaylistItemType.LogoShow: return "🟢";
                 case AirPlaylistItemType.LogoHide: return "🔴";
                 case AirPlaylistItemType.CommandHttp: return "🌐";
