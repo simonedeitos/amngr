@@ -1586,48 +1586,25 @@ namespace AirManager.Forms
                 var source = AirPlaylist.Load(filePath);
                 string folder = GetPlaylistFolder();
                 string copySuffix = LanguageManager.GetString("PlaylistEditor.CopySuffix", " (copia)");
-                string baseName = source.Name + copySuffix;
-                string newName = baseName;
+                string newName = source.Name + copySuffix;
                 int counter = 2;
 
                 // Ensure the name is unique
                 while (File.Exists(Path.Combine(folder, $"{newName}.airpls")))
                 {
-                    string suffixBase = copySuffix.TrimEnd(')'); // e.g. " (copia" from " (copia)"
-                    newName = source.Name + suffixBase + " " + counter + ")";
+                    // Build numbered name: if suffix ends with ')', insert number before closing ')'
+                    // e.g. " (copia)" → " (copia 2)", " (copy)" → " (copy 2)"
+                    string numberedSuffix;
+                    if (copySuffix.EndsWith(")"))
+                        numberedSuffix = copySuffix.Substring(0, copySuffix.Length - 1) + " " + counter + ")";
+                    else
+                        numberedSuffix = copySuffix + " " + counter;
+                    newName = source.Name + numberedSuffix;
                     counter++;
                 }
 
-                // Deep-copy items
-                var cloned = new AirPlaylist
-                {
-                    Name = newName,
-                    StartTime = source.StartTime
-                };
-                foreach (var item in source.Items)
-                {
-                    cloned.Items.Add(new AirPlaylistItem
-                    {
-                        Type = item.Type,
-                        FilePath = item.FilePath,
-                        Artist = item.Artist,
-                        Title = item.Title,
-                        DurationSeconds = item.DurationSeconds,
-                        MarkerIN = item.MarkerIN,
-                        MarkerMIX = item.MarkerMIX,
-                        CategoryName = item.CategoryName,
-                        YearFilterEnabled = item.YearFilterEnabled,
-                        YearFrom = item.YearFrom,
-                        YearTo = item.YearTo,
-                        RuleSourceType = item.RuleSourceType,
-                        RuleCategoryName = item.RuleCategoryName,
-                        RuleGenreName = item.RuleGenreName,
-                        StreamDuration = item.StreamDuration,
-                        CommandValue = item.CommandValue,
-                        AssociatedBufferPath = item.AssociatedBufferPath,
-                        AssociatedVideoPath = item.AssociatedVideoPath
-                    });
-                }
+                var cloned = source.Clone();
+                cloned.Name = newName;
 
                 string newFilePath = Path.Combine(folder, $"{newName}.airpls");
                 cloned.Save(newFilePath);
@@ -1761,9 +1738,13 @@ namespace AirManager.Forms
             }
             catch { durationSeconds = 0; }
 
+            // Determine type based on file extension
+            string ext = Path.GetExtension(filePath).ToLowerInvariant();
+            bool isVideo = ext == ".mp4" || ext == ".mov" || ext == ".avi" || ext == ".mkv" || ext == ".wmv";
+
             var item = new AirPlaylistItem
             {
-                Type = AirPlaylistItemType.ExternalAudio,
+                Type = isVideo ? AirPlaylistItemType.ExternalVideo : AirPlaylistItemType.ExternalAudio,
                 FilePath = filePath,
                 Title = Path.GetFileNameWithoutExtension(filePath),
                 DurationSeconds = durationSeconds,

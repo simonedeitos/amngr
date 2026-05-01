@@ -36,6 +36,7 @@ namespace AirManager.Forms
         private MusicEntry _selectedSong;
         private List<ArtistAliasEntry> _artistEntries = new List<ArtistAliasEntry>();
         private List<MusicEntry> _allSongsWithAliases = new List<MusicEntry>();
+        private string _artistSearchPlaceholder;
 
         /// <summary>
         /// Path of the file that tracks music IDs whose featured-artists were
@@ -117,6 +118,7 @@ namespace AirManager.Forms
             };
 
             string searchPlaceholder = LanguageManager.GetString("ArtistAliasManager.SearchPlaceholder", "Cerca artista...");
+            _artistSearchPlaceholder = searchPlaceholder;
             txtArtistSearch = new TextBox
             {
                 Dock = DockStyle.Top,
@@ -132,7 +134,7 @@ namespace AirManager.Forms
             };
             txtArtistSearch.LostFocus += (s, e) =>
             {
-                if (string.IsNullOrEmpty(txtArtistSearch.Text)) { txtArtistSearch.Text = searchPlaceholder; txtArtistSearch.ForeColor = Color.Gray; }
+                if (string.IsNullOrEmpty(txtArtistSearch.Text)) { txtArtistSearch.Text = _artistSearchPlaceholder; txtArtistSearch.ForeColor = Color.Gray; }
             };
             txtArtistSearch.TextChanged += TxtArtistSearch_TextChanged;
 
@@ -404,9 +406,8 @@ namespace AirManager.Forms
 
         private void TxtArtistSearch_TextChanged(object sender, EventArgs e)
         {
-            string searchPlaceholder = LanguageManager.GetString("ArtistAliasManager.SearchPlaceholder", "Cerca artista...");
             string searchText = txtArtistSearch.Text;
-            if (searchText == searchPlaceholder || txtArtistSearch.ForeColor == Color.Gray)
+            if (searchText == _artistSearchPlaceholder || txtArtistSearch.ForeColor == Color.Gray)
                 searchText = "";
 
             var filtered = string.IsNullOrWhiteSpace(searchText)
