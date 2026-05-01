@@ -339,8 +339,16 @@ namespace AirManager.Forms
         {
             using (OpenFileDialog ofd = new OpenFileDialog())
             {
-                ofd.Filter = LanguageManager.GetString("ScheduleEditor.AudioFilter", "File Audio (*.mp3;*.wav;*.wma;*.aac)|*.mp3;*.wav;*.wma;*.aac|Tutti i file (*.*)|*.*");
-                ofd.Title = LanguageManager.GetString("ScheduleEditor.SelectAudioFile", "Seleziona File Audio");
+                if (_isRadioTVMode)
+                {
+                    ofd.Filter = LanguageManager.GetString("ScheduleEditor.AudioVideoFilter", "File Audio/Video (*.mp3;*.wav;*.wma;*.aac;*.mp4;*.mov;*.avi;*.mkv;*.wmv)|*.mp3;*.wav;*.wma;*.aac;*.mp4;*.mov;*.avi;*.mkv;*.wmv|Tutti i file (*.*)|*.*");
+                    ofd.Title = LanguageManager.GetString("ScheduleEditor.SelectAudioVideoFile", "Seleziona File Audio o Video");
+                }
+                else
+                {
+                    ofd.Filter = LanguageManager.GetString("ScheduleEditor.AudioFilter", "File Audio (*.mp3;*.wav;*.wma;*.aac)|*.mp3;*.wav;*.wma;*.aac|Tutti i file (*.*)|*.*");
+                    ofd.Title = LanguageManager.GetString("ScheduleEditor.SelectAudioFile", "Seleziona File Audio");
+                }
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {

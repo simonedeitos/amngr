@@ -554,6 +554,12 @@ namespace AirManager.Forms
             _dgvPlaylists.Dock = DockStyle.Fill;
             _dgvPlaylists.DoubleClick += (s, e) => OpenSelectedPlaylist();
 
+            // Context menu for playlist list
+            var playlistContextMenu = new ContextMenuStrip();
+            playlistContextMenu.Opening += (s, e) => e.Cancel = _dgvPlaylists.SelectedRows.Count == 0;
+            playlistContextMenu.Items.Add(LanguageManager.GetString("PlaylistEditor.CloneMenuItem", "📋 Clona"), null, (s, e) => CloneSelectedPlaylist());
+            _dgvPlaylists.ContextMenuStrip = playlistContextMenu;
+
             _btnDeletePlaylist = CreateButton(LanguageManager.GetString("PlaylistEditor.DeletePlaylist", "Elimina"), Color.FromArgb(150, 60, 60));
             _btnDeletePlaylist.Dock = DockStyle.Bottom;
             _btnDeletePlaylist.Height = 30;
@@ -716,17 +722,25 @@ namespace AirManager.Forms
 
             GroupBox grpAudio = new GroupBox
             {
-                Text = LanguageManager.GetString("PlaylistEditor.InsertAudio", "Inserisci Audio"),
+                Text = _isRadioTVMode
+                    ? LanguageManager.GetString("PlaylistEditor.InsertFile", "Inserisci File")
+                    : LanguageManager.GetString("PlaylistEditor.InsertAudio", "Inserisci Audio"),
                 ForeColor = Color.White,
                 Left = 16,
                 Top = y,
                 Width = 620,
-                Height = _isRadioTVMode ? 170 : 95
+                Height = _isRadioTVMode ? 95 : 95
             };
             grpAudio.Controls.Add(new Label { Text = LanguageManager.GetString("PlaylistEditor.SelectAudioFile", "Seleziona file audio") + ":", Left = 12, Top = 28, Width = 110, ForeColor = Color.White });
             _txtRuleAudioFile = new TextBox { Left = 125, Top = 24, Width = 415 };
             _btnBrowseRuleAudioFile = new Button { Text = "📁", Left = 545, Top = 24, Width = 30, Height = 24 };
-            _btnBrowseRuleAudioFile.Click += (s, e) => BrowseFileInto(_txtRuleAudioFile, LanguageManager.GetString("PlaylistEditor.SelectAudioFile", "Seleziona file audio"), "Audio|*.mp3;*.wav;*.wma;*.aac;*.flac|All files|*.*");
+            _btnBrowseRuleAudioFile.Click += (s, e) =>
+            {
+                string filter = _isRadioTVMode
+                    ? "Audio/Video|*.mp3;*.wav;*.wma;*.aac;*.flac;*.mp4;*.mov;*.avi;*.mkv;*.wmv|All files|*.*"
+                    : "Audio|*.mp3;*.wav;*.wma;*.aac;*.flac|All files|*.*";
+                BrowseFileInto(_txtRuleAudioFile, LanguageManager.GetString("PlaylistEditor.SelectAudioFile", "Seleziona file audio"), filter);
+            };
             grpAudio.Controls.AddRange(new Control[] { _txtRuleAudioFile, _btnBrowseRuleAudioFile });
 
             _chkRuleBufferVideo = new CheckBox { Left = 12, Top = 58, Width = 200, Text = LanguageManager.GetString("PlaylistEditor.AddBufferVideo", "Aggiungi File Buffer Video"), ForeColor = Color.White, Visible = _isRadioTVMode };
@@ -736,15 +750,18 @@ namespace AirManager.Forms
             _btnBrowseRuleBufferVideo.Click += (s, e) => BrowseFileInto(_txtRuleBufferVideo, LanguageManager.GetString("PlaylistEditor.SelectBufferFile", "Seleziona file buffer video"), "Video|*.mp4;*.mov;*.avi;*.mkv;*.wmv|All files|*.*");
             grpAudio.Controls.AddRange(new Control[] { _chkRuleBufferVideo, _txtRuleBufferVideo, _btnBrowseRuleBufferVideo });
 
-            _chkRuleVideoMp4 = new CheckBox { Left = 12, Top = 88, Width = 280, Text = LanguageManager.GetString("PlaylistEditor.AddVideoMP4", "Aggiungi File Video MP4 (non da archivio)"), ForeColor = Color.White, Visible = _isRadioTVMode };
-            _chkRuleVideoMp4.CheckedChanged += (s, e) => UpdateRuleVideoOptions();
+            // _chkRuleVideoMp4 and related controls are hidden/removed (replaced by the unified file picker above)
+            _chkRuleVideoMp4 = new CheckBox { Left = 12, Top = 88, Width = 280, Text = LanguageManager.GetString("PlaylistEditor.AddVideoMP4", "Aggiungi File Video MP4 (non da archivio)"), ForeColor = Color.White, Visible = false };
             _txtRuleVideoMp4 = new TextBox { Left = 300, Top = 86, Width = 240, Visible = false };
             _btnBrowseRuleVideoMp4 = new Button { Text = "📁", Left = 545, Top = 86, Width = 30, Height = 24, Visible = false };
-            _btnBrowseRuleVideoMp4.Click += (s, e) => BrowseFileInto(_txtRuleVideoMp4, LanguageManager.GetString("PlaylistEditor.SelectVideoFile", "Seleziona file video"), "MP4|*.mp4|All files|*.*");
             grpAudio.Controls.AddRange(new Control[] { _chkRuleVideoMp4, _txtRuleVideoMp4, _btnBrowseRuleVideoMp4 });
 
-            _btnInsertAudio = CreateButton(LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist"), Color.FromArgb(33, 150, 83));
-            _btnInsertAudio.Left = 390; _btnInsertAudio.Top = _isRadioTVMode ? 122 : 56; _btnInsertAudio.Width = 220; _btnInsertAudio.Height = 30;
+            _btnInsertAudio = CreateButton(
+                _isRadioTVMode
+                    ? LanguageManager.GetString("PlaylistEditor.InsertFileBtn", "Inserisci File in Playlist")
+                    : LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist"),
+                Color.FromArgb(33, 150, 83));
+            _btnInsertAudio.Left = 390; _btnInsertAudio.Top = 56; _btnInsertAudio.Width = 220; _btnInsertAudio.Height = 30;
             _btnInsertAudio.Click += BtnInsertAudio_Click;
             grpAudio.Controls.Add(_btnInsertAudio);
             page.Controls.Add(grpAudio);
@@ -845,7 +862,9 @@ namespace AirManager.Forms
             }
             if (_btnInsertCommand != null) _btnInsertCommand.Text = LanguageManager.GetString("PlaylistEditor.InsertCommandBtn", "Inserisci Comando");
             if (_btnInsertStreaming != null) _btnInsertStreaming.Text = LanguageManager.GetString("PlaylistEditor.InsertStreamingBtn", "Inserisci Streaming in Playlist");
-            if (_btnInsertAudio != null) _btnInsertAudio.Text = LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist");
+            if (_btnInsertAudio != null) _btnInsertAudio.Text = _isRadioTVMode
+                ? LanguageManager.GetString("PlaylistEditor.InsertFileBtn", "Inserisci File in Playlist")
+                : LanguageManager.GetString("PlaylistEditor.InsertAudioBtn", "Inserisci Audio in Playlist");
             if (_chkRuleBufferVideo != null) _chkRuleBufferVideo.Text = LanguageManager.GetString("PlaylistEditor.AddBufferVideo", "Aggiungi File Buffer Video");
             if (_chkRuleVideoMp4 != null) _chkRuleVideoMp4.Text = LanguageManager.GetString("PlaylistEditor.AddVideoMP4", "Aggiungi File Video MP4 (non da archivio)");
             if (_tabArchive != null && _tabArchive.TabPages.Count >= 4)
@@ -1556,6 +1575,83 @@ namespace AirManager.Forms
             }
         }
 
+        private void CloneSelectedPlaylist()
+        {
+            if (_dgvPlaylists.SelectedRows.Count == 0) return;
+            string filePath = _dgvPlaylists.SelectedRows[0].Tag as string;
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return;
+
+            try
+            {
+                var source = AirPlaylist.Load(filePath);
+                string folder = GetPlaylistFolder();
+                string copySuffix = LanguageManager.GetString("PlaylistEditor.CopySuffix", " (copia)");
+                string baseName = source.Name + copySuffix;
+                string newName = baseName;
+                int counter = 2;
+
+                // Ensure the name is unique
+                while (File.Exists(Path.Combine(folder, $"{newName}.airpls")))
+                {
+                    string suffixBase = copySuffix.TrimEnd(')'); // e.g. " (copia" from " (copia)"
+                    newName = source.Name + suffixBase + " " + counter + ")";
+                    counter++;
+                }
+
+                // Deep-copy items
+                var cloned = new AirPlaylist
+                {
+                    Name = newName,
+                    StartTime = source.StartTime
+                };
+                foreach (var item in source.Items)
+                {
+                    cloned.Items.Add(new AirPlaylistItem
+                    {
+                        Type = item.Type,
+                        FilePath = item.FilePath,
+                        Artist = item.Artist,
+                        Title = item.Title,
+                        DurationSeconds = item.DurationSeconds,
+                        MarkerIN = item.MarkerIN,
+                        MarkerMIX = item.MarkerMIX,
+                        CategoryName = item.CategoryName,
+                        YearFilterEnabled = item.YearFilterEnabled,
+                        YearFrom = item.YearFrom,
+                        YearTo = item.YearTo,
+                        RuleSourceType = item.RuleSourceType,
+                        RuleCategoryName = item.RuleCategoryName,
+                        RuleGenreName = item.RuleGenreName,
+                        StreamDuration = item.StreamDuration,
+                        CommandValue = item.CommandValue,
+                        AssociatedBufferPath = item.AssociatedBufferPath,
+                        AssociatedVideoPath = item.AssociatedVideoPath
+                    });
+                }
+
+                string newFilePath = Path.Combine(folder, $"{newName}.airpls");
+                cloned.Save(newFilePath);
+                RefreshPlaylistList();
+
+                // Select the newly created playlist
+                foreach (DataGridViewRow row in _dgvPlaylists.Rows)
+                {
+                    if (row.Tag as string == newFilePath)
+                    {
+                        row.Selected = true;
+                        _dgvPlaylists.CurrentCell = row.Cells[0];
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("PlaylistEditor.SaveError", "❌ Errore durante il salvataggio") + "\n" + ex.Message,
+                    "AirManager", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         // ══════════════════════════════════════════════════════════════════
         // RULES TAB
         // ══════════════════════════════════════════════════════════════════
@@ -1652,14 +1748,27 @@ namespace AirManager.Forms
             if (string.IsNullOrWhiteSpace(_txtRuleAudioFile?.Text))
                 return;
 
+            string filePath = _txtRuleAudioFile.Text.Trim();
+            int durationSeconds = 0;
+
+            // Read actual duration using TagLib
+            try
+            {
+                using (var tagFile = TagLib.File.Create(filePath))
+                {
+                    durationSeconds = (int)tagFile.Properties.Duration.TotalSeconds;
+                }
+            }
+            catch { durationSeconds = 0; }
+
             var item = new AirPlaylistItem
             {
                 Type = AirPlaylistItemType.ExternalAudio,
-                FilePath = _txtRuleAudioFile.Text.Trim(),
-                Title = Path.GetFileNameWithoutExtension(_txtRuleAudioFile.Text.Trim()),
-                DurationSeconds = 0,
+                FilePath = filePath,
+                Title = Path.GetFileNameWithoutExtension(filePath),
+                DurationSeconds = durationSeconds,
                 AssociatedBufferPath = (_chkRuleBufferVideo?.Checked == true) ? (_txtRuleBufferVideo?.Text ?? "") : "",
-                AssociatedVideoPath = (_chkRuleVideoMp4?.Checked == true) ? (_txtRuleVideoMp4?.Text ?? "") : ""
+                AssociatedVideoPath = ""
             };
 
             _playlist.Items.Add(item);
