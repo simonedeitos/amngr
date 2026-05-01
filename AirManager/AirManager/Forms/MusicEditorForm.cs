@@ -468,16 +468,8 @@ namespace AirManager.Forms
                 StartPosition = FormStartPosition.Manual,
                 ShowInTaskbar = false,
                 Text = LanguageManager.GetString("MusicEditor.FeaturedArtists", "Artisti Feat."),
-                Size = new Size(280, 300),
+                Size = new Size(280, 330),
                 BackColor = this.BackColor
-            };
-
-            var clb = new CheckedListBox
-            {
-                Dock = DockStyle.Fill,
-                CheckOnClick = true,
-                Font = new Font("Segoe UI", 9F),
-                BorderStyle = BorderStyle.None
             };
 
             var allItems = new HashSet<string>(_allFeaturedArtists, StringComparer.OrdinalIgnoreCase);
@@ -488,12 +480,66 @@ namespace AirManager.Forms
             if (!string.IsNullOrWhiteSpace(currentArtist))
                 allItems.Remove(currentArtist);
 
-            foreach (var artist in allItems.OrderBy(a => a))
+            // Preserve check states even for items temporarily hidden by the filter
+            var checkedState = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            foreach (var artist in allItems)
+                checkedState[artist] = _checkedFeaturedArtists.Contains(artist);
+
+            var clb = new CheckedListBox
             {
-                int idx = clb.Items.Add(artist);
-                if (_checkedFeaturedArtists.Contains(artist))
-                    clb.SetItemChecked(idx, true);
+                Dock = DockStyle.Fill,
+                CheckOnClick = true,
+                Font = new Font("Segoe UI", 9F),
+                BorderStyle = BorderStyle.None
+            };
+
+            // Sync visible check states back into the dictionary
+            void SyncCheckedState()
+            {
+                for (int i = 0; i < clb.Items.Count; i++)
+                    checkedState[clb.Items[i].ToString()] = clb.GetItemChecked(i);
             }
+
+            // Rebuild the list according to the current filter, restoring check states
+            void RebuildList(string filter)
+            {
+                clb.Items.Clear();
+                foreach (var artist in allItems.OrderBy(a => a))
+                {
+                    if (!string.IsNullOrWhiteSpace(filter) &&
+                        artist.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                    int idx = clb.Items.Add(artist);
+                    if (checkedState.TryGetValue(artist, out bool isChecked) && isChecked)
+                        clb.SetItemChecked(idx, true);
+                }
+            }
+
+            RebuildList("");
+
+            // Filter panel at the top of the popup
+            var filterPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 30,
+                BackColor = this.BackColor,
+                Padding = new Padding(4, 4, 4, 2)
+            };
+            var txtFilter = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Segoe UI", 9F),
+                BackColor = AppTheme.Surface,
+                ForeColor = AppTheme.TextPrimary,
+                PlaceholderText = LanguageManager.GetString("FeaturedArtists.SearchPlaceholder", "Cerca artista...")
+            };
+            filterPanel.Controls.Add(txtFilter);
+
+            txtFilter.TextChanged += (s, e) =>
+            {
+                SyncCheckedState();
+                RebuildList(txtFilter.Text);
+            };
 
             var addPanel = new Panel
             {
@@ -542,26 +588,28 @@ namespace AirManager.Forms
                 string newArtist = txtNew.Text.Trim();
                 if (string.IsNullOrWhiteSpace(newArtist)) return;
 
-                bool exists = false;
-                for (int i = 0; i < clb.Items.Count; i++)
+                SyncCheckedState();
+
+                // Find the canonical name if already present (case-insensitive)
+                string existing = checkedState.Keys.FirstOrDefault(k =>
+                    string.Equals(k, newArtist, StringComparison.OrdinalIgnoreCase));
+
+                if (existing != null)
                 {
-                    if (string.Equals(clb.Items[i].ToString(), newArtist, StringComparison.OrdinalIgnoreCase))
-                    {
-                        clb.SetItemChecked(i, true);
-                        exists = true;
-                        break;
-                    }
+                    checkedState[existing] = true;
                 }
-                if (!exists)
+                else
                 {
-                    int idx = clb.Items.Add(newArtist);
-                    clb.SetItemChecked(idx, true);
+                    allItems.Add(newArtist);
+                    checkedState[newArtist] = true;
                     if (!_allFeaturedArtists.Contains(newArtist))
                     {
                         _allFeaturedArtists.Add(newArtist);
                         PersistNewArtistAlias(newArtist);
                     }
                 }
+
+                RebuildList(txtFilter.Text);
                 txtNew.Text = "";
             };
 
@@ -575,24 +623,25 @@ namespace AirManager.Forms
                         txtTitle.Text?.Trim() ?? "",
                         aliases);
 
+                    SyncCheckedState();
+
                     foreach (var detectedArtist in detected)
                     {
-                        bool found = false;
-                        for (int i = 0; i < clb.Items.Count; i++)
+                        string existing = checkedState.Keys.FirstOrDefault(k =>
+                            string.Equals(k, detectedArtist, StringComparison.OrdinalIgnoreCase));
+
+                        if (existing != null)
                         {
-                            if (string.Equals(clb.Items[i].ToString(), detectedArtist, StringComparison.OrdinalIgnoreCase))
-                            {
-                                clb.SetItemChecked(i, true);
-                                found = true;
-                                break;
-                            }
+                            checkedState[existing] = true;
                         }
-                        if (!found)
+                        else
                         {
-                            int idx = clb.Items.Add(detectedArtist);
-                            clb.SetItemChecked(idx, true);
+                            allItems.Add(detectedArtist);
+                            checkedState[detectedArtist] = true;
                         }
                     }
+
+                    RebuildList(txtFilter.Text);
                 }
                 catch (Exception ex)
                 {
@@ -606,17 +655,19 @@ namespace AirManager.Forms
 
             popup.Controls.Add(clb);
             popup.Controls.Add(addPanel);
+            popup.Controls.Add(filterPanel);
 
             var screenPos = txtFeaturedArtistsDisplay.PointToScreen(new Point(0, txtFeaturedArtistsDisplay.Height));
             popup.Location = screenPos;
 
             popup.FormClosed += (s2, e2) =>
             {
+                SyncCheckedState();
                 _checkedFeaturedArtists.Clear();
-                for (int i = 0; i < clb.Items.Count; i++)
+                foreach (var kvp in checkedState)
                 {
-                    if (clb.GetItemChecked(i))
-                        _checkedFeaturedArtists.Add(clb.Items[i].ToString());
+                    if (kvp.Value)
+                        _checkedFeaturedArtists.Add(kvp.Key);
                 }
                 UpdateFeaturedArtistsDisplay();
             };

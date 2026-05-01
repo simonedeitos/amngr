@@ -225,17 +225,19 @@ namespace AirManager.Controls
                 }
             };
 
-            string firstTime = !string.IsNullOrEmpty(schedule.Times) ? schedule.Times.Split(';')[0] : "--:--:--";
-            Label lblTime = new Label
+            int labelWidth = cardWidth - 165;
+
+            // Row 1 – schedule name in blue (primary colour)
+            Label lblName = new Label
             {
-                Text = firstTime,
-                Location = new Point(10, 12),
-                Size = new Size(75, 25),
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Text = schedule.Name ?? "",
+                Location = new Point(10, 6),
+                Size = new Size(labelWidth, 20),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = isEnabled ? AppTheme.Primary : Color.Gray,
-                TextAlign = ContentAlignment.MiddleLeft
+                AutoEllipsis = true
             };
-            card.Controls.Add(lblTime);
+            card.Controls.Add(lblName);
 
             string icon = schedule.Type == "PlayClock" ? "🕐" :
                          schedule.Type == "PlayAudio" ? "🎵" :
@@ -272,17 +274,6 @@ namespace AirManager.Controls
                 target = System.IO.Path.GetFileName(schedule.ClockName ?? "");
             }
 
-            Label lblTitle = new Label
-            {
-                Text = $"{icon} {schedule.Name} → {target}",
-                Location = new Point(95, 8),
-                Size = new Size(cardWidth - 265, 18),
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
-                ForeColor = isEnabled ? AppTheme.TextPrimary : Color.Gray,
-                AutoEllipsis = true
-            };
-            card.Controls.Add(lblTitle);
-
             List<string> days = new List<string>();
             if (schedule.Monday == 1) days.Add(LanguageManager.GetString("Download.DayMon", "Lun"));
             if (schedule.Tuesday == 1) days.Add(LanguageManager.GetString("Download.DayTue", "Mar"));
@@ -297,18 +288,18 @@ namespace AirManager.Controls
                 $"📅 {string.Join(", ", days)}";
 
             string allTimes = !string.IsNullOrEmpty(schedule.Times) ? schedule.Times.Replace(";", ", ") : "--:--:--";
-            string timesInfo = schedule.Times?.Split(';').Length > 1 ? $" | ⏰ {allTimes}" : "";
 
-            Label lblDays = new Label
+            // Row 2 – icon, target, time and days in secondary colour
+            Label lblInfo = new Label
             {
-                Text = $"{daysText}{timesInfo}",
-                Location = new Point(95, 28),
-                Size = new Size(cardWidth - 265, 16),
+                Text = $"{icon} ⏰ {allTimes}  →  {target}  |  {daysText}",
+                Location = new Point(10, 28),
+                Size = new Size(labelWidth, 16),
                 Font = new Font("Segoe UI", 8),
                 ForeColor = isEnabled ? AppTheme.TextSecondary : Color.Gray,
                 AutoEllipsis = true
             };
-            card.Controls.Add(lblDays);
+            card.Controls.Add(lblInfo);
 
             int btnX = cardWidth - 145;
 
