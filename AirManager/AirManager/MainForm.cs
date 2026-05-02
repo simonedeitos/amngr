@@ -49,6 +49,7 @@ namespace AirManager
         private ToolStripMenuItem menuItemArchiveStreamingManager;
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
+        private ToolStripMenuItem menuItemExportMusicArchive;
 
         // ✅ RIFERIMENTI ALLE VOCI DI MENU PROGRAMMING
         // ✅ RIFERIMENTI ALLE VOCI DI MENU REPORT
@@ -160,6 +161,11 @@ namespace AirManager
 
             menuItemArchiveClips = new ToolStripMenuItem("⚡ Archivio Clips", null, MenuArchiveClips_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveClips);
+
+            menuArchives.DropDownItems.Add(new ToolStripSeparator());
+
+            menuItemExportMusicArchive = new ToolStripMenuItem("📤 Esporta Archivio Musicale", null, MenuExportMusicArchive_Click);
+            menuArchives.DropDownItems.Add(menuItemExportMusicArchive);
 
             menuStrip.Items.Add(menuArchives);
 
@@ -302,6 +308,7 @@ namespace AirManager
             menuItemArchiveStreamingManager.Text = "🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming");
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
+            menuItemExportMusicArchive.Text = "📤 " + LanguageManager.GetString("MainForm.Menu.Archives.ExportMusicArchive", "Esporta Archivio Musicale");
 
             // ✅ MENU PROGRAMMING
             menuProgramming.Text = "📅 " + LanguageManager.GetString("MainForm.Menu.Programming");
@@ -683,6 +690,24 @@ namespace AirManager
             _archiveClipsControl.RefreshArchive();
 
             lblStatus.Text = $"{LanguageManager.GetString("MainForm.Status.ArchiveClips")} - {_currentStation.Name}";
+        }
+
+        private void MenuExportMusicArchive_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new ExportMusicArchiveForm())
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void ShowProgrammingControl()
