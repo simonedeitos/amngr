@@ -26,7 +26,6 @@ namespace AirManager.Forms
         // Format radio buttons
         private RadioButton rdoCSV;
         private RadioButton rdoXLS;
-        private RadioButton rdoPDF;
 
         // Action controls
         private Button btnExport;
@@ -82,8 +81,6 @@ namespace AirManager.Forms
                 rdoCSV.Text = LanguageManager.GetString("ExportMusicArchive.FormatCSV", "CSV (separatore ;)");
             if (rdoXLS != null)
                 rdoXLS.Text = LanguageManager.GetString("ExportMusicArchive.FormatXLS", "XLS (Excel)");
-            if (rdoPDF != null)
-                rdoPDF.Text = LanguageManager.GetString("ExportMusicArchive.FormatPDF", "PDF");
 
             if (btnExport != null)
                 btnExport.Text = "📤 " + LanguageManager.GetString("ExportMusicArchive.BtnExport", "Esporta");
@@ -184,9 +181,8 @@ namespace AirManager.Forms
             var radioFont = new Font("Segoe UI", 9);
             rdoCSV = new RadioButton { Text = "CSV (separatore ;)", Checked = true, Location = new Point(margin, 28), Size = new Size(160, colH), Font = radioFont, ForeColor = Color.White, BackColor = Color.Transparent };
             rdoXLS = new RadioButton { Text = "XLS (Excel)", Location = new Point(180, 28), Size = new Size(120, colH), Font = radioFont, ForeColor = Color.White, BackColor = Color.Transparent };
-            rdoPDF = new RadioButton { Text = "PDF", Location = new Point(310, 28), Size = new Size(80, colH), Font = radioFont, ForeColor = Color.White, BackColor = Color.Transparent };
 
-            grpFormat.Controls.AddRange(new Control[] { rdoCSV, rdoXLS, rdoPDF });
+            grpFormat.Controls.AddRange(new Control[] { rdoCSV, rdoXLS });
 
             // --- Export button ---
             btnExport = new Button
@@ -226,17 +222,6 @@ namespace AirManager.Forms
             {
                 MessageBox.Show(
                     LanguageManager.GetString("ExportMusicArchive.SelectAtLeastOneColumn", "Seleziona almeno una colonna da esportare!"),
-                    LanguageManager.GetString("Common.Warning", "Attenzione"),
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning);
-                return;
-            }
-
-            // PDF non disponibile
-            if (rdoPDF.Checked)
-            {
-                MessageBox.Show(
-                    LanguageManager.GetString("ExportMusicArchive.PdfNotAvailable", "⚠️ Esportazione PDF non ancora disponibile. Installa una libreria PDF compatibile."),
                     LanguageManager.GetString("Common.Warning", "Attenzione"),
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
