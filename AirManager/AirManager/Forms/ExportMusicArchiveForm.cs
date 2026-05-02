@@ -268,20 +268,19 @@ namespace AirManager.Forms
                 try
                 {
                     // 4. Esporta
-                    int count = ExportToCsv(entries, dlg.FileName);
+                    int count = ExportData(entries, dlg.FileName);
 
-                    lblStatus.Text = string.Format(
+                    string successMsg = string.Format(
                         LanguageManager.GetString("ExportMusicArchive.ExportSuccess", "✅ Archivio esportato con successo!\n\n{0} brani salvati in:\n{1}"),
                         count,
                         dlg.FileName);
+
+                    lblStatus.Text = successMsg;
                     lblStatus.ForeColor = Color.FromArgb(40, 167, 69);
 
                     // 5. Messaggio di conferma
                     MessageBox.Show(
-                        string.Format(
-                            LanguageManager.GetString("ExportMusicArchive.ExportSuccess", "✅ Archivio esportato con successo!\n\n{0} brani salvati in:\n{1}"),
-                            count,
-                            dlg.FileName),
+                        successMsg,
                         LanguageManager.GetString("Common.Success", "Successo"),
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Information);
@@ -304,7 +303,7 @@ namespace AirManager.Forms
             }
         }
 
-        private int ExportToCsv(System.Collections.Generic.List<MusicEntry> entries, string filePath)
+        private int ExportData(System.Collections.Generic.List<MusicEntry> entries, string filePath)
         {
             var sb = new StringBuilder();
 
