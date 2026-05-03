@@ -8,11 +8,12 @@ using AirManager.Services.Database;
 using AirManager.Services;
 using AirManager.Models;
 using AirManager.Themes;
+using AirManager.Forms;
 using NAudio.Wave;
 
-namespace AirManager.Forms
+namespace AirManager.Controls
 {
-    public class MusicCategoryContentForm : Form
+    public class MusicCategoryContentControl : UserControl
     {
         // ── Left panel controls ──────────────────────────────────────────────
         private Panel pnlLeftContainer;
@@ -56,8 +57,9 @@ namespace AirManager.Forms
 
         // ── Constructor ──────────────────────────────────────────────────────
 
-        public MusicCategoryContentForm()
+        public MusicCategoryContentControl()
         {
+            this.Dock = DockStyle.Fill;
             InitializeLayout();
             InitializeMiniPlayer();
             ApplyLanguage();
@@ -94,10 +96,6 @@ namespace AirManager.Forms
 
         private void InitializeLayout()
         {
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.MinimumSize = new Size(900, 550);
-            this.Size = new Size(1200, 700);
             this.BackColor = AppTheme.BgLight;
             this.ForeColor = AppTheme.TextPrimary;
 
@@ -288,7 +286,7 @@ namespace AirManager.Forms
             dgvTracks.MouseDown += DgvTracks_MouseDown;
             dgvTracks.MouseMove += DgvTracks_MouseMove;
 
-            // Add to form (order matters for docking)
+            // Add to control (order matters for docking)
             this.Controls.Add(dgvTracks);
             this.Controls.Add(pnlLeftContainer);
         }
@@ -388,8 +386,6 @@ namespace AirManager.Forms
 
         private void ApplyLanguage()
         {
-            this.Text = LanguageManager.GetString("MusicCategoryContent.Title", "🎵 CONTENUTO CATEGORIE MUSICA");
-
             if (txtNewCategoryName != null)
                 txtNewCategoryName.PlaceholderText = LanguageManager.GetString("MusicCategoryContent.NewCategoryPlaceholder", "➕ Nuova categoria...");
 
@@ -433,7 +429,7 @@ namespace AirManager.Forms
 
         // ── Data Loading ──────────────────────────────────────────────────────
 
-        private void RefreshAll()
+        public void RefreshAll()
         {
             _allMusic = DbcManager.LoadFromCsv<MusicEntry>("Music.dbc");
             _allCategories = DbcManager.LoadFromCsv<CategoryEntry>("Categories.dbc")
@@ -633,12 +629,23 @@ namespace AirManager.Forms
             LoadTracksForSelectedCategory();
         }
 
-        // ── Selection Changed ─────────────────────────────────────────────────
+        // ── Selection Changed (auto-preview) ──────────────────────────────────
 
         private void DgvTracks_SelectionChanged(object sender, EventArgs e)
         {
-            if (_isPreviewPlaying)
-                StopPreview();
+            // If the mini player is not visible (user has not opened it), do nothing
+            if (!pnlMiniPlayer.Visible) return;
+
+            // With multiple rows selected, do nothing
+            if (dgvTracks.SelectedRows.Count != 1) return;
+
+            var row = dgvTracks.SelectedRows[0];
+            if (!(row.Tag is MusicEntry entry)) return;
+
+            if (string.IsNullOrEmpty(entry.FilePath) || !File.Exists(entry.FilePath)) return;
+
+            // StartPreview calls StopPreview internally, replacing the current preview
+            StartPreview(entry);
         }
 
         // ── Context Menu ──────────────────────────────────────────────────────
@@ -681,7 +688,7 @@ namespace AirManager.Forms
 
             using (var form = new TrackHistoryForm(entry.Artist, entry.Title))
             {
-                form.ShowDialog(this);
+                form.ShowDialog(this.FindForm());
             }
         }
 
@@ -790,7 +797,7 @@ namespace AirManager.Forms
             DialogResult result;
             using (var dlg = new MoveOrCopyDialog(title, message, moveText, copyText, cancelText))
             {
-                result = dlg.ShowDialog(this);
+                result = dlg.ShowDialog(this.FindForm());
             }
 
             if (result == DialogResult.Cancel) return;

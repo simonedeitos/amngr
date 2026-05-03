@@ -75,6 +75,7 @@ namespace AirManager
         private ReportAdvancedControl _reportControl;
         private ProgrammingControl _programmingControl;
         private PlaylistEditorControl _playlistEditorControl;
+        private MusicCategoryContentControl _musicCategoryContentControl;
 
         private StationConfig _currentStation;
 
@@ -912,10 +913,17 @@ namespace AirManager
                 return;
             }
 
-            using (var form = new MusicCategoryContentForm())
+            contentPanel.Controls.Clear();
+
+            if (_musicCategoryContentControl == null)
             {
-                form.ShowDialog(this);
+                _musicCategoryContentControl = new MusicCategoryContentControl();
             }
+
+            contentPanel.Controls.Add(_musicCategoryContentControl);
+            _musicCategoryContentControl.RefreshAll();
+
+            lblStatus.Text = $"{LanguageManager.GetString("MusicCategoryContent.MenuItemTitle", "Contenuto Categorie Musica")} - {_currentStation.Name}";
         }
 
         private void MenuCommandManager_Click(object sender, EventArgs e)
