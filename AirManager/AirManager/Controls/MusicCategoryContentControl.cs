@@ -752,8 +752,6 @@ namespace AirManager.Controls
                         entry.Year = newYear;
                         DbcManager.Update("Music.dbc", entry);
                         row.Cells["Year"].Value = newYear.ToString();
-                        var idx = _currentCategoryEntries.FindIndex(m => m.ID == entry.ID);
-                        if (idx >= 0) _currentCategoryEntries[idx].Year = newYear;
                     }
                 }
             }
