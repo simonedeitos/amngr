@@ -22,6 +22,11 @@ namespace AirManager.Controls
         private TextBox txtNewCategoryName;
         private Button btnAddCategory;
 
+        // ── Right panel (search header + grid) ───────────────────────────────
+        private Panel pnlRightContainer;
+        private Panel pnlSearchHeader;
+        private TextBox txtSearch;
+
         // ── Grid ─────────────────────────────────────────────────────────────
         private CategoryContentDataGridView dgvTracks;
 
@@ -54,6 +59,12 @@ namespace AirManager.Controls
         // ── Sorting ──────────────────────────────────────────────────────────
         private string _sortColumnName = null;
         private bool _sortAscending = true;
+
+        // ── Current category entries for live filter ─────────────────────────
+        private List<MusicEntry> _currentCategoryEntries = new List<MusicEntry>();
+
+        // ── Pending selection restore after Move/Copy ────────────────────────
+        private HashSet<int> _pendingSelectionIds = null;
 
         // ── Constructor ──────────────────────────────────────────────────────
 
@@ -103,7 +114,7 @@ namespace AirManager.Controls
             pnlLeftContainer = new Panel
             {
                 Dock = DockStyle.Left,
-                Width = 220,
+                Width = 235,
                 BackColor = AppTheme.BgLight
             };
 
@@ -285,9 +296,43 @@ namespace AirManager.Controls
             dgvTracks.SelectionChanged += DgvTracks_SelectionChanged;
             dgvTracks.MouseDown += DgvTracks_MouseDown;
             dgvTracks.MouseMove += DgvTracks_MouseMove;
+            dgvTracks.CellDoubleClick += DgvTracks_CellDoubleClick;
+            dgvTracks.CellMouseEnter += (s, e2) =>
+            {
+                if (e2.RowIndex >= 0 && dgvTracks.Columns[e2.ColumnIndex].Name == "Year")
+                    dgvTracks.Cursor = Cursors.Hand;
+                else
+                    dgvTracks.Cursor = Cursors.Default;
+            };
+
+            // ── Search header panel ──────────────────────────────────────────
+            txtSearch = new TextBox
+            {
+                Dock = DockStyle.Fill,
+                Height = 28,
+                Font = new Font("Segoe UI", 10F),
+                BackColor = AppTheme.BgInput,
+                ForeColor = AppTheme.TextPrimary,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            txtSearch.TextChanged += TxtSearch_TextChanged;
+
+            pnlSearchHeader = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 40,
+                BackColor = AppTheme.BgLight,
+                Padding = new Padding(4, 6, 4, 4)
+            };
+            pnlSearchHeader.Controls.Add(txtSearch);
+
+            // ── Right container (search header + grid) ───────────────────────
+            pnlRightContainer = new Panel { Dock = DockStyle.Fill };
+            pnlRightContainer.Controls.Add(dgvTracks);
+            pnlRightContainer.Controls.Add(pnlSearchHeader);
 
             // Add to control (order matters for docking)
-            this.Controls.Add(dgvTracks);
+            this.Controls.Add(pnlRightContainer);
             this.Controls.Add(pnlLeftContainer);
         }
 
@@ -386,6 +431,9 @@ namespace AirManager.Controls
 
         private void ApplyLanguage()
         {
+            if (txtSearch != null)
+                txtSearch.PlaceholderText = "🔍 " + LanguageManager.GetString("MusicCategoryContent.SearchPlaceholder", "Cerca artista o titolo...");
+
             if (txtNewCategoryName != null)
                 txtNewCategoryName.PlaceholderText = LanguageManager.GetString("MusicCategoryContent.NewCategoryPlaceholder", "➕ Nuova categoria...");
 
@@ -504,6 +552,7 @@ namespace AirManager.Controls
             {
                 _selectedCategoryName = categoryName;
                 SelectButton(btn, categoryName);
+                if (txtSearch != null) txtSearch.Text = "";
                 LoadTracksForSelectedCategory();
             };
 
@@ -551,15 +600,6 @@ namespace AirManager.Controls
 
         private void LoadTracksForSelectedCategory()
         {
-            dgvTracks.Rows.Clear();
-
-            // Update sort glyph
-            foreach (DataGridViewColumn col in dgvTracks.Columns)
-                col.HeaderCell.SortGlyphDirection = SortOrder.None;
-            if (!string.IsNullOrEmpty(_sortColumnName) && dgvTracks.Columns.Contains(_sortColumnName))
-                dgvTracks.Columns[_sortColumnName].HeaderCell.SortGlyphDirection =
-                    _sortAscending ? SortOrder.Ascending : SortOrder.Descending;
-
             IEnumerable<MusicEntry> filtered;
             if (_selectedCategoryName == null)
             {
@@ -573,23 +613,48 @@ namespace AirManager.Controls
                         string.Equals(c, _selectedCategoryName, StringComparison.OrdinalIgnoreCase)));
             }
 
-            var list = filtered.ToList();
+            _currentCategoryEntries = filtered.ToList();
+            ApplyFilter();
+        }
+
+        private void ApplyFilter()
+        {
+            dgvTracks.Rows.Clear();
+
+            // Update sort glyph
+            foreach (DataGridViewColumn col in dgvTracks.Columns)
+                col.HeaderCell.SortGlyphDirection = SortOrder.None;
+            if (!string.IsNullOrEmpty(_sortColumnName) && dgvTracks.Columns.Contains(_sortColumnName))
+                dgvTracks.Columns[_sortColumnName].HeaderCell.SortGlyphDirection =
+                    _sortAscending ? SortOrder.Ascending : SortOrder.Descending;
+
+            string searchText = txtSearch?.Text?.Trim() ?? "";
+
+            IEnumerable<MusicEntry> list = _currentCategoryEntries;
+
+            // Apply search filter
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                list = list.Where(m =>
+                    (m.Artist ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    (m.Title  ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
 
             // Apply sort
             if (!string.IsNullOrEmpty(_sortColumnName))
             {
                 IEnumerable<MusicEntry> sorted = _sortColumnName switch
                 {
-                    "Artist"    => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Artist ?? "")     : list.OrderByDescending(m => m.Artist ?? ""),
-                    "Title"     => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Title ?? "")      : list.OrderByDescending(m => m.Title ?? ""),
-                    "Genre"     => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Genre ?? "")      : list.OrderByDescending(m => m.Genre ?? ""),
-                    "Year"      => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Year)             : list.OrderByDescending(m => m.Year),
-                    "Duration"  => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Duration)         : list.OrderByDescending(m => m.Duration),
-                    "Category"  => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Categories ?? "") : list.OrderByDescending(m => m.Categories ?? ""),
-                    "AddedDate" => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.AddedDate ?? "")  : list.OrderByDescending(m => m.AddedDate ?? ""),
+                    "Artist"    => _sortAscending ? list.OrderBy(m => m.Artist ?? "")     : list.OrderByDescending(m => m.Artist ?? ""),
+                    "Title"     => _sortAscending ? list.OrderBy(m => m.Title ?? "")      : list.OrderByDescending(m => m.Title ?? ""),
+                    "Genre"     => _sortAscending ? list.OrderBy(m => m.Genre ?? "")      : list.OrderByDescending(m => m.Genre ?? ""),
+                    "Year"      => _sortAscending ? list.OrderBy(m => m.Year)             : list.OrderByDescending(m => m.Year),
+                    "Duration"  => _sortAscending ? list.OrderBy(m => m.Duration)         : list.OrderByDescending(m => m.Duration),
+                    "Category"  => _sortAscending ? list.OrderBy(m => m.Categories ?? "") : list.OrderByDescending(m => m.Categories ?? ""),
+                    "AddedDate" => _sortAscending ? list.OrderBy(m => m.AddedDate ?? "")  : list.OrderByDescending(m => m.AddedDate ?? ""),
                     _           => list
                 };
-                list = sorted.ToList();
+                list = sorted;
             }
 
             foreach (var entry in list)
@@ -612,6 +677,25 @@ namespace AirManager.Controls
                 );
                 dgvTracks.Rows[rowIndex].Tag = entry;
             }
+
+            // Restore pending selection (after Move/Copy refresh)
+            if (_pendingSelectionIds != null)
+            {
+                dgvTracks.ClearSelection();
+                foreach (DataGridViewRow row in dgvTracks.Rows)
+                {
+                    if (row.Tag is MusicEntry me && _pendingSelectionIds.Contains(me.ID))
+                        row.Selected = true;
+                }
+                _pendingSelectionIds = null;
+            }
+        }
+
+        // ── Search Filter ─────────────────────────────────────────────────────
+
+        private void TxtSearch_TextChanged(object sender, EventArgs e)
+        {
+            ApplyFilter();
         }
 
         // ── Column Header Sorting ─────────────────────────────────────────────
@@ -626,7 +710,7 @@ namespace AirManager.Controls
                 _sortColumnName = colName;
                 _sortAscending = true;
             }
-            LoadTracksForSelectedCategory();
+            ApplyFilter();
         }
 
         // ── Selection Changed (auto-preview) ──────────────────────────────────
@@ -646,6 +730,33 @@ namespace AirManager.Controls
 
             // StartPreview calls StopPreview internally, replacing the current preview
             StartPreview(entry);
+        }
+
+        // ── Year Inline Edit ──────────────────────────────────────────────────
+
+        private void DgvTracks_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0) return;
+            if (dgvTracks.Columns[e.ColumnIndex].Name != "Year") return;
+
+            var row = dgvTracks.Rows[e.RowIndex];
+            if (!(row.Tag is MusicEntry entry)) return;
+
+            string currentYear = entry.Year > 0 ? entry.Year.ToString() : "";
+            using (var dlg = new YearEditDialog(currentYear))
+            {
+                if (dlg.ShowDialog(this.FindForm()) == DialogResult.OK)
+                {
+                    if (int.TryParse(dlg.NewValue, out int newYear) && newYear >= 1900 && newYear <= 2100)
+                    {
+                        entry.Year = newYear;
+                        DbcManager.Update("Music.dbc", entry);
+                        row.Cells["Year"].Value = newYear.ToString();
+                        var idx = _currentCategoryEntries.FindIndex(m => m.ID == entry.ID);
+                        if (idx >= 0) _currentCategoryEntries[idx].Year = newYear;
+                    }
+                }
+            }
         }
 
         // ── Context Menu ──────────────────────────────────────────────────────
@@ -837,6 +948,13 @@ namespace AirManager.Controls
 
                 DbcManager.Update("Music.dbc", entry);
             }
+
+            _pendingSelectionIds = dgvTracks.SelectedRows
+                .Cast<DataGridViewRow>()
+                .Select(r => (r.Tag as MusicEntry)?.ID)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToHashSet();
 
             RefreshAll();
         }
@@ -1175,6 +1293,80 @@ namespace AirManager.Controls
             this.Controls.Add(btnCancel);
 
             this.AcceptButton = btnMove;
+            this.CancelButton = btnCancel;
+        }
+    }
+
+    // ── Year Edit Dialog ──────────────────────────────────────────────────────
+
+    internal class YearEditDialog : Form
+    {
+        private TextBox txtYear;
+        private Button btnOk;
+        private Button btnCancel;
+
+        public string NewValue => txtYear.Text.Trim();
+
+        public YearEditDialog(string currentYear)
+        {
+            this.Text = LanguageManager.GetString("MusicCategoryContent.EditYear", "Modifica Anno");
+            this.Size = new Size(280, 120);
+            this.StartPosition = FormStartPosition.CenterParent;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.BackColor = AppTheme.BgLight;
+            this.ForeColor = AppTheme.TextPrimary;
+
+            txtYear = new TextBox
+            {
+                Text = currentYear,
+                Location = new Point(12, 12),
+                Size = new Size(240, 24),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = AppTheme.BgInput,
+                ForeColor = AppTheme.TextPrimary,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            txtYear.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+            };
+            this.Controls.Add(txtYear);
+
+            btnOk = new Button
+            {
+                Text = LanguageManager.GetString("Common.OK", "OK"),
+                Location = new Point(12, 48),
+                Size = new Size(110, 30),
+                DialogResult = DialogResult.OK,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = AppTheme.ButtonPrimary,
+                ForeColor = Color.White,
+                Cursor = Cursors.Hand
+            };
+            btnOk.FlatAppearance.BorderSize = 0;
+            this.Controls.Add(btnOk);
+
+            btnCancel = new Button
+            {
+                Text = LanguageManager.GetString("Common.Cancel", "Annulla"),
+                Location = new Point(142, 48),
+                Size = new Size(110, 30),
+                DialogResult = DialogResult.Cancel,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = AppTheme.ButtonDanger,
+                ForeColor = Color.White,
+                Cursor = Cursors.Hand
+            };
+            btnCancel.FlatAppearance.BorderSize = 0;
+            this.Controls.Add(btnCancel);
+
+            this.AcceptButton = btnOk;
             this.CancelButton = btnCancel;
         }
     }
