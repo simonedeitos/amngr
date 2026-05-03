@@ -26,6 +26,9 @@ namespace AirManager.Controls
         private Panel pnlRightContainer;
         private Panel pnlSearchHeader;
         private TextBox txtSearch;
+        private Button btnFontIncrease;
+        private Button btnFontDecrease;
+        private float _gridFontSize = 10F;
 
         // ── Grid ─────────────────────────────────────────────────────────────
         private CategoryContentDataGridView dgvTracks;
@@ -317,6 +320,36 @@ namespace AirManager.Controls
             };
             txtSearch.TextChanged += TxtSearch_TextChanged;
 
+            btnFontDecrease = new Button
+            {
+                Text = "–",
+                Width = 28,
+                Dock = DockStyle.Right,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = AppTheme.Surface,
+                ForeColor = AppTheme.TextPrimary,
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                TabStop = false
+            };
+            btnFontDecrease.FlatAppearance.BorderSize = 0;
+            btnFontDecrease.Click += BtnFontDecrease_Click;
+
+            btnFontIncrease = new Button
+            {
+                Text = "+",
+                Width = 28,
+                Dock = DockStyle.Right,
+                FlatStyle = FlatStyle.Flat,
+                BackColor = AppTheme.Surface,
+                ForeColor = AppTheme.TextPrimary,
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Cursor = Cursors.Hand,
+                TabStop = false
+            };
+            btnFontIncrease.FlatAppearance.BorderSize = 0;
+            btnFontIncrease.Click += BtnFontIncrease_Click;
+
             pnlSearchHeader = new Panel
             {
                 Dock = DockStyle.Top,
@@ -324,7 +357,10 @@ namespace AirManager.Controls
                 BackColor = AppTheme.BgLight,
                 Padding = new Padding(4, 6, 4, 4)
             };
+            // Order matters: add right-docked controls before Fill-docked txtSearch
             pnlSearchHeader.Controls.Add(txtSearch);
+            pnlSearchHeader.Controls.Add(btnFontDecrease);
+            pnlSearchHeader.Controls.Add(btnFontIncrease);
 
             // ── Right container (search header + grid) ───────────────────────
             pnlRightContainer = new Panel { Dock = DockStyle.Fill };
@@ -696,6 +732,30 @@ namespace AirManager.Controls
         private void TxtSearch_TextChanged(object sender, EventArgs e)
         {
             ApplyFilter();
+        }
+
+        // ── Grid Font Size ────────────────────────────────────────────────────
+
+        private void BtnFontIncrease_Click(object sender, EventArgs e)
+        {
+            if (_gridFontSize >= 24F) return;
+            _gridFontSize = Math.Min(24F, _gridFontSize + 1F);
+            ApplyGridFontSize();
+        }
+
+        private void BtnFontDecrease_Click(object sender, EventArgs e)
+        {
+            if (_gridFontSize <= 7F) return;
+            _gridFontSize = Math.Max(7F, _gridFontSize - 1F);
+            ApplyGridFontSize();
+        }
+
+        private void ApplyGridFontSize()
+        {
+            dgvTracks.Font = new Font(dgvTracks.Font.FontFamily, _gridFontSize);
+            dgvTracks.RowTemplate.Height = Math.Max(24, (int)(_gridFontSize * 2.8F));
+            foreach (DataGridViewRow row in dgvTracks.Rows)
+                row.Height = dgvTracks.RowTemplate.Height;
         }
 
         // ── Column Header Sorting ─────────────────────────────────────────────
