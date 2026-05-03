@@ -584,13 +584,13 @@ namespace AirManager.Forms
             {
                 IEnumerable<MusicEntry> sorted = _sortColumnName switch
                 {
-                    "Artist"    => _sortAscending ? list.OrderBy(m => m.Artist ?? "")     : (IEnumerable<MusicEntry>)list.OrderByDescending(m => m.Artist ?? ""),
-                    "Title"     => _sortAscending ? list.OrderBy(m => m.Title ?? "")      : list.OrderByDescending(m => m.Title ?? ""),
-                    "Genre"     => _sortAscending ? list.OrderBy(m => m.Genre ?? "")      : list.OrderByDescending(m => m.Genre ?? ""),
-                    "Year"      => _sortAscending ? list.OrderBy(m => m.Year)             : list.OrderByDescending(m => m.Year),
-                    "Duration"  => _sortAscending ? list.OrderBy(m => m.Duration)         : list.OrderByDescending(m => m.Duration),
-                    "Category"  => _sortAscending ? list.OrderBy(m => m.Categories ?? "") : list.OrderByDescending(m => m.Categories ?? ""),
-                    "AddedDate" => _sortAscending ? list.OrderBy(m => m.AddedDate ?? "")  : list.OrderByDescending(m => m.AddedDate ?? ""),
+                    "Artist"    => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Artist ?? "")     : list.OrderByDescending(m => m.Artist ?? ""),
+                    "Title"     => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Title ?? "")      : list.OrderByDescending(m => m.Title ?? ""),
+                    "Genre"     => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Genre ?? "")      : list.OrderByDescending(m => m.Genre ?? ""),
+                    "Year"      => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Year)             : list.OrderByDescending(m => m.Year),
+                    "Duration"  => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Duration)         : list.OrderByDescending(m => m.Duration),
+                    "Category"  => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.Categories ?? "") : list.OrderByDescending(m => m.Categories ?? ""),
+                    "AddedDate" => _sortAscending ? (IEnumerable<MusicEntry>)list.OrderBy(m => m.AddedDate ?? "")  : list.OrderByDescending(m => m.AddedDate ?? ""),
                     _           => list
                 };
                 list = sorted.ToList();
@@ -1005,6 +1005,7 @@ namespace AirManager.Forms
 
             _userIsDraggingSlider = true;
             TrackBar track = (TrackBar)sender;
+            if (track.Width <= 0) return;
             double percentage = (double)e.X / track.Width;
             int newValue = (int)(percentage * (track.Maximum - track.Minimum)) + track.Minimum;
             newValue = Math.Max(track.Minimum, Math.Min(track.Maximum, newValue));
@@ -1031,7 +1032,7 @@ namespace AirManager.Forms
                 int totalSec   = (int)_previewAudioFile.TotalTime.TotalSeconds;
 
                 int clampedVal = Math.Max(trackPosition.Minimum, Math.Min(trackPosition.Maximum, currentSec));
-                if (Math.Abs(trackPosition.Value - clampedVal) > 0)
+                if (trackPosition.Value != clampedVal)
                     trackPosition.Value = clampedVal;
 
                 lblTimeCounter.Text = $"{FormatTime(currentSec)} / {FormatTime(totalSec)}";
