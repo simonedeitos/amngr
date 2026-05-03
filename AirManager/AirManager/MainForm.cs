@@ -47,6 +47,7 @@ namespace AirManager
         private ToolStripMenuItem menuItemArtistAliases;
         private ToolStripMenuItem menuItemArchiveCommandManager;
         private ToolStripMenuItem menuItemArchiveStreamingManager;
+        private ToolStripMenuItem menuItemCategoryManager;
         private ToolStripMenuItem menuItemArchiveMusic;
         private ToolStripMenuItem menuItemArchiveClips;
         private ToolStripMenuItem menuItemExportMusicArchive;
@@ -154,7 +155,9 @@ namespace AirManager
             menuArchives.DropDownItems.Insert(1, menuItemArchiveCommandManager);
             menuItemArchiveStreamingManager = new ToolStripMenuItem("🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming"), null, MenuStreamingManager_Click);
             menuArchives.DropDownItems.Insert(2, menuItemArchiveStreamingManager);
-            menuArchives.DropDownItems.Insert(3, new ToolStripSeparator());
+            menuItemCategoryManager = new ToolStripMenuItem("📂 ...", null, MenuCategoryManager_Click);
+            menuArchives.DropDownItems.Insert(3, menuItemCategoryManager);
+            menuArchives.DropDownItems.Insert(4, new ToolStripSeparator());
 
             menuItemArchiveMusic = new ToolStripMenuItem("🎵 Archivio Musica", null, MenuArchiveMusic_Click);
             menuArchives.DropDownItems.Add(menuItemArchiveMusic);
@@ -306,6 +309,7 @@ namespace AirManager
             menuItemArtistAliases.Text = "🎤 " + LanguageManager.GetString("MainForm.Menu.Archives.ArtistAliases", "Gestione Alias Artisti");
             menuItemArchiveCommandManager.Text = "📡 " + LanguageManager.GetString("MainForm.Menu.Archives.CommandManager", "Gestione Comandi");
             menuItemArchiveStreamingManager.Text = "🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming");
+            menuItemCategoryManager.Text = "📂 " + LanguageManager.GetString("CategoryManager.MenuItemTitle", "Modifica Categorie");
             menuItemArchiveMusic.Text = "🎵 " + LanguageManager.GetString("MainForm.Menu.Archives.Music");
             menuItemArchiveClips.Text = "⚡ " + LanguageManager.GetString("MainForm.Menu.Archives.Clips");
             menuItemExportMusicArchive.Text = "📤 " + LanguageManager.GetString("MainForm.Menu.Archives.ExportMusicArchive", "Esporta Archivio Musicale");
@@ -865,6 +869,24 @@ namespace AirManager
             }
 
             using (var form = new StreamingManagerForm())
+            {
+                form.ShowDialog(this);
+            }
+        }
+
+        private void MenuCategoryManager_Click(object sender, EventArgs e)
+        {
+            if (_currentStation == null)
+            {
+                MessageBox.Show(
+                    LanguageManager.GetString("MainForm.Message.SelectStationFirst"),
+                    LanguageManager.GetString("Common.Warning"),
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            using (var form = new CategoryManagerForm())
             {
                 form.ShowDialog(this);
             }
