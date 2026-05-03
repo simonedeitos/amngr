@@ -920,7 +920,6 @@ namespace AirManager
                 _musicCategoryContentControl = new MusicCategoryContentControl();
             }
 
-            _musicCategoryContentControl.Dock = DockStyle.Fill;
             contentPanel.Controls.Add(_musicCategoryContentControl);
             _musicCategoryContentControl.RefreshAll();
 

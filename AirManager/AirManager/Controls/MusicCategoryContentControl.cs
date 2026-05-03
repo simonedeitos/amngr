@@ -1167,8 +1167,8 @@ namespace AirManager.Controls
                 Size = new Size(120, 36),
                 DialogResult = DialogResult.Cancel,
                 FlatStyle = FlatStyle.Flat,
-                BackColor = AppTheme.Surface,
-                ForeColor = AppTheme.TextPrimary,
+                BackColor = AppTheme.ButtonDanger,
+                ForeColor = Color.White,
                 Cursor = Cursors.Hand
             };
             btnCancel.FlatAppearance.BorderSize = 0;
