@@ -328,7 +328,9 @@ namespace AirManager.Forms
             dgv.Rows.Clear();
             if (categories.Count == 0)
             {
-                dgv.Rows.Add(LanguageManager.GetString("CategoryManager.NoCategories", "Nessuna categoria trovata"), 0);
+                var row = dgv.Rows[dgv.Rows.Add()];
+                row.Cells[0].Value = LanguageManager.GetString("CategoryManager.NoCategories", "Nessuna categoria trovata");
+                row.Cells[1].Value = "";
                 return;
             }
 

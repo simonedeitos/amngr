@@ -155,7 +155,9 @@ namespace AirManager
             menuArchives.DropDownItems.Insert(1, menuItemArchiveCommandManager);
             menuItemArchiveStreamingManager = new ToolStripMenuItem("🌐 " + LanguageManager.GetString("MainForm.Menu.Archives.StreamingManager", "Gestione Streaming"), null, MenuStreamingManager_Click);
             menuArchives.DropDownItems.Insert(2, menuItemArchiveStreamingManager);
-            menuItemCategoryManager = new ToolStripMenuItem("📂 ...", null, MenuCategoryManager_Click);
+            menuItemCategoryManager = new ToolStripMenuItem(
+                "📂 " + LanguageManager.GetString("CategoryManager.MenuItemTitle", "Modifica Categorie"),
+                null, MenuCategoryManager_Click);
             menuArchives.DropDownItems.Insert(3, menuItemCategoryManager);
             menuArchives.DropDownItems.Insert(4, new ToolStripSeparator());
 
