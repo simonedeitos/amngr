@@ -35,6 +35,14 @@ namespace AirManager.Forms
         private Button btnRefresh;
         private Button btnClose;
 
+        // ── Static Events ────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Fired after a category is successfully renamed or deleted, so other open
+        /// forms (e.g. MusicCategoryContentForm) can refresh their data.
+        /// </summary>
+        public static event EventHandler CategoriesChanged;
+
         // ── Constructor ─────────────────────────────────────────────────────
 
         public CategoryManagerForm()
@@ -520,6 +528,7 @@ namespace AirManager.Forms
                     MessageBoxIcon.Information);
 
                 LoadData();
+                CategoriesChanged?.Invoke(null, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -685,6 +694,7 @@ namespace AirManager.Forms
                     MessageBoxIcon.Information);
 
                 LoadData();
+                CategoriesChanged?.Invoke(null, EventArgs.Empty);
             }
             catch (Exception ex)
             {
